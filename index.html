@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cell-Logic Live Poll</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+  :root{--blk:#000;--accent:#111827;--paper:#f3f4f6;--line:#e4e6ea;--ink:#111418;--mut:#6b7280;--ok:#15803d;--white:#fff}
+  body{background:var(--paper)}
+  #app{max-width:760px;margin:0 auto;padding:18px 16px 60px;color:var(--ink)}
+  .brand{display:flex;align-items:center;gap:10px;border-bottom:3px solid var(--blk);padding-bottom:12px;margin-bottom:18px}
+  .logo{font-weight:800;font-size:24px;letter-spacing:.5px}
+  .logo .l2{font-weight:300;color:#3a3a3a}
+  .tag{margin-left:auto;font-size:10px;letter-spacing:2px;color:var(--mut);text-transform:uppercase}
+  h1{font-size:21px;font-weight:800;line-height:1.25;margin:4px 0 2px}
+  .card{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 4px 18px rgba(0,0,0,.04);margin-bottom:14px}
+  .btn{display:block;width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;transition:.15s;margin-top:10px}
+  .btn-gold{background:var(--blk);color:#fff}
+  .btn-gold:hover{background:#222}
+  .btn-out{background:var(--white);color:var(--ink);border:2px solid var(--blk)}
+  .btn-out:hover{background:#e9ebef}
+  .opt{display:block;width:100%;text-align:left;background:var(--white);border:2px solid var(--line);border-radius:12px;padding:16px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:.12s}
+  .opt:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .scale-row{display:flex;gap:8px;margin:16px 0 6px}
+  .scale-btn{flex:1;aspect-ratio:1;border:2px solid var(--line);border-radius:12px;background:var(--white);font-size:20px;font-weight:800;cursor:pointer}
+  .scale-btn:hover{border-color:var(--accent)}
+  .scale-lab{display:flex;justify-content:space-between;font-size:11px;color:var(--mut)}
+  .pin{width:100%;padding:14px;font-size:18px;text-align:center;border:2px solid var(--line);border-radius:12px;letter-spacing:4px}
+  .txtin{width:100%;padding:14px;font-size:16px;border:2px solid var(--line);border-radius:12px}
+  .muted{color:var(--mut);font-size:13px;line-height:1.5}
+  .pill{display:inline-block;background:#e9ebef;color:#374151;font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.5px}
+  .qnum{font-size:12px;color:var(--accent);font-weight:800;letter-spacing:1px}
+  .bar-wrap{margin:10px 0}
+  .bar-top{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin-bottom:5px}
+  .bar-bg{background:#eee;border-radius:8px;height:30px;overflow:hidden}
+  .bar-fill{height:100%;background:linear-gradient(90deg,#111827,#4b5563);border-radius:8px;transition:width .5s;min-width:2px}
+  .bar-fill.correct{background:linear-gradient(90deg,#15803d,#3ac17a)}
+  .ctrl{display:flex;gap:8px;margin-top:14px}
+  .ctrl button{flex:1;border:2px solid var(--blk);background:var(--white);border-radius:10px;padding:12px;font-weight:700;cursor:pointer;font-size:14px}
+  .ctrl button.on{background:var(--blk);color:#fff}
+  .ctrl button:disabled{opacity:.3;cursor:default}
+  .stat{display:flex;gap:14px;flex-wrap:wrap;margin:8px 0}
+  .stat div{background:#eceef2;border-radius:10px;padding:10px 14px;flex:1;min-width:90px;text-align:center}
+  .stat b{display:block;font-size:24px;color:var(--blk)}
+  .stat span{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+  .cloud{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:center;padding:10px 0;min-height:60px}
+  .cloud span{font-weight:800;color:var(--blk);line-height:1}
+  .center{text-align:center}.small{font-size:12px}
+  .live{display:inline-flex;align-items:center;gap:6px;color:var(--ok);font-weight:700;font-size:12px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:p 1.2s infinite}
+  @keyframes p{0%,100%{opacity:1}50%{opacity:.25}}
+  .danger{color:#b23b3b;font-weight:700;background:none;border:none;cursor:pointer;font-size:13px;margin-top:8px;text-decoration:underline}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- Firebase (free database) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+/* ============================================================
+   YOUR FIREBASE CONFIG (already filled in)
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCl7NCk6M4mVQItdY73G8JSxug0bu-rqPM",
+  authDomain: "cell-logic-poll.firebaseapp.com",
+  databaseURL: "https://cell-logic-poll-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "cell-logic-poll",
+  storageBucket: "cell-logic-poll.firebasestorage.app",
+  messagingSenderId: "680622798974",
+  appId: "1:680622798974:web:5cc2b7f55d23c38bd6002f"
+};
+
+/* ============================================================
+   EDIT YOUR QUESTIONS EACH WEEK (only this block)
+   types: "mc" (multiple choice / true-false), "scale" (1-5), "word" (word cloud)
+   "correct": index of right answer for mc (omit for opinion questions)
+   ============================================================ */
+const PRESENTER_PIN = "cell2026";
+const QUESTIONS = [
+  {id:"q1",type:"mc",text:'What does "KIP" stand for?',options:["Key Information Point","Knowledge is Power","Keep It Personal","Known Industry Practice"],correct:1},
+  {id:"q2",type:"mc",text:"Under Regulation 4, when must all disclosures be made to the customer?",options:["Within 7 days of the sale","At the point of sale, before signing","Only if the customer asks","On the first bill date"],correct:1},
+  {id:"q3",type:"mc",text:"Which transactions require a completed Customer (KIP) Checklist?",options:["New post-paid contracts only","Upgrades only","New contracts, upgrades AND SIM-only deals","Only deals over R500"],correct:2},
+  {id:"q4",type:"mc",text:"Who must sign the Customer (KIP) Checklist?",options:["Only the customer","Only the sales consultant","Both the consultant and the customer","The store manager"],correct:2},
+  {id:"q5",type:"mc",text:"TRUE or FALSE: If an item is not on the checklist, it is treated as NOT explained — even if you explained it verbally.",options:["True","False"],correct:0},
+  {id:"q6",type:"mc",text:"Random compliance inspections of our stores are conducted by…",options:["ICASA directly","MTN, as the licensor","The store manager","An outside auditor only"],correct:1},
+  {id:"q7",type:"word",text:'In ONE word: "If it is not documented, it did not ____."'},
+  {id:"q8",type:"scale",text:"How confident do you feel applying Regulation 4 at the point of sale?",min:1,max:5,labels:["Not confident","Very confident"]}
+];
+/* ===================== END OF WEEKLY EDITS ===================== */
+
+const app=document.getElementById('app');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function header(){return '<div class="brand"><div class="logo">CELL<span class="l2">LOGIC</span></div><div class="tag">MTN Post-Paid Compliance</div></div>';}
+
+if(String(firebaseConfig.apiKey).indexOf("PASTE_HERE")>=0){
+  app.innerHTML=header()+'<div class="card"><h1>Config missing</h1><p class="muted" style="margin-top:8px">The Firebase details are not filled in.</p></div>';
+} else {
+  firebase.initializeApp(firebaseConfig);
+  const db=firebase.database();
+  const ctrlRef=db.ref('poll/ctrl');
+  const respRef=db.ref('poll/responses');
+
+  const sid="s_"+Math.random().toString(36).slice(2,10);
+  let myName="", myAnswers={}, role=null, currentCtrl={active:-1,open:false}, currentResp={};
+
+  renderLanding();
+
+  function renderLanding(){
+    app.innerHTML=header()+'<div class="card"><span class="pill">Weekly Check</span><h1 style="margin-top:8px">Reg 4 / KIP Knowledge Check</h1><p class="muted" style="margin-top:6px">Live and anonymous. Results update in real time.</p><button class="btn btn-gold" id="bJoin">Join &amp; answer →</button><button class="btn btn-out" id="bPres">I\'m presenting</button></div><p class="muted center small">No app. No account. Works on any phone.</p>';
+    document.getElementById('bJoin').onclick=()=>renderName();
+    document.getElementById('bPres').onclick=()=>renderPin();
+  }
+
+  function renderName(){
+    app.innerHTML=header()+'<div class="card"><h1>Welcome 👋</h1><p class="muted" style="margin:8px 0 14px">Add your name (optional) or stay anonymous.</p><input class="txtin" id="nm" placeholder="Your name (optional)" maxlength="40"/><button class="btn btn-gold" id="go">Continue →</button></div>';
+    document.getElementById('go').onclick=()=>{
+      myName=document.getElementById('nm').value.trim();
+      respRef.child(sid).child('name').set(myName||"Anonymous");
+      role='join';
+      ctrlRef.on('value',s=>{currentCtrl=s.val()||{active:-1,open:false};if(role==='join')renderParticipant();});
+    };
+  }
+
+  function renderParticipant(){
+    const c=currentCtrl;
+    if(c.active<0||!c.open){
+      app.innerHTML=header()+'<div class="card center"><h1>Hang tight…</h1><p class="muted" style="margin-top:8px">Waiting for the presenter to open a question.</p></div>';
+      return;
+    }
+    const q=QUESTIONS[c.active];
+    if(myAnswers[q.id]!==undefined){
+      app.innerHTML=header()+'<div class="card center"><span class="qnum">QUESTION '+(c.active+1)+' OF '+QUESTIONS.length+'</span><h1 style="margin-top:6px">Got it ✅</h1><p class="muted" style="margin-top:8px">Your answer is in. Look up at the screen for live results!</p></div>';
+      return;
+    }
+    let body="";
+    if(q.type==="mc")body=q.options.map((o,i)=>'<button class="opt" data-i="'+i+'">'+esc(o)+'</button>').join("");
+    else if(q.type==="scale"){let b="";for(let v=q.min;v<=q.max;v++)b+='<button class="scale-btn" data-v="'+v+'">'+v+'</button>';body='<div class="scale-row">'+b+'</div><div class="scale-lab"><span>'+esc(q.labels?q.labels[0]:q.min)+'</span><span>'+esc(q.labels?q.labels[1]:q.max)+'</span></div>';}
+    else if(q.type==="word")body='<input class="txtin" id="wd" placeholder="Type your answer…" maxlength="30"/><button class="btn btn-gold" id="wsend">Send</button>';
+    app.innerHTML=header()+'<div class="card"><span class="qnum">QUESTION '+(c.active+1)+' OF '+QUESTIONS.length+'</span><h1 style="margin:6px 0 16px">'+esc(q.text)+'</h1>'+body+'</div>';
+    const submit=v=>{myAnswers[q.id]=v;respRef.child(sid).child(q.id).set(v);renderParticipant();};
+    app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>submit(parseInt(b.dataset.i)));
+    app.querySelectorAll('.scale-btn').forEach(b=>b.onclick=()=>submit(parseInt(b.dataset.v)));
+    const ws=document.getElementById('wsend');
+    if(ws)ws.onclick=()=>{const v=document.getElementById('wd').value.trim();if(v)submit(v);};
+  }
+
+  function renderPin(){
+    app.innerHTML=header()+'<div class="card"><h1>Presenter access</h1><p class="muted" style="margin:8px 0 14px">Enter the PIN to control the poll and see live results.</p><input class="pin" id="pin" placeholder="••••" maxlength="12"/><button class="btn btn-gold" id="ok">Unlock →</button><p class="small" id="err" style="color:#b23b3b;margin-top:10px"></p><button class="danger" id="back" style="text-decoration:none;color:var(--mut)">← Back</button></div>';
+    document.getElementById('back').onclick=renderLanding;
+    const go=()=>{if(document.getElementById('pin').value.trim()===PRESENTER_PIN){startPresenter();}else document.getElementById('err').textContent="Wrong PIN.";};
+    document.getElementById('ok').onclick=go;
+    document.getElementById('pin').onkeydown=e=>{if(e.key==='Enter')go();};
+  }
+
+  function startPresenter(){
+    role='present';
+    ctrlRef.once('value',s=>{if(!s.val())ctrlRef.set({active:0,open:false});});
+    ctrlRef.on('value',s=>{currentCtrl=s.val()||{active:0,open:false};if(role==='present')renderPresenter();});
+    respRef.on('value',s=>{currentResp=s.val()||{};if(role==='present')renderPresenter();});
+  }
+
+  function renderPresenter(){
+    const c=currentCtrl, active=c.active<0?0:c.active, q=QUESTIONS[active];
+    const people=Object.keys(currentResp).length;
+    let res={},words={},scale=[];
+    for(const k in currentResp){const a=currentResp[k][q.id];if(a===undefined||a===null)continue;
+      if(q.type==="mc")res[a]=(res[a]||0)+1;else if(q.type==="scale")scale.push(a);else if(q.type==="word"){const w=String(a).toLowerCase();words[w]=(words[w]||0)+1;}}
+    let html="";
+    if(q.type==="mc"){const t=Object.values(res).reduce((a,b)=>a+b,0)||0;
+      html=q.options.map((o,i)=>{const ct=res[i]||0,pct=t?Math.round(ct/t*100):0,r=(q.correct===i);
+        return '<div class="bar-wrap"><div class="bar-top"><span>'+esc(o)+(r?' ✅':'')+'</span><span>'+ct+' · '+pct+'%</span></div><div class="bar-bg"><div class="bar-fill '+(r?'correct':'')+'" style="width:'+pct+'%"></div></div></div>';}).join("");
+    } else if(q.type==="scale"){const n=scale.length,avg=n?(scale.reduce((a,b)=>a+b,0)/n).toFixed(1):"–";let d="";
+      for(let v=q.min;v<=q.max;v++){const ct=scale.filter(x=>x===v).length,pct=n?Math.round(ct/n*100):0;d+='<div class="bar-wrap"><div class="bar-top"><span>'+v+'</span><span>'+ct+' · '+pct+'%</span></div><div class="bar-bg"><div class="bar-fill" style="width:'+pct+'%"></div></div></div>';}
+      html='<div class="stat"><div><b>'+avg+'</b><span>Average</span></div><div><b>'+n+'</b><span>Responses</span></div></div>'+d;
+    } else if(q.type==="word"){const e=Object.entries(words).sort((a,b)=>b[1]-a[1]);
+      html=e.length?'<div class="cloud">'+e.map(([w,ct])=>{const mx=e[0][1];return '<span style="font-size:'+(16+ct/mx*30)+'px">'+esc(w)+'</span>';}).join("")+'</div>':'<p class="muted center">No words yet…</p>';}
+    app.innerHTML=header()+
+      '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="qnum">QUESTION '+(active+1)+' / '+QUESTIONS.length+'</span><span class="live"><span class="dot"></span>LIVE</span></div><h1 style="margin:8px 0 14px">'+esc(q.text)+'</h1>'+html+
+      '<div class="ctrl"><button id="prev" '+(active===0?'disabled':'')+'>◀ Prev</button><button id="tog" class="'+(c.open?'on':'')+'">'+(c.open?'⏸ Close voting':'▶ Open voting')+'</button><button id="next" '+(active===QUESTIONS.length-1?'disabled':'')+'>Next ▶</button></div></div>'+
+      '<div class="card"><div class="stat"><div><b>'+people+'</b><span>Participants</span></div><div><b>'+QUESTIONS.length+'</b><span>Questions</span></div></div><button class="btn btn-out" id="csv">⤓ Export results (CSV / Excel)</button><button class="danger" id="reset">Reset all responses (new week)</button></div>';
+    document.getElementById('prev').onclick=()=>ctrlRef.set({active:Math.max(0,active-1),open:false});
+    document.getElementById('next').onclick=()=>ctrlRef.set({active:Math.min(QUESTIONS.length-1,active+1),open:false});
+    document.getElementById('tog').onclick=()=>ctrlRef.set({active:active,open:!c.open});
+    document.getElementById('csv').onclick=exportCSV;
+    document.getElementById('reset').onclick=()=>{if(confirm("Clear ALL responses for a new week? This cannot be undone."))respRef.remove();};
+  }
+
+  function exportCSV(){
+    const rows=[["Name"].concat(QUESTIONS.map(q=>q.text))];
+    for(const k in currentResp){const r=currentResp[k],line=[r.name||"Anonymous"];
+      for(const q of QUESTIONS){let v=r[q.id];if(v===undefined||v===null)v="";else if(q.type==="mc")v=q.options[v]!==undefined?q.options[v]:v;line.push(v);}
+      rows.push(line);}
+    const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\n");
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+    a.download="cell-logic-poll-"+new Date().toISOString().slice(0,10)+".csv";a.click();
+  }
+}
+</script>
+</body>
+</html>
