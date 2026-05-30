@@ -72,10 +72,65 @@
   .winner-crown{font-size:54px;animation:bnc 1.1s ease infinite;line-height:1}
   .champ .nm{font-size:26px;font-weight:800;margin-top:2px}
   .champ .sc{color:var(--ok);font-weight:800;font-size:15px;margin-top:2px}
+  /* ----- Presenter view: bigger layout for laptop / projector ----- */
+  .present #app{max-width:1040px;padding:30px 28px 70px}
+  .present .card{padding:30px 38px;border-radius:18px}
+  .present h1{font-size:36px;line-height:1.2;text-align:center}
+  .present .qnum{font-size:15px}
+  .present .live{font-size:15px}
+  .present .prog{height:10px;margin-bottom:18px}
+  .present .bar-top{font-size:21px;margin-bottom:8px}
+  .present .bar-bg{height:46px;border-radius:10px}
+  .present .bar-fill{border-radius:10px}
+  .present .ctrl button{padding:18px;font-size:18px;border-radius:12px}
+  .present .stat b{font-size:38px}
+  .present .stat span{font-size:13px}
+  .present .lrow{font-size:24px;padding:18px 22px;border-radius:14px}
+  .present .medal{font-size:34px}
+  .present .lscore{font-size:24px}
+  .present .winner-crown{font-size:78px}
+  .present .champ .nm{font-size:38px}
+  .present .champ .sc{font-size:20px}
+  /* ----- Editorial restyle (presenter only) ----- */
+  body.present{background:linear-gradient(160deg,#fbfcfd 0%,#eef0f2 100%)}
+  .present .brand{display:none}
+  .present #app{max-width:1080px;padding:26px 36px 70px}
+  .present .qcard{position:relative;overflow:hidden;background:linear-gradient(160deg,#fcfdfe,#f1f3f5);border:1px solid #e9ebef;border-top:1px solid #e9ebef;box-shadow:0 16px 50px rgba(0,0,0,.06);padding:40px 46px;min-height:540px;display:flex;flex-direction:column}
+  .ghostnum{position:absolute;right:-2%;top:-12%;font-size:40vh;font-weight:200;color:#000;opacity:.035;line-height:1;letter-spacing:-8px;pointer-events:none}
+  .phantom{position:absolute;border:2px solid #000;border-radius:22px;opacity:.05;pointer-events:none;width:120px;height:240px}
+  .phantom.ph1{right:9%;top:13%;transform:rotate(18deg)}
+  .phantom.ph2{right:22%;top:46%;transform:rotate(-11deg)}
+  .sechead{display:flex;align-items:flex-start;gap:16px;position:relative;z-index:2}
+  .secnum{font-size:58px;font-weight:200;line-height:.8;letter-spacing:-3px;color:#111}
+  .seclbl{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#9aa0a8;font-weight:600;padding-top:6px}
+  .seclbl b{display:block;color:#111;font-weight:700;font-size:12px;letter-spacing:2px}
+  .present .sechead .live{margin-left:auto;color:#15803d}
+  .present .prog{height:2px;margin:22px 0 0;background:#dfe2e6;position:relative;z-index:2}
+  .present h1.qbig{font-size:42px;font-weight:200;line-height:1.16;letter-spacing:-.8px;color:#1a1a1a;text-align:left;margin:auto 0 22px;max-width:80%;position:relative;z-index:2}
+  .present #results{position:relative;z-index:2;max-width:82%}
+  .present .bar-wrap{margin:0 0 16px}
+  .present .bar-top{font-size:16px;font-weight:300;color:#3a3a3a;margin-bottom:7px}
+  .present .bar-bg{height:3px;background:#dfe2e6;border-radius:99px}
+  .present .bar-fill{background:#111;border-radius:99px}
+  .present .bar-fill.correct{background:#15803d}
+  .present .cloud span{font-weight:300}
+  .present .ctrl{position:relative;z-index:2;margin-top:14px}
+  .present .ctrl button{border:1px solid #111;background:transparent;border-radius:8px;font-weight:600}
+  .present .ctrl button.on{background:#111;color:#fff}
+  .present .stat div{background:#fff}
+  /* white interstitial between questions */
+  #inter{position:fixed;inset:0;background:#fff;z-index:9000;display:flex;flex-direction:column;padding:6vh 7vw;opacity:0;pointer-events:none;transition:opacity .5s ease}
+  #inter.show{opacity:1}
+  #inter .it-num{font-size:20vh;font-weight:200;letter-spacing:-10px;line-height:.85;color:#111;transform:translateY(34px);opacity:0}
+  #inter .it-lead{font-size:46px;font-weight:200;line-height:1.16;letter-spacing:-.8px;color:#1a1a1a;margin-top:auto;max-width:80%;transform:translateY(26px);opacity:0}
+  #inter.run .it-num{animation:itrise .6s ease .05s forwards}
+  #inter.run .it-lead{animation:itrise .6s ease .24s forwards}
+  @keyframes itrise{to{transform:translateY(0);opacity:1}}
 </style>
 </head>
 <body>
 <div id="app"></div>
+<div id="inter"></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -117,7 +172,7 @@ const qRef=db.ref('poll/questions');
 
 const sid="s_"+Math.random().toString(36).slice(2,10);
 let myName="", myAnswers={}, role=null;
-let currentCtrl={active:0,revealed:false,finished:false}, currentResp={}, QUESTIONS=DEFAULT_QUESTIONS.slice();
+let currentCtrl={active:0,revealed:false,finished:false}, currentResp={}, QUESTIONS=DEFAULT_QUESTIONS.slice(), lastPresenterSig=null;
 
 // live listeners
 qRef.on('value',s=>{const v=s.val();QUESTIONS=(v&&Array.isArray(v)&&v.length)?v:DEFAULT_QUESTIONS.slice();redraw();});
@@ -132,7 +187,7 @@ function redraw(){
 renderLanding();
 
 function renderLanding(){
-  role=null;
+  role=null;document.body.classList.remove('present');
   app.innerHTML=header()+'<div class="card"><span class="pill">Weekly Check</span><h1 style="margin-top:8px">Reg 4 / KIP Knowledge Check</h1><p class="muted" style="margin-top:6px">Answer on your phone. Results show live on the screen.</p><button class="btn btn-gold" id="bJoin">Join &amp; answer →</button><button class="btn btn-out" id="bPres">I\'m presenting</button></div><div class="center"><button class="adminlink" id="bAdmin">⚙ Manage weekly questions</button></div>';
   document.getElementById('bJoin').onclick=renderName;
   document.getElementById('bPres').onclick=()=>renderPin('present');
@@ -147,7 +202,7 @@ function renderName(){
     myName=nm.value.trim();
     if(myName.length<2){document.getElementById('er').textContent="Please enter your name.";return;}
     respRef.child(sid).child('name').set(myName);
-    role='join';renderParticipant();
+    role='join';document.body.classList.remove('present');renderParticipant();
   };
   nm.onkeydown=e=>{if(e.key==='Enter'&&!go.disabled)go.click();};
 }
@@ -198,7 +253,7 @@ function renderParticipant(){
 function renderPin(dest){
   app.innerHTML=header()+'<div class="card"><h1>'+(dest==='admin'?'Manage questions':'Presenter access')+'</h1><p class="muted" style="margin:8px 0 14px">Enter the PIN to continue.</p><input class="pin" id="pin" placeholder="••••" maxlength="12"/><button class="btn btn-gold" id="ok">Unlock →</button><p class="small" id="err" style="color:#b23b3b;margin-top:10px"></p><button class="danger" id="back" style="text-decoration:none;color:var(--mut)">← Back</button></div>';
   document.getElementById('back').onclick=renderLanding;
-  const go=()=>{if(document.getElementById('pin').value.trim()===PRESENTER_PIN){if(dest==='admin'){role=null;renderAdmin();}else{role='present';ctrlRef.once('value',s=>{if(!s.val())ctrlRef.set({active:0,revealed:false,finished:false});});renderPresenter();}}else document.getElementById('err').textContent="Wrong PIN.";};
+  const go=()=>{if(document.getElementById('pin').value.trim()===PRESENTER_PIN){if(dest==='admin'){role=null;document.body.classList.remove('present');renderAdmin();}else{role='present';document.body.classList.add('present');ctrlRef.once('value',s=>{if(!s.val())ctrlRef.set({active:0,revealed:false,finished:false});});renderPresenter();}}else document.getElementById('err').textContent="Wrong PIN.";};
   document.getElementById('ok').onclick=go;
   document.getElementById('pin').onkeydown=e=>{if(e.key==='Enter')go();};
 }
@@ -235,6 +290,23 @@ function renderPresenter(){
   document.getElementById('prev').onclick=()=>ctrlRef.set({active:Math.max(0,active-1),revealed:false,finished:false});
   document.getElementById('next').onclick=()=>{if(last)ctrlRef.set({active:active,revealed:false,finished:true});else ctrlRef.set({active:active+1,revealed:false,finished:false});};
   const rev=document.getElementById('rev');if(rev)rev.onclick=()=>ctrlRef.set({active:active,revealed:true,finished:false});
+  const sig=active+'|'+(c.revealed?1:0);
+  if(sig!==lastPresenterSig){lastPresenterSig=sig;playEntry();}
+}
+function playEntry(){
+  const res=document.getElementById('results');
+  const kids=res?Array.prototype.slice.call(res.children):[];
+  kids.forEach(function(k){k.style.transition='none';k.style.opacity='0';k.style.transform='translateY(16px)';});
+  const it=document.getElementById('inter');
+  const a=Math.min(currentCtrl.active||0,QUESTIONS.length-1), q=QUESTIONS[a]||{text:''};
+  const nn=('0'+(a+1)).slice(-2);
+  it.innerHTML='<div class="it-num">'+nn+'</div><div class="it-lead">'+esc(q.text)+'</div>';
+  it.className='inter show'; void it.offsetWidth; it.className='inter show run';
+  setTimeout(function(){
+    it.style.opacity='0';
+    kids.forEach(function(k,i){var d=(i*0.09+0.05);k.style.transition='transform .5s cubic-bezier(.2,.8,.2,1) '+d+'s, opacity .45s ease '+d+'s';k.style.transform='none';k.style.opacity='1';});
+  },1400);
+  setTimeout(function(){it.className='inter';it.style.opacity='';it.innerHTML='';},1950);
 }
 
 function fireConfetti(){
@@ -248,6 +320,7 @@ function fireConfetti(){
   })();
 }
 function renderLeaderboardScreen(){
+  lastPresenterSig=null;
   const lb=leaderboard(),tot=scorable();
   const medals=['🥇','🥈','🥉'];
   const champ=lb[0];
