@@ -61,6 +61,17 @@
   .medal{font-size:22px}.lscore{margin-left:auto;color:var(--ok);font-weight:800}
   .banner{border-radius:12px;padding:14px;font-weight:700;text-align:center;margin-bottom:12px}
   .banner.good{background:#eafaf0;color:#15803d}.banner.bad{background:#fdeeee;color:#b23b3b}
+  .prog{height:7px;background:#e4e6ea;border-radius:999px;overflow:hidden;margin-bottom:14px}
+  .prog>div{height:100%;background:linear-gradient(90deg,#111827,#4b5563);border-radius:999px;transition:width .5s ease}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+  @keyframes shk{0%,100%{transform:translateX(0) rotate(0)}20%{transform:translateX(-5px) rotate(-2.5deg)}40%{transform:translateX(5px) rotate(2.5deg)}60%{transform:translateX(-4px) rotate(-1.5deg)}80%{transform:translateX(4px) rotate(1.5deg)}}
+  @keyframes bnc{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .lrow{animation:pop .45s ease both}
+  .l1{animation:pop .45s ease both, shk .55s ease .5s 3}
+  .champ{margin:16px 0 4px}
+  .winner-crown{font-size:54px;animation:bnc 1.1s ease infinite;line-height:1}
+  .champ .nm{font-size:26px;font-weight:800;margin-top:2px}
+  .champ .sc{color:var(--ok);font-weight:800;font-size:15px;margin-top:2px}
 </style>
 </head>
 <body>
@@ -69,6 +80,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-confetti/1.9.3/confetti.browser.min.js"></script>
 
 <script>
 /* ===== YOUR FIREBASE CONFIG (already filled in) ===== */
@@ -216,34 +228,44 @@ function renderPresenter(){
   const canReveal=(q.type==='mc'&&q.correct!==undefined&&q.correct!==null);
   const last=(active===QUESTIONS.length-1);
   app.innerHTML=header('Presenter')+
-    '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="qnum">QUESTION '+(active+1)+' / '+QUESTIONS.length+'</span><span class="live"><span class="dot"></span>LIVE · '+people+' in</span></div><h1 style="margin:8px 0 14px">'+esc(q.text)+'</h1>'+html+
+    '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="qnum">QUESTION '+(active+1)+' / '+QUESTIONS.length+'</span><span class="live"><span class="dot"></span>LIVE · '+people+' in</span></div><div class="prog"><div style="width:'+Math.round((active+1)/QUESTIONS.length*100)+'%"></div></div><h1 style="margin:8px 0 14px">'+esc(q.text)+'</h1>'+html+
     '<div class="ctrl"><button id="prev" '+(active===0?'disabled':'')+'>◀ Back</button>'+
     (canReveal?'<button id="rev" class="'+(showC?'on':'')+'" '+(showC?'disabled':'')+'>'+(showC?'✓ Revealed':'👁 Reveal answer')+'</button>':'')+
-    '<button id="next">'+(last?'Finish 🏆':'Next ▶')+'</button></div></div>'+
-    '<div class="card"><button class="btn btn-out" id="csv">⤓ Export results (CSV / Excel)</button><button class="danger" id="reset">Reset all responses (new week)</button></div>';
+    '<button id="next">'+(last?'Finish 🏆':'Next ▶')+'</button></div></div>';
   document.getElementById('prev').onclick=()=>ctrlRef.set({active:Math.max(0,active-1),revealed:false,finished:false});
   document.getElementById('next').onclick=()=>{if(last)ctrlRef.set({active:active,revealed:false,finished:true});else ctrlRef.set({active:active+1,revealed:false,finished:false});};
   const rev=document.getElementById('rev');if(rev)rev.onclick=()=>ctrlRef.set({active:active,revealed:true,finished:false});
-  document.getElementById('csv').onclick=exportCSV;
-  document.getElementById('reset').onclick=()=>{if(confirm("Clear ALL responses for a new week? This cannot be undone."))respRef.remove();};
 }
 
+function fireConfetti(){
+  if(typeof confetti!=='function')return;
+  confetti({particleCount:150,spread:95,origin:{y:0.55}});
+  const end=Date.now()+1600;
+  (function frame(){
+    confetti({particleCount:5,angle:60,spread:55,origin:{x:0}});
+    confetti({particleCount:5,angle:120,spread:55,origin:{x:1}});
+    if(Date.now()<end)requestAnimationFrame(frame);
+  })();
+}
 function renderLeaderboardScreen(){
   const lb=leaderboard(),tot=scorable();
   const medals=['🥇','🥈','🥉'];
+  const champ=lb[0];
   let rows=lb.slice(0,10).map((p,i)=>{
     const cls=i===0?'l1':i===1?'l2b':i===2?'l3':'lrest';
     const left=i<3?'<span class="medal">'+medals[i]+'</span>':'<span style="width:22px;text-align:center;color:#6b7280">'+(i+1)+'</span>';
-    return '<div class="lrow '+cls+'">'+left+' '+esc(p.name)+' <span class="lscore" '+(i>2?'style="color:#6b7280"':'')+'>'+p.score+'/'+tot+'</span></div>';
+    return '<div class="lrow '+cls+'" style="animation-delay:'+(i*0.12).toFixed(2)+'s">'+left+' '+esc(p.name)+' <span class="lscore" '+(i>2?'style="color:#6b7280"':'')+'>'+p.score+'/'+tot+'</span></div>';
   }).join("");
   if(!lb.length)rows='<p class="muted center">No players yet.</p>';
   app.innerHTML=header('Results')+
-    '<div class="card center"><h1 style="font-size:26px">🏆 Top of the class!</h1><p class="muted" style="margin-top:4px">Reg 4 / KIP — this week\'s leaders</p></div>'+
+    '<div class="card center"><h1 style="font-size:28px">🏆 Top of the class!</h1><p class="muted" style="margin-top:4px">Reg 4 / KIP — this week\'s champions</p>'+
+    (champ?'<div class="champ"><div class="winner-crown">👑</div><div class="nm">'+esc(champ.name)+'</div><div class="sc">'+champ.score+' / '+tot+' correct</div></div>':'')+'</div>'+
     '<div class="card">'+rows+'</div>'+
-    '<div class="card"><div class="ctrl"><button id="bk">◀ Back to questions</button></div><button class="btn btn-out" id="csv">⤓ Export results (CSV / Excel)</button><button class="danger" id="reset">Reset all responses (new week)</button></div>';
-  document.getElementById('bk').onclick=()=>ctrlRef.set({active:QUESTIONS.length-1,revealed:false,finished:false});
+    '<div class="card"><div class="ctrl"><button id="bk">◀ Back to questions</button><button id="again">🎉 Celebrate again</button></div><button class="btn btn-out" id="csv">⤓ Export results (CSV / Excel)</button></div>';
+  document.getElementById('bk').onclick=()=>{renderLeaderboardScreen._done=false;ctrlRef.set({active:QUESTIONS.length-1,revealed:false,finished:false});};
   document.getElementById('csv').onclick=exportCSV;
-  document.getElementById('reset').onclick=()=>{if(confirm("Clear ALL responses for a new week? This cannot be undone."))respRef.remove();};
+  document.getElementById('again').onclick=fireConfetti;
+  if(lb.length&&!renderLeaderboardScreen._done){renderLeaderboardScreen._done=true;setTimeout(fireConfetti,250);}
 }
 
 function exportCSV(){
@@ -265,8 +287,9 @@ function renderAdmin(){
     '<label class="btn btn-gold" style="text-align:center" for="file">⤒ Choose Excel / CSV file</label>'+
     '<input id="file" type="file" accept=".csv,.xlsx,.xls" style="display:none"/>'+
     '<div id="preview"></div></div>'+
-    '<div class="card"><p class="muted">Currently live: <b>'+QUESTIONS.length+'</b> questions.</p><button class="danger" id="back" style="color:var(--mut)">← Back to home</button></div>';
+    '<div class="card"><p class="muted">Currently live: <b>'+QUESTIONS.length+'</b> questions.</p><button class="btn btn-out" id="resetAll">↺ Reset all responses (start a fresh week)</button><button class="danger" id="back" style="color:var(--mut)">← Back to home</button></div>';
   document.getElementById('back').onclick=renderLanding;
+  document.getElementById('resetAll').onclick=()=>{if(confirm("Clear ALL responses and start fresh? This cannot be undone."))respRef.remove().then(()=>{ctrlRef.set({active:0,revealed:false,finished:false});alert('Responses cleared. Ready for a new session.');});};
   document.getElementById('tmpl').onclick=downloadTemplate;
   document.getElementById('file').onchange=e=>{const f=e.target.files[0];if(f)parseFile(f);};
 }
