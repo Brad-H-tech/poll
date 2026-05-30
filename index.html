@@ -16,12 +16,15 @@
   h1{font-size:21px;font-weight:800;line-height:1.25;margin:4px 0 2px}
   .card{background:var(--white);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 4px 18px rgba(0,0,0,.04);margin-bottom:14px}
   .btn{display:block;width:100%;border:none;border-radius:12px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;transition:.15s;margin-top:10px}
-  .btn-gold{background:var(--blk);color:#fff}
-  .btn-gold:hover{background:#222}
-  .btn-out{background:var(--white);color:var(--ink);border:2px solid var(--blk)}
-  .btn-out:hover{background:#e9ebef}
+  .btn-gold{background:var(--blk);color:#fff}.btn-gold:hover{background:#222}
+  .btn-gold:disabled{opacity:.4;cursor:default}
+  .btn-out{background:var(--white);color:var(--ink);border:2px solid var(--blk)}.btn-out:hover{background:#e9ebef}
   .opt{display:block;width:100%;text-align:left;background:var(--white);border:2px solid var(--line);border-radius:12px;padding:16px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:.12s}
   .opt:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .opt.correct{border-color:var(--ok);background:#eafaf0}
+  .opt.mine{border-color:var(--blk)}
+  .opt.dim{opacity:.5}
+  .tickr{float:right;color:var(--ok);font-weight:800}
   .scale-row{display:flex;gap:8px;margin:16px 0 6px}
   .scale-btn{flex:1;aspect-ratio:1;border:2px solid var(--line);border-radius:12px;background:var(--white);font-size:20px;font-weight:800;cursor:pointer}
   .scale-btn:hover{border-color:var(--accent)}
@@ -51,19 +54,24 @@
   .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);animation:p 1.2s infinite}
   @keyframes p{0%,100%{opacity:1}50%{opacity:.25}}
   .danger{color:#b23b3b;font-weight:700;background:none;border:none;cursor:pointer;font-size:13px;margin-top:8px;text-decoration:underline}
+  .adminlink{display:inline-block;margin-top:14px;color:var(--mut);font-size:12px;text-decoration:underline;cursor:pointer;background:none;border:none}
+  .lrow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:8px;font-size:16px;font-weight:700}
+  .l1{background:#fff7e0;border:2px solid #e8c34a}.l2b{background:#f1f3f5;border:2px solid #cfd4da}.l3{background:#f7ede2;border:2px solid #d9b38c}
+  .lrest{background:#fff;border:1px solid var(--line);font-weight:600}
+  .medal{font-size:22px}.lscore{margin-left:auto;color:var(--ok);font-weight:800}
+  .banner{border-radius:12px;padding:14px;font-weight:700;text-align:center;margin-bottom:12px}
+  .banner.good{background:#eafaf0;color:#15803d}.banner.bad{background:#fdeeee;color:#b23b3b}
 </style>
 </head>
 <body>
 <div id="app"></div>
 
-<!-- Firebase (free database) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <script>
-/* ============================================================
-   YOUR FIREBASE CONFIG (already filled in)
-   ============================================================ */
+/* ===== YOUR FIREBASE CONFIG (already filled in) ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyCl7NCk6M4mVQItdY73G8JSxug0bu-rqPM",
   authDomain: "cell-logic-poll.firebaseapp.com",
@@ -74,130 +82,241 @@ const firebaseConfig = {
   appId: "1:680622798974:web:5cc2b7f55d23c38bd6002f"
 };
 
-/* ============================================================
-   EDIT YOUR QUESTIONS EACH WEEK (only this block)
-   types: "mc" (multiple choice / true-false), "scale" (1-5), "word" (word cloud)
-   "correct": index of right answer for mc (omit for opinion questions)
-   ============================================================ */
 const PRESENTER_PIN = "cell2026";
-const QUESTIONS = [
-  {id:"q1",type:"mc",text:'What does "KIP" stand for?',options:["Key Information Point","Knowledge is Power","Keep It Personal","Known Industry Practice"],correct:1},
-  {id:"q2",type:"mc",text:"Under Regulation 4, when must all disclosures be made to the customer?",options:["Within 7 days of the sale","At the point of sale, before signing","Only if the customer asks","On the first bill date"],correct:1},
-  {id:"q3",type:"mc",text:"Which transactions require a completed Customer (KIP) Checklist?",options:["New post-paid contracts only","Upgrades only","New contracts, upgrades AND SIM-only deals","Only deals over R500"],correct:2},
-  {id:"q4",type:"mc",text:"Who must sign the Customer (KIP) Checklist?",options:["Only the customer","Only the sales consultant","Both the consultant and the customer","The store manager"],correct:2},
-  {id:"q5",type:"mc",text:"TRUE or FALSE: If an item is not on the checklist, it is treated as NOT explained — even if you explained it verbally.",options:["True","False"],correct:0},
-  {id:"q6",type:"mc",text:"Random compliance inspections of our stores are conducted by…",options:["ICASA directly","MTN, as the licensor","The store manager","An outside auditor only"],correct:1},
-  {id:"q7",type:"word",text:'In ONE word: "If it is not documented, it did not ____."'},
-  {id:"q8",type:"scale",text:"How confident do you feel applying Regulation 4 at the point of sale?",min:1,max:5,labels:["Not confident","Very confident"]}
+
+/* Default questions — used only until you upload your own via the Admin screen */
+const DEFAULT_QUESTIONS = [
+  {id:"q0",type:"mc",text:'What does "KIP" stand for?',options:["Key Information Point","Knowledge is Power","Keep It Personal","Known Industry Practice"],correct:1},
+  {id:"q1",type:"mc",text:"When must all disclosures be made to the customer?",options:["Within 7 days of the sale","At the point of sale, before signing","Only if the customer asks","On the first bill date"],correct:1},
+  {id:"q2",type:"mc",text:"Who must sign the Customer (KIP) Checklist?",options:["Only the customer","Only the sales consultant","Both the consultant and the customer","The store manager"],correct:2},
+  {id:"q3",type:"word",text:'In ONE word: "If it is not documented, it did not ____."'},
+  {id:"q4",type:"scale",text:"How confident do you feel applying Regulation 4 at the point of sale?",min:1,max:5,labels:["Not confident","Very confident"]}
 ];
-/* ===================== END OF WEEKLY EDITS ===================== */
 
 const app=document.getElementById('app');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function header(){return '<div class="brand"><div class="logo">CELL<span class="l2">LOGIC</span></div><div class="tag">MTN Post-Paid Compliance</div></div>';}
+function header(t){return '<div class="brand"><div class="logo">CELL<span class="l2">LOGIC</span></div><div class="tag">'+(t||'MTN Compliance')+'</div></div>';}
 
-if(String(firebaseConfig.apiKey).indexOf("PASTE_HERE")>=0){
-  app.innerHTML=header()+'<div class="card"><h1>Config missing</h1><p class="muted" style="margin-top:8px">The Firebase details are not filled in.</p></div>';
-} else {
-  firebase.initializeApp(firebaseConfig);
-  const db=firebase.database();
-  const ctrlRef=db.ref('poll/ctrl');
-  const respRef=db.ref('poll/responses');
+firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+const ctrlRef=db.ref('poll/ctrl');
+const respRef=db.ref('poll/responses');
+const qRef=db.ref('poll/questions');
 
-  const sid="s_"+Math.random().toString(36).slice(2,10);
-  let myName="", myAnswers={}, role=null, currentCtrl={active:-1,open:false}, currentResp={};
+const sid="s_"+Math.random().toString(36).slice(2,10);
+let myName="", myAnswers={}, role=null;
+let currentCtrl={active:0,revealed:false,finished:false}, currentResp={}, QUESTIONS=DEFAULT_QUESTIONS.slice();
 
-  renderLanding();
+// live listeners
+qRef.on('value',s=>{const v=s.val();QUESTIONS=(v&&Array.isArray(v)&&v.length)?v:DEFAULT_QUESTIONS.slice();redraw();});
+ctrlRef.on('value',s=>{currentCtrl=s.val()||{active:0,revealed:false,finished:false};redraw();});
+respRef.on('value',s=>{currentResp=s.val()||{};redraw();});
 
-  function renderLanding(){
-    app.innerHTML=header()+'<div class="card"><span class="pill">Weekly Check</span><h1 style="margin-top:8px">Reg 4 / KIP Knowledge Check</h1><p class="muted" style="margin-top:6px">Live and anonymous. Results update in real time.</p><button class="btn btn-gold" id="bJoin">Join &amp; answer →</button><button class="btn btn-out" id="bPres">I\'m presenting</button></div><p class="muted center small">No app. No account. Works on any phone.</p>';
-    document.getElementById('bJoin').onclick=()=>renderName();
-    document.getElementById('bPres').onclick=()=>renderPin();
+function redraw(){
+  if(role==='join')renderParticipant();
+  else if(role==='present')renderPresenter();
+}
+
+renderLanding();
+
+function renderLanding(){
+  role=null;
+  app.innerHTML=header()+'<div class="card"><span class="pill">Weekly Check</span><h1 style="margin-top:8px">Reg 4 / KIP Knowledge Check</h1><p class="muted" style="margin-top:6px">Answer on your phone. Results show live on the screen.</p><button class="btn btn-gold" id="bJoin">Join &amp; answer →</button><button class="btn btn-out" id="bPres">I\'m presenting</button></div><div class="center"><button class="adminlink" id="bAdmin">⚙ Manage weekly questions</button></div>';
+  document.getElementById('bJoin').onclick=renderName;
+  document.getElementById('bPres').onclick=()=>renderPin('present');
+  document.getElementById('bAdmin').onclick=()=>renderPin('admin');
+}
+
+function renderName(){
+  app.innerHTML=header()+'<div class="card"><h1>What\'s your name?</h1><p class="muted" style="margin:8px 0 14px">Needed so you can appear on the leaderboard 🏆</p><input class="txtin" id="nm" placeholder="Your full name" maxlength="40"/><button class="btn btn-gold" id="go" disabled>Continue →</button><p class="small" id="er" style="color:#b23b3b;margin-top:8px"></p></div>';
+  const nm=document.getElementById('nm'),go=document.getElementById('go');
+  nm.oninput=()=>{go.disabled=nm.value.trim().length<2;};
+  go.onclick=()=>{
+    myName=nm.value.trim();
+    if(myName.length<2){document.getElementById('er').textContent="Please enter your name.";return;}
+    respRef.child(sid).child('name').set(myName);
+    role='join';renderParticipant();
+  };
+  nm.onkeydown=e=>{if(e.key==='Enter'&&!go.disabled)go.click();};
+}
+
+function renderParticipant(){
+  const c=currentCtrl;
+  if(c.finished){
+    const lb=leaderboard(),tot=scorable();
+    const meIdx=lb.findIndex(x=>x.sid===sid),me=lb[meIdx];
+    app.innerHTML=header('Results')+'<div class="card center"><h1>🎉 Quiz complete!</h1>'+
+      (me?'<p style="font-size:40px;font-weight:800;margin:14px 0 2px">'+me.score+'<span style="font-size:20px;color:var(--mut)">/'+tot+'</span></p><p class="muted">You finished #'+(meIdx+1)+' of '+lb.length+'</p>':'<p class="muted" style="margin-top:10px">Thanks for playing!</p>')+
+      '<p class="muted" style="margin-top:14px">Look up at the screen for the full leaderboard 🏆</p></div>';
+    return;
   }
-
-  function renderName(){
-    app.innerHTML=header()+'<div class="card"><h1>Welcome 👋</h1><p class="muted" style="margin:8px 0 14px">Add your name (optional) or stay anonymous.</p><input class="txtin" id="nm" placeholder="Your name (optional)" maxlength="40"/><button class="btn btn-gold" id="go">Continue →</button></div>';
-    document.getElementById('go').onclick=()=>{
-      myName=document.getElementById('nm').value.trim();
-      respRef.child(sid).child('name').set(myName||"Anonymous");
-      role='join';
-      ctrlRef.on('value',s=>{currentCtrl=s.val()||{active:-1,open:false};if(role==='join')renderParticipant();});
-    };
-  }
-
-  function renderParticipant(){
-    const c=currentCtrl;
-    if(c.active<0||!c.open){
-      app.innerHTML=header()+'<div class="card center"><h1>Hang tight…</h1><p class="muted" style="margin-top:8px">Waiting for the presenter to open a question.</p></div>';
-      return;
+  const q=QUESTIONS[c.active]; if(!q){app.innerHTML=header()+'<div class="card center"><h1>Hang tight…</h1></div>';return;}
+  const answered=myAnswers[q.id]!==undefined;
+  // revealed view
+  if(c.revealed){
+    if(q.type==='mc'){
+      const mine=myAnswers[q.id];
+      const right=(mine===q.correct);
+      let opts=q.options.map((o,i)=>{let cls='opt';if(q.correct===i)cls+=' correct';else cls+=' dim';if(mine===i&&i!==q.correct)cls+=' mine';return '<div class="'+cls+'">'+esc(o)+(q.correct===i?'<span class="tickr">✓</span>':'')+'</div>';}).join("");
+      app.innerHTML=header()+'<div class="card"><span class="qnum">QUESTION '+(c.active+1)+' OF '+QUESTIONS.length+'</span><h1 style="margin:6px 0 12px">'+esc(q.text)+'</h1>'+
+        (mine===undefined?'':('<div class="banner '+(right?'good':'bad')+'">'+(right?'Correct! ✅':'Not this time — the right answer is in green')+'</div>'))+opts+'</div>';
+    } else {
+      app.innerHTML=header()+'<div class="card center"><span class="qnum">QUESTION '+(c.active+1)+'</span><h1 style="margin-top:6px">Answer revealed</h1><p class="muted" style="margin-top:8px">See the screen for everyone\'s results 📊</p></div>';
     }
-    const q=QUESTIONS[c.active];
-    if(myAnswers[q.id]!==undefined){
-      app.innerHTML=header()+'<div class="card center"><span class="qnum">QUESTION '+(c.active+1)+' OF '+QUESTIONS.length+'</span><h1 style="margin-top:6px">Got it ✅</h1><p class="muted" style="margin-top:8px">Your answer is in. Look up at the screen for live results!</p></div>';
-      return;
-    }
-    let body="";
-    if(q.type==="mc")body=q.options.map((o,i)=>'<button class="opt" data-i="'+i+'">'+esc(o)+'</button>').join("");
-    else if(q.type==="scale"){let b="";for(let v=q.min;v<=q.max;v++)b+='<button class="scale-btn" data-v="'+v+'">'+v+'</button>';body='<div class="scale-row">'+b+'</div><div class="scale-lab"><span>'+esc(q.labels?q.labels[0]:q.min)+'</span><span>'+esc(q.labels?q.labels[1]:q.max)+'</span></div>';}
-    else if(q.type==="word")body='<input class="txtin" id="wd" placeholder="Type your answer…" maxlength="30"/><button class="btn btn-gold" id="wsend">Send</button>';
-    app.innerHTML=header()+'<div class="card"><span class="qnum">QUESTION '+(c.active+1)+' OF '+QUESTIONS.length+'</span><h1 style="margin:6px 0 16px">'+esc(q.text)+'</h1>'+body+'</div>';
-    const submit=v=>{myAnswers[q.id]=v;respRef.child(sid).child(q.id).set(v);renderParticipant();};
-    app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>submit(parseInt(b.dataset.i)));
-    app.querySelectorAll('.scale-btn').forEach(b=>b.onclick=()=>submit(parseInt(b.dataset.v)));
-    const ws=document.getElementById('wsend');
-    if(ws)ws.onclick=()=>{const v=document.getElementById('wd').value.trim();if(v)submit(v);};
+    return;
   }
+  // already answered, awaiting reveal
+  if(answered){
+    app.innerHTML=header()+'<div class="card center"><span class="qnum">QUESTION '+(c.active+1)+' OF '+QUESTIONS.length+'</span><h1 style="margin-top:6px">Locked in ✅</h1><p class="muted" style="margin-top:8px">Watch the screen — the presenter will reveal the answer.</p></div>';
+    return;
+  }
+  // answer UI
+  let body="";
+  if(q.type==="mc")body=q.options.map((o,i)=>'<button class="opt" data-i="'+i+'">'+esc(o)+'</button>').join("");
+  else if(q.type==="scale"){let b="";for(let v=q.min;v<=q.max;v++)b+='<button class="scale-btn" data-v="'+v+'">'+v+'</button>';body='<div class="scale-row">'+b+'</div><div class="scale-lab"><span>'+esc(q.labels?q.labels[0]:q.min)+'</span><span>'+esc(q.labels?q.labels[1]:q.max)+'</span></div>';}
+  else if(q.type==="word")body='<input class="txtin" id="wd" placeholder="Type your answer…" maxlength="30"/><button class="btn btn-gold" id="wsend">Send</button>';
+  app.innerHTML=header()+'<div class="card"><span class="qnum">QUESTION '+(c.active+1)+' OF '+QUESTIONS.length+'</span><h1 style="margin:6px 0 16px">'+esc(q.text)+'</h1>'+body+'</div>';
+  const submit=v=>{myAnswers[q.id]=v;respRef.child(sid).child(q.id).set(v);renderParticipant();};
+  app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>submit(parseInt(b.dataset.i)));
+  app.querySelectorAll('.scale-btn').forEach(b=>b.onclick=()=>submit(parseInt(b.dataset.v)));
+  const ws=document.getElementById('wsend');
+  if(ws)ws.onclick=()=>{const v=document.getElementById('wd').value.trim();if(v)submit(v);};
+}
 
-  function renderPin(){
-    app.innerHTML=header()+'<div class="card"><h1>Presenter access</h1><p class="muted" style="margin:8px 0 14px">Enter the PIN to control the poll and see live results.</p><input class="pin" id="pin" placeholder="••••" maxlength="12"/><button class="btn btn-gold" id="ok">Unlock →</button><p class="small" id="err" style="color:#b23b3b;margin-top:10px"></p><button class="danger" id="back" style="text-decoration:none;color:var(--mut)">← Back</button></div>';
-    document.getElementById('back').onclick=renderLanding;
-    const go=()=>{if(document.getElementById('pin').value.trim()===PRESENTER_PIN){startPresenter();}else document.getElementById('err').textContent="Wrong PIN.";};
-    document.getElementById('ok').onclick=go;
-    document.getElementById('pin').onkeydown=e=>{if(e.key==='Enter')go();};
-  }
+function renderPin(dest){
+  app.innerHTML=header()+'<div class="card"><h1>'+(dest==='admin'?'Manage questions':'Presenter access')+'</h1><p class="muted" style="margin:8px 0 14px">Enter the PIN to continue.</p><input class="pin" id="pin" placeholder="••••" maxlength="12"/><button class="btn btn-gold" id="ok">Unlock →</button><p class="small" id="err" style="color:#b23b3b;margin-top:10px"></p><button class="danger" id="back" style="text-decoration:none;color:var(--mut)">← Back</button></div>';
+  document.getElementById('back').onclick=renderLanding;
+  const go=()=>{if(document.getElementById('pin').value.trim()===PRESENTER_PIN){if(dest==='admin'){role=null;renderAdmin();}else{role='present';ctrlRef.once('value',s=>{if(!s.val())ctrlRef.set({active:0,revealed:false,finished:false});});renderPresenter();}}else document.getElementById('err').textContent="Wrong PIN.";};
+  document.getElementById('ok').onclick=go;
+  document.getElementById('pin').onkeydown=e=>{if(e.key==='Enter')go();};
+}
 
-  function startPresenter(){
-    role='present';
-    ctrlRef.once('value',s=>{if(!s.val())ctrlRef.set({active:0,open:false});});
-    ctrlRef.on('value',s=>{currentCtrl=s.val()||{active:0,open:false};if(role==='present')renderPresenter();});
-    respRef.on('value',s=>{currentResp=s.val()||{};if(role==='present')renderPresenter();});
-  }
+function scorable(){return QUESTIONS.filter(q=>q.type==='mc'&&q.correct!==undefined&&q.correct!==null).length;}
+function scoreOf(r){let s=0;for(const q of QUESTIONS){if(q.type==='mc'&&q.correct!==undefined&&q.correct!==null&&r[q.id]===q.correct)s++;}return s;}
+function leaderboard(){return Object.keys(currentResp).map(k=>({sid:k,name:currentResp[k].name||'Player',score:scoreOf(currentResp[k])})).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name));}
 
-  function renderPresenter(){
-    const c=currentCtrl, active=c.active<0?0:c.active, q=QUESTIONS[active];
-    const people=Object.keys(currentResp).length;
-    let res={},words={},scale=[];
-    for(const k in currentResp){const a=currentResp[k][q.id];if(a===undefined||a===null)continue;
-      if(q.type==="mc")res[a]=(res[a]||0)+1;else if(q.type==="scale")scale.push(a);else if(q.type==="word"){const w=String(a).toLowerCase();words[w]=(words[w]||0)+1;}}
-    let html="";
-    if(q.type==="mc"){const t=Object.values(res).reduce((a,b)=>a+b,0)||0;
-      html=q.options.map((o,i)=>{const ct=res[i]||0,pct=t?Math.round(ct/t*100):0,r=(q.correct===i);
-        return '<div class="bar-wrap"><div class="bar-top"><span>'+esc(o)+(r?' ✅':'')+'</span><span>'+ct+' · '+pct+'%</span></div><div class="bar-bg"><div class="bar-fill '+(r?'correct':'')+'" style="width:'+pct+'%"></div></div></div>';}).join("");
-    } else if(q.type==="scale"){const n=scale.length,avg=n?(scale.reduce((a,b)=>a+b,0)/n).toFixed(1):"–";let d="";
-      for(let v=q.min;v<=q.max;v++){const ct=scale.filter(x=>x===v).length,pct=n?Math.round(ct/n*100):0;d+='<div class="bar-wrap"><div class="bar-top"><span>'+v+'</span><span>'+ct+' · '+pct+'%</span></div><div class="bar-bg"><div class="bar-fill" style="width:'+pct+'%"></div></div></div>';}
-      html='<div class="stat"><div><b>'+avg+'</b><span>Average</span></div><div><b>'+n+'</b><span>Responses</span></div></div>'+d;
-    } else if(q.type==="word"){const e=Object.entries(words).sort((a,b)=>b[1]-a[1]);
-      html=e.length?'<div class="cloud">'+e.map(([w,ct])=>{const mx=e[0][1];return '<span style="font-size:'+(16+ct/mx*30)+'px">'+esc(w)+'</span>';}).join("")+'</div>':'<p class="muted center">No words yet…</p>';}
-    app.innerHTML=header()+
-      '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="qnum">QUESTION '+(active+1)+' / '+QUESTIONS.length+'</span><span class="live"><span class="dot"></span>LIVE</span></div><h1 style="margin:8px 0 14px">'+esc(q.text)+'</h1>'+html+
-      '<div class="ctrl"><button id="prev" '+(active===0?'disabled':'')+'>◀ Prev</button><button id="tog" class="'+(c.open?'on':'')+'">'+(c.open?'⏸ Close voting':'▶ Open voting')+'</button><button id="next" '+(active===QUESTIONS.length-1?'disabled':'')+'>Next ▶</button></div></div>'+
-      '<div class="card"><div class="stat"><div><b>'+people+'</b><span>Participants</span></div><div><b>'+QUESTIONS.length+'</b><span>Questions</span></div></div><button class="btn btn-out" id="csv">⤓ Export results (CSV / Excel)</button><button class="danger" id="reset">Reset all responses (new week)</button></div>';
-    document.getElementById('prev').onclick=()=>ctrlRef.set({active:Math.max(0,active-1),open:false});
-    document.getElementById('next').onclick=()=>ctrlRef.set({active:Math.min(QUESTIONS.length-1,active+1),open:false});
-    document.getElementById('tog').onclick=()=>ctrlRef.set({active:active,open:!c.open});
-    document.getElementById('csv').onclick=exportCSV;
-    document.getElementById('reset').onclick=()=>{if(confirm("Clear ALL responses for a new week? This cannot be undone."))respRef.remove();};
-  }
+function renderPresenter(){
+  const c=currentCtrl;
+  if(c.finished){renderLeaderboardScreen();return;}
+  const active=Math.min(c.active,QUESTIONS.length-1), q=QUESTIONS[active];
+  const people=Object.keys(currentResp).length;
+  let res={},words={},scale=[];
+  for(const k in currentResp){const a=currentResp[k][q.id];if(a===undefined||a===null)continue;
+    if(q.type==="mc")res[a]=(res[a]||0)+1;else if(q.type==="scale")scale.push(a);else if(q.type==="word"){const w=String(a).toLowerCase();words[w]=(words[w]||0)+1;}}
+  const showC=c.revealed;
+  let html="";
+  if(q.type==="mc"){const t=Object.values(res).reduce((a,b)=>a+b,0)||0;
+    html=q.options.map((o,i)=>{const ct=res[i]||0,pct=t?Math.round(ct/t*100):0,r=(showC&&q.correct===i);
+      return '<div class="bar-wrap"><div class="bar-top"><span>'+esc(o)+(r?' ✅':'')+'</span><span>'+ct+' · '+pct+'%</span></div><div class="bar-bg"><div class="bar-fill '+(r?'correct':'')+'" style="width:'+pct+'%"></div></div></div>';}).join("");
+  } else if(q.type==="scale"){const n=scale.length,avg=n?(scale.reduce((a,b)=>a+b,0)/n).toFixed(1):"–";let d="";
+    for(let v=q.min;v<=q.max;v++){const ct=scale.filter(x=>x===v).length,pct=n?Math.round(ct/n*100):0;d+='<div class="bar-wrap"><div class="bar-top"><span>'+v+'</span><span>'+ct+' · '+pct+'%</span></div><div class="bar-bg"><div class="bar-fill" style="width:'+pct+'%"></div></div></div>';}
+    html='<div class="stat"><div><b>'+avg+'</b><span>Average</span></div><div><b>'+n+'</b><span>Responses</span></div></div>'+d;
+  } else if(q.type==="word"){const e=Object.entries(words).sort((a,b)=>b[1]-a[1]);
+    html=e.length?'<div class="cloud">'+e.map(([w,ct])=>{const mx=e[0][1];return '<span style="font-size:'+(16+ct/mx*30)+'px">'+esc(w)+'</span>';}).join("")+'</div>':'<p class="muted center">No words yet…</p>';}
+  const canReveal=(q.type==='mc'&&q.correct!==undefined&&q.correct!==null);
+  const last=(active===QUESTIONS.length-1);
+  app.innerHTML=header('Presenter')+
+    '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><span class="qnum">QUESTION '+(active+1)+' / '+QUESTIONS.length+'</span><span class="live"><span class="dot"></span>LIVE · '+people+' in</span></div><h1 style="margin:8px 0 14px">'+esc(q.text)+'</h1>'+html+
+    '<div class="ctrl"><button id="prev" '+(active===0?'disabled':'')+'>◀ Back</button>'+
+    (canReveal?'<button id="rev" class="'+(showC?'on':'')+'" '+(showC?'disabled':'')+'>'+(showC?'✓ Revealed':'👁 Reveal answer')+'</button>':'')+
+    '<button id="next">'+(last?'Finish 🏆':'Next ▶')+'</button></div></div>'+
+    '<div class="card"><button class="btn btn-out" id="csv">⤓ Export results (CSV / Excel)</button><button class="danger" id="reset">Reset all responses (new week)</button></div>';
+  document.getElementById('prev').onclick=()=>ctrlRef.set({active:Math.max(0,active-1),revealed:false,finished:false});
+  document.getElementById('next').onclick=()=>{if(last)ctrlRef.set({active:active,revealed:false,finished:true});else ctrlRef.set({active:active+1,revealed:false,finished:false});};
+  const rev=document.getElementById('rev');if(rev)rev.onclick=()=>ctrlRef.set({active:active,revealed:true,finished:false});
+  document.getElementById('csv').onclick=exportCSV;
+  document.getElementById('reset').onclick=()=>{if(confirm("Clear ALL responses for a new week? This cannot be undone."))respRef.remove();};
+}
 
-  function exportCSV(){
-    const rows=[["Name"].concat(QUESTIONS.map(q=>q.text))];
-    for(const k in currentResp){const r=currentResp[k],line=[r.name||"Anonymous"];
-      for(const q of QUESTIONS){let v=r[q.id];if(v===undefined||v===null)v="";else if(q.type==="mc")v=q.options[v]!==undefined?q.options[v]:v;line.push(v);}
-      rows.push(line);}
-    const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\n");
-    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-    a.download="cell-logic-poll-"+new Date().toISOString().slice(0,10)+".csv";a.click();
+function renderLeaderboardScreen(){
+  const lb=leaderboard(),tot=scorable();
+  const medals=['🥇','🥈','🥉'];
+  let rows=lb.slice(0,10).map((p,i)=>{
+    const cls=i===0?'l1':i===1?'l2b':i===2?'l3':'lrest';
+    const left=i<3?'<span class="medal">'+medals[i]+'</span>':'<span style="width:22px;text-align:center;color:#6b7280">'+(i+1)+'</span>';
+    return '<div class="lrow '+cls+'">'+left+' '+esc(p.name)+' <span class="lscore" '+(i>2?'style="color:#6b7280"':'')+'>'+p.score+'/'+tot+'</span></div>';
+  }).join("");
+  if(!lb.length)rows='<p class="muted center">No players yet.</p>';
+  app.innerHTML=header('Results')+
+    '<div class="card center"><h1 style="font-size:26px">🏆 Top of the class!</h1><p class="muted" style="margin-top:4px">Reg 4 / KIP — this week\'s leaders</p></div>'+
+    '<div class="card">'+rows+'</div>'+
+    '<div class="card"><div class="ctrl"><button id="bk">◀ Back to questions</button></div><button class="btn btn-out" id="csv">⤓ Export results (CSV / Excel)</button><button class="danger" id="reset">Reset all responses (new week)</button></div>';
+  document.getElementById('bk').onclick=()=>ctrlRef.set({active:QUESTIONS.length-1,revealed:false,finished:false});
+  document.getElementById('csv').onclick=exportCSV;
+  document.getElementById('reset').onclick=()=>{if(confirm("Clear ALL responses for a new week? This cannot be undone."))respRef.remove();};
+}
+
+function exportCSV(){
+  const rows=[["Name","Score"].concat(QUESTIONS.map(q=>q.text))];
+  for(const k in currentResp){const r=currentResp[k],line=[r.name||"Player",scoreOf(r)+"/"+scorable()];
+    for(const q of QUESTIONS){let v=r[q.id];if(v===undefined||v===null)v="";else if(q.type==="mc")v=q.options[v]!==undefined?q.options[v]:v;line.push(v);}
+    rows.push(line);}
+  const csv=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\n");
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="cell-logic-poll-"+new Date().toISOString().slice(0,10)+".csv";a.click();
+}
+
+/* ---------- ADMIN: weekly question upload ---------- */
+let staged=null;
+function renderAdmin(){
+  app.innerHTML=header('Admin')+
+    '<div class="card"><h1>Update this week\'s questions</h1><p class="muted" style="margin:8px 0 14px">Upload an Excel or CSV file. Columns: <b>Type, Question, A, B, C, D, E, Correct</b>. Type = mc / scale / word. Correct = the letter of the right option (blank for opinion questions).</p>'+
+    '<button class="btn btn-out" id="tmpl">⤓ Download blank template</button>'+
+    '<label class="btn btn-gold" style="text-align:center" for="file">⤒ Choose Excel / CSV file</label>'+
+    '<input id="file" type="file" accept=".csv,.xlsx,.xls" style="display:none"/>'+
+    '<div id="preview"></div></div>'+
+    '<div class="card"><p class="muted">Currently live: <b>'+QUESTIONS.length+'</b> questions.</p><button class="danger" id="back" style="color:var(--mut)">← Back to home</button></div>';
+  document.getElementById('back').onclick=renderLanding;
+  document.getElementById('tmpl').onclick=downloadTemplate;
+  document.getElementById('file').onchange=e=>{const f=e.target.files[0];if(f)parseFile(f);};
+}
+function parseFile(file){
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:""});
+      staged=rowsToQuestions(rows);
+      showPreview();
+    }catch(err){document.getElementById('preview').innerHTML='<p class="banner bad">Could not read that file. Make sure it\'s a .csv or .xlsx.</p>';}
+  };
+  reader.readAsArrayBuffer(file);
+}
+function rowsToQuestions(rows){
+  const out=[];let start=0;
+  if(rows.length&&String(rows[0][0]).trim().toLowerCase()==='type')start=1;
+  for(let i=start;i<rows.length;i++){
+    const r=rows[i];if(!r)continue;
+    const text=String(r[1]||'').trim();if(!text)continue;
+    let type=String(r[0]||'mc').trim().toLowerCase();if(['mc','scale','word'].indexOf(type)<0)type='mc';
+    const q={id:'q'+out.length,type:type,text:text};
+    if(type==='mc'){
+      const opts=[r[2],r[3],r[4],r[5],r[6]].map(x=>String(x||'').trim()).filter(x=>x.length);
+      q.options=opts.length?opts:['True','False'];
+      const ci='ABCDE'.indexOf(String(r[7]||'').trim().toUpperCase());
+      if(ci>=0&&ci<q.options.length)q.correct=ci;
+    } else if(type==='scale'){q.min=1;q.max=5;q.labels=['Low','High'];}
+    out.push(q);
   }
+  return out;
+}
+function showPreview(){
+  if(!staged||!staged.length){document.getElementById('preview').innerHTML='<p class="banner bad">No questions found in that file. Check the format.</p>';return;}
+  let list=staged.map((q,i)=>(i+1)+'. '+esc(q.text)+' <span class="muted">('+q.type+(q.correct!==undefined?', ✓ '+esc(q.options[q.correct]):'')+')</span>').join('<br>');
+  document.getElementById('preview').innerHTML='<div class="banner good">Found '+staged.length+' questions ✅</div><p class="small" style="line-height:1.7">'+list+'</p><button class="btn btn-gold" id="save">Save these for everyone</button><p class="muted small center" style="margin-top:6px">This replaces the current questions and clears old responses.</p>';
+  document.getElementById('save').onclick=()=>{
+    qRef.set(staged).then(()=>{respRef.remove();ctrlRef.set({active:0,revealed:false,finished:false});alert('Saved! '+staged.length+' questions are now live for everyone. Old responses cleared.');staged=null;renderAdmin();});
+  };
+}
+function downloadTemplate(){
+  const csv='Type,Question,A,B,C,D,E,Correct\n'+
+    'mc,What does KIP stand for?,Key Information Point,Knowledge is Power,Keep It Personal,Known Industry Practice,,B\n'+
+    'mc,An item not on the checklist is treated as not explained (True/False),True,False,,,,A\n'+
+    'mc,Who must sign the checklist?,Only the customer,Only the consultant,Both the consultant and the customer,The store manager,,C\n'+
+    'word,In one word - if it is not documented it did not ____,,,,,,\n'+
+    'scale,How confident are you applying Reg 4 (1 to 5)?,,,,,,\n';
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='cell-logic-questions-template.csv';a.click();
 }
 </script>
 </body>
