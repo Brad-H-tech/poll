@@ -121,8 +121,8 @@
   /* white interstitial between questions */
   #inter{position:fixed;inset:0;background:#fff;z-index:9000;display:flex;flex-direction:column;padding:6vh 7vw;opacity:0;pointer-events:none;transition:opacity .5s ease}
   #inter.show{opacity:1}
-  #inter .it-num{font-size:20vh;font-weight:200;letter-spacing:-10px;line-height:.85;color:#111;transform:translateY(34px);opacity:0}
-  #inter .it-lead{font-size:46px;font-weight:200;line-height:1.16;letter-spacing:-.8px;color:#1a1a1a;margin-top:auto;max-width:80%;transform:translateY(26px);opacity:0}
+  #inter .it-num{font-size:16vh;font-weight:200;letter-spacing:-8px;line-height:.85;color:#111;transform:translateY(34px);opacity:0}
+  #inter .it-lead{font-size:clamp(28px,3.4vw,44px);font-weight:200;line-height:1.16;letter-spacing:-.6px;color:#1a1a1a;margin-top:auto;max-width:88%;transform:translateY(26px);opacity:0}
   #inter.run .it-num{animation:itrise .6s ease .05s forwards}
   #inter.run .it-lead{animation:itrise .6s ease .24s forwards}
   @keyframes itrise{to{transform:translateY(0);opacity:1}}
@@ -294,15 +294,19 @@ function renderPresenter(){
   if(sig!==lastPresenterSig){lastPresenterSig=sig;playEntry();}
 }
 function playEntry(){
-  const card=document.querySelector('#app .qcard');
   const res=document.getElementById('results');
   const kids=res?Array.prototype.slice.call(res.children):[];
-  if(card){card.style.transition='none';card.style.opacity='0';card.style.transform='translateY(16px)';}
-  kids.forEach(function(k){k.style.transition='none';k.style.opacity='0';k.style.transform='translateY(12px)';});
-  requestAnimationFrame(function(){requestAnimationFrame(function(){
-    if(card){card.style.transition='opacity .55s ease, transform .6s cubic-bezier(.2,.8,.2,1)';card.style.opacity='1';card.style.transform='none';}
-    kids.forEach(function(k,i){var d=(i*0.1+0.22);k.style.transition='transform .55s cubic-bezier(.2,.8,.2,1) '+d+'s, opacity .5s ease '+d+'s';k.style.transform='none';k.style.opacity='1';});
-  });});
+  kids.forEach(function(k){k.style.transition='none';k.style.opacity='0';k.style.transform='translateY(14px)';});
+  const it=document.getElementById('inter');
+  const a=Math.min(currentCtrl.active||0,QUESTIONS.length-1), q=QUESTIONS[a]||{text:''};
+  const nn=('0'+(a+1)).slice(-2);
+  it.innerHTML='<div class="it-num">'+nn+'</div><div class="it-lead">'+esc(q.text)+'</div>';
+  it.className='inter show'; void it.offsetWidth; it.className='inter show run';
+  setTimeout(function(){
+    it.style.opacity='0';
+    kids.forEach(function(k,i){var d=(i*0.1+0.1);k.style.transition='transform .55s cubic-bezier(.2,.8,.2,1) '+d+'s, opacity .5s ease '+d+'s';k.style.transform='none';k.style.opacity='1';});
+  },5000);
+  setTimeout(function(){it.className='inter';it.style.opacity='';it.innerHTML='';},5600);
 }
 
 function fireConfetti(){
