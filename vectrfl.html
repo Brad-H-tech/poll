@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VECTRFL — Scroll Experience</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--ink:#e8ecf4;--mut:#8b93a7}
+  html{scroll-behavior:auto}
+  body{background:#04060e;color:var(--ink);font-family:'Segoe UI',Helvetica,Arial,sans-serif;overflow-x:hidden}
+  #scene{position:fixed;inset:0;z-index:0;display:block}
+  /* progress rail */
+  #rail{position:fixed;right:22px;top:50%;transform:translateY(-50%);width:2px;height:38vh;background:rgba(255,255,255,.08);z-index:30;border-radius:99px}
+  #rail .fill{width:100%;height:0%;background:linear-gradient(180deg,#62f0ff,#7a5cff);border-radius:99px;box-shadow:0 0 12px rgba(98,240,255,.8)}
+  /* top bar */
+  .bar{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:22px 34px;z-index:30;mix-blend-mode:screen}
+  .bar .lg{font-weight:800;letter-spacing:6px;font-size:14px}
+  .bar .lg span{color:#62f0ff}
+  .bar .st{font-size:10px;letter-spacing:3px;color:var(--mut);text-transform:uppercase}
+  /* scroll sections */
+  .sec{position:relative;height:100vh;display:flex;align-items:center;z-index:10;padding:0 8vw;pointer-events:none}
+  .sec .inner{max-width:560px;opacity:0;transform:translateY(40px)}
+  .sec.right{justify-content:flex-end;text-align:right}
+  .kick{font-size:11px;letter-spacing:5px;text-transform:uppercase;color:#62f0ff;margin-bottom:14px;font-weight:700}
+  .sec h2{font-size:clamp(34px,5vw,64px);font-weight:200;line-height:1.05;letter-spacing:-1px}
+  .sec h2 b{font-weight:800;background:linear-gradient(90deg,#62f0ff,#7a5cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sec p{margin-top:18px;color:var(--mut);font-size:15px;line-height:1.7;font-weight:300}
+  .num{position:absolute;bottom:8vh;left:8vw;font-size:11px;letter-spacing:3px;color:var(--mut)}
+  .sec.right .num{left:auto;right:8vw}
+  /* hero */
+  #hero .inner{max-width:760px}
+  #hero h1{font-size:clamp(44px,8vw,110px);font-weight:200;line-height:.98;letter-spacing:-3px}
+  #hero h1 b{font-weight:800}
+  #hero .sub{margin-top:22px;color:var(--mut);font-size:15px;letter-spacing:1px;font-weight:300}
+  #cue{position:absolute;bottom:5vh;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:4px;color:var(--mut);text-transform:uppercase;text-align:center}
+  #cue .ln{width:1px;height:46px;margin:12px auto 0;background:linear-gradient(180deg,#62f0ff,transparent);animation:drip 1.6s ease infinite}
+  @keyframes drip{0%{transform:scaleY(0);transform-origin:top}45%{transform:scaleY(1);transform-origin:top}55%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+  /* end card */
+  #end{flex-direction:column;justify-content:center;text-align:center}
+  #end .inner{max-width:720px}
+  #end .cta{pointer-events:auto;display:inline-block;margin-top:30px;padding:16px 42px;border:1px solid rgba(98,240,255,.6);border-radius:999px;color:#e8ecf4;font-size:12px;letter-spacing:4px;text-transform:uppercase;text-decoration:none;transition:.25s;background:rgba(98,240,255,.05)}
+  #end .cta:hover{background:rgba(98,240,255,.18);box-shadow:0 0 34px rgba(98,240,255,.45)}
+  .vig{position:fixed;inset:0;z-index:5;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(2,4,10,.75) 100%)}
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+<div class="vig"></div>
+<div class="bar"><div class="lg">VEC<span>TRFL</span></div><div class="st">Signal / Form / Motion</div></div>
+<div id="rail"><div class="fill"></div></div>
+
+<section class="sec" id="hero">
+  <div class="inner">
+    <div class="kick">A scroll-driven experiment</div>
+    <h1>Follow the <b>signal</b><br>through the dark.</h1>
+    <p class="sub">One continuous path. Six environments. Zero cuts.</p>
+  </div>
+  <div id="cue">Scroll<div class="ln"></div></div>
+</section>
+
+<section class="sec right">
+  <div class="inner">
+    <div class="kick">01 — Emergence</div>
+    <h2>The line <b>wakes up</b>.</h2>
+    <p>A single thread of light traces itself into existence, pulling the camera along its spine as it goes.</p>
+  </div>
+  <div class="num">01 / 05</div>
+</section>
+
+<section class="sec">
+  <div class="inner">
+    <div class="kick">02 — Descent</div>
+    <h2>Dive through the <b>field</b>.</h2>
+    <p>The path banks downward into a drift of particles. Depth of fog and color shift with every pixel you scroll.</p>
+  </div>
+  <div class="num">02 / 05</div>
+</section>
+
+<section class="sec right">
+  <div class="inner">
+    <div class="kick">03 — Threshold</div>
+    <h2>Pass the <b>gates</b>.</h2>
+    <p>Wireframe rings mark the waypoints. The glowing head of the line threads each one without slowing down.</p>
+  </div>
+  <div class="num">03 / 05</div>
+</section>
+
+<section class="sec">
+  <div class="inner">
+    <div class="kick">04 — Shift</div>
+    <h2>The scene <b>re-tunes</b> itself.</h2>
+    <p>Cyan gives way to violet, violet to ember. The environment listens to the scrollbar, not the clock.</p>
+  </div>
+  <div class="num">04 / 05</div>
+</section>
+
+<section class="sec" id="end">
+  <div class="inner">
+    <div class="kick">05 — Arrival</div>
+    <h2>End of the <b>line</b>.</h2>
+    <p>The camera settles, the path completes, and the loop is yours to run again.</p>
+    <a class="cta" href="#hero" id="again">Run it back</a>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {EffectComposer} from 'three/addons/postprocessing/EffectComposer.js';
+import {RenderPass} from 'three/addons/postprocessing/RenderPass.js';
+import {UnrealBloomPass} from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+gsap.registerPlugin(ScrollTrigger);
+
+/* ---------- renderer / scene ---------- */
+const canvas=document.getElementById('scene');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x04060e);
+scene.fog=new THREE.FogExp2(0x04060e,0.016);
+
+const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,0.1,400);
+
+/* ---------- the path ---------- */
+const pts=[
+  [0,0,0],      [6,1,-14],   [14,5,-28],  [10,10,-46],
+  [-2,12,-58],  [-16,8,-70], [-22,0,-88], [-14,-7,-104],
+  [2,-10,-118], [18,-6,-132],[24,4,-148], [14,12,-164],
+  [-4,14,-176], [-18,9,-192],[-16,0,-208],[0,-2,-222]
+].map(p=>new THREE.Vector3(...p));
+const curve=new THREE.CatmullRomCurve3(pts,false,'catmullrom',0.5);
+
+/* glowing tube — reveal driven by uProgress along the tube's length */
+const tubeGeo=new THREE.TubeGeometry(curve,640,0.16,12,false);
+const tubeMat=new THREE.ShaderMaterial({
+  transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  uniforms:{
+    uProgress:{value:0},
+    uTime:{value:0},
+    uColorA:{value:new THREE.Color(0x62f0ff)},
+    uColorB:{value:new THREE.Color(0x7a5cff)}
+  },
+  vertexShader:`
+    varying vec2 vUv;
+    void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader:`
+    uniform float uProgress,uTime;
+    uniform vec3 uColorA,uColorB;
+    varying vec2 vUv;
+    void main(){
+      if(vUv.x>uProgress)discard;
+      vec3 col=mix(uColorA,uColorB,vUv.x);
+      // bright head just behind the reveal edge
+      float head=smoothstep(uProgress-0.035,uProgress,vUv.x);
+      // energy pulses travelling along the line
+      float pulse=0.55+0.45*sin(vUv.x*90.0-uTime*4.0);
+      float a=0.35+0.5*pulse+head*2.2;
+      // fade the very start in softly
+      a*=smoothstep(0.0,0.015,vUv.x);
+      gl_FragColor=vec4(col*(0.9+head*2.4),a);
+    }`
+});
+scene.add(new THREE.Mesh(tubeGeo,tubeMat));
+
+/* glowing head sprite that rides the tip of the line */
+const head=new THREE.Mesh(
+  new THREE.SphereGeometry(0.42,18,18),
+  new THREE.MeshBasicMaterial({color:0xbffaff,transparent:true,opacity:0.95,blending:THREE.AdditiveBlending})
+);
+scene.add(head);
+const headGlow=new THREE.PointLight(0x62f0ff,18,26,2);
+scene.add(headGlow);
+
+/* ---------- waypoint gates ---------- */
+const gates=[];
+const gateMat=new THREE.MeshBasicMaterial({color:0x62f0ff,wireframe:true,transparent:true,opacity:0.35});
+for(let i=1;i<=8;i++){
+  const t=i/9;
+  const g=new THREE.Mesh(new THREE.TorusGeometry(3.4,0.05,8,72),gateMat.clone());
+  const pos=curve.getPointAt(t);
+  g.position.copy(pos);
+  g.lookAt(curve.getPointAt(Math.min(t+0.01,1)));
+  g.userData.t=t;
+  gates.push(g);scene.add(g);
+}
+
+/* ---------- particle field ---------- */
+const N=2600;
+const pPos=new Float32Array(N*3);
+for(let i=0;i<N;i++){
+  const t=Math.random();
+  const c=curve.getPointAt(t);
+  pPos[i*3]  =c.x+(Math.random()-0.5)*46;
+  pPos[i*3+1]=c.y+(Math.random()-0.5)*46;
+  pPos[i*3+2]=c.z+(Math.random()-0.5)*30;
+}
+const pGeo=new THREE.BufferGeometry();
+pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+const pMat=new THREE.PointsMaterial({color:0x6f7fb0,size:0.14,transparent:true,opacity:0.7,sizeAttenuation:true,depthWrite:false});
+const stars=new THREE.Points(pGeo,pMat);
+scene.add(stars);
+
+scene.add(new THREE.AmbientLight(0x223,2));
+
+/* ---------- bloom ---------- */
+const composer=new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene,camera));
+const bloom=new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),1.25,0.55,0.12);
+composer.addPass(bloom);
+
+/* ---------- scroll-driven state ---------- */
+/* palette stops the scene lerps through as you scroll */
+const stops=[
+  {bg:0x04060e,fog:0.016,a:0x62f0ff,b:0x7a5cff},
+  {bg:0x060414,fog:0.020,a:0x7a5cff,b:0xff5ce8},
+  {bg:0x0c0410,fog:0.024,a:0xff5ce8,b:0xff8a3c},
+  {bg:0x100804,fog:0.018,a:0xff8a3c,b:0xffd24a},
+  {bg:0x03080c,fog:0.014,a:0x62f0ff,b:0x9cff6a}
+];
+const state={p:0,target:0};
+ScrollTrigger.create({
+  trigger:document.body,start:'top top',end:'bottom bottom',scrub:true,
+  onUpdate:s=>{state.target=s.progress;}
+});
+
+/* section copy fades */
+document.querySelectorAll('.sec .inner').forEach(el=>{
+  gsap.fromTo(el,{opacity:0,y:40},{
+    opacity:1,y:0,ease:'none',
+    scrollTrigger:{trigger:el.closest('.sec'),start:'top 70%',end:'top 30%',scrub:true}
+  });
+  gsap.to(el,{opacity:0,y:-40,ease:'none',
+    scrollTrigger:{trigger:el.closest('.sec'),start:'bottom 65%',end:'bottom 25%',scrub:true}
+  });
+});
+gsap.to('#cue',{opacity:0,scrollTrigger:{trigger:'#hero',start:'top top',end:'40% top',scrub:true}});
+document.getElementById('again').addEventListener('click',e=>{
+  e.preventDefault();window.scrollTo({top:0,behavior:'smooth'});
+});
+
+const railFill=document.querySelector('#rail .fill');
+const tmpA=new THREE.Color(),tmpB=new THREE.Color(),tmpBg=new THREE.Color();
+const camPos=new THREE.Vector3(),look=new THREE.Vector3();
+
+function lerpStops(p){
+  const seg=Math.min(stops.length-2,Math.floor(p*(stops.length-1)));
+  const f=p*(stops.length-1)-seg;
+  const A=stops[seg],B=stops[seg+1];
+  tmpBg.setHex(A.bg).lerp(tmpB.setHex(B.bg),f);
+  scene.background.copy(tmpBg);
+  scene.fog.color.copy(tmpBg);
+  scene.fog.density=A.fog+(B.fog-A.fog)*f;
+  tubeMat.uniforms.uColorA.value.setHex(A.a).lerp(tmpA.setHex(B.a),f);
+  tubeMat.uniforms.uColorB.value.setHex(A.b).lerp(tmpA.setHex(B.b),f);
+  headGlow.color.copy(tubeMat.uniforms.uColorA.value);
+}
+
+const clock=new THREE.Clock();
+function tick(){
+  const t=clock.getElapsedTime();
+  // smooth the scrub so the camera glides
+  state.p+=(state.target-state.p)*0.07;
+  const p=state.p;
+
+  // path reveal leads the camera slightly
+  const reveal=Math.min(p*1.06+0.02,1);
+  tubeMat.uniforms.uProgress.value=reveal;
+  tubeMat.uniforms.uTime.value=t;
+
+  // head rides the reveal edge
+  const headT=Math.min(reveal,0.999);
+  head.position.copy(curve.getPointAt(headT));
+  head.scale.setScalar(1+Math.sin(t*6)*0.12);
+  headGlow.position.copy(head.position);
+
+  // camera trails behind the head, looking ahead
+  const camT=Math.max(headT-0.045,0);
+  curve.getPointAt(camT,camPos);
+  curve.getPointAt(Math.min(camT+0.03,1),look);
+  // lift the camera off the line and add a gentle sway
+  camPos.y+=1.6+Math.sin(t*0.7)*0.2;
+  camPos.x+=Math.cos(t*0.5)*0.3;
+  camera.position.copy(camPos);
+  camera.lookAt(look);
+
+  // gates pulse as the head passes through
+  for(const g of gates){
+    const d=Math.abs(g.userData.t-headT);
+    const hot=Math.max(0,1-d*22);
+    g.material.opacity=0.18+hot*0.8;
+    g.material.color.copy(tubeMat.uniforms.uColorA.value);
+    g.rotation.z+=0.0016+hot*0.02;
+    g.scale.setScalar(1+hot*0.18);
+  }
+
+  stars.rotation.z=t*0.004;
+  bloom.strength=1.1+Math.sin(t*1.3)*0.1+ (1-Math.abs(p*2-1))*0.3;
+
+  lerpStops(p);
+  railFill.style.height=(state.target*100).toFixed(2)+'%';
+
+  composer.render();
+  requestAnimationFrame(tick);
+}
+tick();
+
+addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+  composer.setSize(innerWidth,innerHeight);
+});
+</script>
+</body>
+</html>
