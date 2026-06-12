@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MTN Flagship Finder — Compare the Latest Phones in 3D</title>
+<meta name="description" content="Interactive 3D comparison of the latest flagship phones on MTN: iPhone 17 Pro, Samsung Galaxy S26 Ultra and HONOR Magic 8 Pro. Drag to rotate, compare specs head to head.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%23ffcb00'/%3E%3Ctext x='16' y='21' text-anchor='middle' font-family='sans-serif' font-weight='800' font-size='11' fill='%23000'%3EMTN%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --yellow:#ffcb00;
+  --ink:#0b0b0c;
+  --ink-2:#141416;
+  --card:#1a1a1d;
+  --line:rgba(255,255,255,.1);
+  --txt:#f4f3ef;
+  --mut:#9b9a94;
+  --apple:#ff7a3c;
+  --samsung:#7aa7ff;
+  --honor:#ffd66e;
+  --pad:clamp(16px,4vw,56px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--ink);color:var(--txt);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+::selection{background:var(--yellow);color:#000}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* header */
+.top{
+  position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;
+  padding:14px var(--pad);background:rgba(11,11,12,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.mtn-dot{
+  width:38px;height:38px;border-radius:50%;background:var(--yellow);
+  display:grid;place-items:center;font-weight:800;font-size:11px;color:#000;flex-shrink:0;
+}
+.top h1{font-size:16px;font-weight:700;letter-spacing:.02em}
+.top h1 span{color:var(--mut);font-weight:400}
+.top .concept{
+  margin-left:auto;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:6px 12px;white-space:nowrap;
+}
+@media(max-width:640px){.top .concept{display:none}}
+
+/* hero / stage */
+.stage-wrap{position:relative;border-bottom:1px solid var(--line);background:radial-gradient(80% 90% at 50% 0%,#1c1c20 0%,var(--ink) 70%)}
+.stage-head{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between;padding:clamp(20px,4vh,40px) var(--pad) 0}
+.stage-head h2{font-size:clamp(24px,4.5vw,52px);font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.stage-head h2 em{font-style:normal;color:var(--yellow)}
+.stage-head p{color:var(--mut);font-size:14px;max-width:46ch}
+.stage{position:relative;height:clamp(380px,58vh,640px)}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.stage canvas:active{cursor:grabbing}
+.drag-hint{
+  position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
+  display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--mut);pointer-events:none;transition:opacity .4s;
+}
+.drag-hint svg{animation:wig 2s ease-in-out infinite}
+@keyframes wig{0%,100%{transform:translateX(-4px)}50%{transform:translateX(4px)}}
+.webgl-fallback{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  text-align:center;color:var(--mut);padding:24px;
+}
+.no-webgl .webgl-fallback{display:flex}
+.no-webgl .stage canvas,.no-webgl .drag-hint{display:none}
+
+/* selector tabs */
+.tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 var(--pad) 18px}
+.tab{
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+  border:1px solid var(--line);border-radius:14px;padding:10px 18px;
+  background:var(--ink-2);transition:border-color .25s,background .25s,transform .15s;
+}
+.tab:hover{transform:translateY(-2px)}
+.tab .b{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.tab .n{font-weight:700;font-size:14px}
+.tab.on{border-color:var(--yellow);background:#221e08}
+.tab.on .b{color:var(--yellow)}
+.tab-all{align-self:stretch;justify-content:center;align-items:center}
+.tab-all .n{color:var(--yellow)}
+
+/* info card */
+.info{
+  display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(18px,3vw,40px);
+  padding:clamp(22px,4vh,44px) var(--pad);max-width:1200px;margin:0 auto;
+}
+.info h3{font-size:clamp(22px,3vw,34px);font-weight:800;letter-spacing:-.01em}
+.info .tagline{color:var(--mut);margin:4px 0 14px;font-size:15px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  font-size:12.5px;border:1px solid var(--line);border-radius:999px;
+  padding:6px 12px;background:var(--card);color:var(--txt);
+}
+.chip b{color:var(--yellow);font-weight:700}
+.price-card{
+  background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:clamp(18px,2.5vw,28px);align-self:start;
+}
+.price-card .from{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.price-card .rrp{font-size:clamp(30px,4vw,44px);font-weight:800;letter-spacing:-.02em;margin:2px 0}
+.price-card .pm{font-size:14px;color:var(--mut)}
+.price-card .pm b{color:var(--txt)}
+.btn-deal{
+  display:inline-block;margin-top:16px;background:var(--yellow);color:#000;
+  font-weight:700;font-size:14px;border-radius:999px;padding:12px 22px;text-decoration:none;
+  transition:transform .15s,box-shadow .15s;
+}
+.btn-deal:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,203,0,.25)}
+.fineprint{font-size:11.5px;color:var(--mut);margin-top:12px;line-height:1.5}
+@media(max-width:820px){.info{grid-template-columns:1fr}}
+
+/* head to head */
+.h2h{padding:clamp(40px,8vh,90px) var(--pad);max-width:1200px;margin:0 auto;scroll-margin-top:80px}
+.h2h h2{font-size:clamp(22px,3.5vw,40px);font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+.h2h .sub{color:var(--mut);font-size:14px;margin-bottom:28px}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:22px;font-size:13px}
+.legend span{display:flex;align-items:center;gap:7px;color:var(--mut)}
+.legend i{width:11px;height:11px;border-radius:3px}
+.metric{margin-bottom:26px}
+.metric .m-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.metric .m-name{font-weight:700;font-size:15px}
+.metric .m-note{font-size:12px;color:var(--mut)}
+.bar-row{display:grid;grid-template-columns:150px 1fr 110px;gap:12px;align-items:center;margin-bottom:8px}
+.bar-row .who{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{background:var(--ink-2);border:1px solid var(--line);border-radius:99px;height:22px;overflow:hidden}
+.bar{height:100%;width:0%;border-radius:99px;min-width:6px}
+.bar-row .val{font-size:13px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.bar-row .val.best{color:var(--yellow)}
+.bar-row .val.best::after{content:" ★"}
+@media(max-width:640px){
+  .bar-row{grid-template-columns:1fr;gap:4px}
+  .bar-row .val{text-align:left}
+}
+
+/* footer */
+.foot{
+  border-top:1px solid var(--line);padding:26px var(--pad);display:flex;gap:14px;
+  flex-wrap:wrap;justify-content:space-between;font-size:12px;color:var(--mut);
+}
+.foot a{color:var(--yellow);text-decoration:none}
+
+.reveal{opacity:0;transform:translateY(28px)}
+html.no-js .reveal,html.reduced .reveal{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.drag-hint svg{animation:none}}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.remove('no-js');
+if(matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('reduced');</script>
+
+<header class="top">
+  <div class="mtn-dot">MTN</div>
+  <h1>Flagship Finder <span>— compare the latest phones in 3D</span></h1>
+  <span class="concept">Concept demo</span>
+</header>
+
+<main>
+  <section class="stage-wrap">
+    <div class="stage-head">
+      <h2>Grab a phone.<br><em>Spin it. Compare it.</em></h2>
+      <p>The three flagships of the moment on MTN — Apple, Samsung and HONOR — modelled in 3D. Drag to rotate, switch between them, or line all three up.</p>
+    </div>
+    <div class="stage" id="stage">
+      <div class="webgl-fallback"><p>3D view isn't available on this device.<br>The full comparison below still works.</p></div>
+      <div class="drag-hint" id="dragHint">
+        <svg width="18" height="14" viewBox="0 0 18 14" fill="none"><path d="M1 7h16M4 3L1 7l3 4M14 3l3 4-3 4" stroke="currentColor" stroke-width="1.4"/></svg>
+        Drag to rotate
+      </div>
+    </div>
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-i="0"><span class="b">Apple</span><span class="n">iPhone 17 Pro</span></button>
+      <button class="tab" data-i="1"><span class="b">Samsung</span><span class="n">Galaxy S26 Ultra</span></button>
+      <button class="tab" data-i="2"><span class="b">HONOR</span><span class="n">Magic 8 Pro</span></button>
+      <button class="tab tab-all" data-i="all"><span class="n">View all three</span></button>
+    </div>
+  </section>
+
+  <section class="info">
+    <div>
+      <h3 id="iName">iPhone 17 Pro</h3>
+      <p class="tagline" id="iTag"></p>
+      <div class="chips" id="iChips"></div>
+    </div>
+    <div class="price-card">
+      <div class="from">Launch RRP (South Africa)</div>
+      <div class="rrp" id="iPrice">R28 599</div>
+      <div class="pm" id="iPm"></div>
+      <a class="btn-deal" id="iDeal" href="https://www.mtn.co.za/shop/deals/devices/phones" target="_blank" rel="noopener">View MTN deals ↗</a>
+      <p class="fineprint">Concept demo — not an MTN product. RRPs are launch prices; actual MTN contract pricing bundles airtime &amp; data and varies by plan. Monthly figure is simply RRP ÷ 36 as a rough device-split guide.</p>
+    </div>
+  </section>
+
+  <section class="h2h" id="compare">
+    <h2 class="reveal">Head to head</h2>
+    <p class="sub reveal">Longer bar = better (price bar shows cheaper as longer). ★ marks the winner per category.</p>
+    <div class="legend reveal" id="legend"></div>
+    <div id="metrics"></div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span>Concept demo built for exploration — specs from public launch info, June 2026.</span>
+  <span>Deals: <a href="https://www.mtn.co.za/shop/deals/devices/phones" target="_blank" rel="noopener">mtn.co.za</a></span>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.min.js"}}
+</script>
+
+<script>
+/* ---------------- data ---------------- */
+const PHONES = [
+  {
+    brand:"Apple", name:"iPhone 17 Pro", color:"#c2511f", accent:"#ff7a3c",
+    screenHue:["#2b1c4d","#ff7a3c"], body:{w:1.42,h:3.0,d:0.155}, cam:"apple",
+    tagline:"A19 Pro power in an aluminium unibody — the new Cosmic Orange look.",
+    price:28599,
+    chips:["6.3″ OLED · 120Hz · 3000 nits","A19 Pro chip · 12GB RAM","48MP main + ultra-wide + tele (8x optical-quality)","≈4 250 mAh · up to 27h video","204 g"],
+    stats:{display:6.3, battery:4252, charge:40, cam:48, weight:204}
+  },
+  {
+    brand:"Samsung", name:"Galaxy S26 Ultra", color:"#8a8f98", accent:"#7aa7ff",
+    screenHue:["#0c1c3a","#7aa7ff"], body:{w:1.56,h:3.3,d:0.16}, cam:"samsung",
+    tagline:"The 200MP AI flagship with the biggest, sharpest display of the trio.",
+    price:30999,
+    chips:["6.9″ QHD+ AMOLED · 120Hz · Privacy Display","Snapdragon 8 Elite Gen 5 for Galaxy","200MP main · 50MP UW · dual tele","5 000 mAh · 60W fast charge","Titanium frame"],
+    stats:{display:6.9, battery:5000, charge:60, cam:200, weight:218}
+  },
+  {
+    brand:"HONOR", name:"Magic 8 Pro", color:"#caa45c", accent:"#ffd66e",
+    screenHue:["#3a2a08","#ffd66e"], body:{w:1.50,h:3.22,d:0.16}, cam:"honor",
+    tagline:"Monster 7 100mAh battery, 100W charging and a 200MP periscope zoom.",
+    price:27999,
+    chips:["6.71″ LTPO OLED · 120Hz","Snapdragon 8 Elite Gen 5","200MP periscope tele · 50MP main","7 100 mAh Si-C · 100W wired / 80W wireless","IP68/69/69K · AI button"],
+    stats:{display:6.71, battery:7100, charge:100, cam:200, weight:223}
+  }
+];
+const METRICS = [
+  {key:"battery", name:"Battery", note:"capacity, mAh", unit:" mAh", best:"max"},
+  {key:"charge",  name:"Wired charging", note:"watts", unit:" W", best:"max"},
+  {key:"cam",     name:"Highest-res camera", note:"megapixels", unit:" MP", best:"max"},
+  {key:"display", name:"Display size", note:"inches", unit:"″", best:"max"},
+  {key:"price",   name:"Price", note:"launch RRP — cheaper wins", unit:"", best:"min", fmt:v=>"R"+v.toLocaleString("en-ZA").replace(/,/g," ")},
+  {key:"weight",  name:"Weight", note:"grams — lighter wins", unit:" g", best:"min"}
+];
+const fmtR = v => "R" + v.toLocaleString("en-ZA").replace(/,/g," ");
+
+/* ---------------- spec UI ---------------- */
+const reduced = document.documentElement.classList.contains('reduced');
+let current = 0;
+
+function setInfo(i){
+  const p = PHONES[i];
+  document.getElementById('iName').textContent = p.name;
+  document.getElementById('iTag').textContent = p.tagline;
+  document.getElementById('iPrice').textContent = fmtR(p.price);
+  document.getElementById('iPm').innerHTML = "≈ <b>" + fmtR(Math.round(p.price/36)) + " pm</b> over 36 months (device-only estimate)";
+  document.getElementById('iChips').innerHTML = p.chips.map(c => `<span class="chip">${c}</span>`).join("");
+}
+setInfo(0);
+
+/* legend + metric bars */
+document.getElementById('legend').innerHTML = PHONES.map(p =>
+  `<span><i style="background:${p.accent}"></i>${p.name}</span>`).join("");
+
+const metricsEl = document.getElementById('metrics');
+METRICS.forEach(m => {
+  const vals = PHONES.map(p => m.key === "price" ? p.price : p.stats[m.key]);
+  const bestVal = m.best === "max" ? Math.max(...vals) : Math.min(...vals);
+  const wrap = document.createElement('div');
+  wrap.className = "metric reveal";
+  wrap.innerHTML = `<div class="m-head"><span class="m-name">${m.name}</span><span class="m-note">${m.note}</span></div>` +
+    PHONES.map((p,i) => {
+      const v = vals[i];
+      const ratio = m.best === "max" ? v / Math.max(...vals) : Math.min(...vals) / v;
+      const label = m.fmt ? m.fmt(v) : (Number.isInteger(v) ? v.toLocaleString("en-ZA").replace(/,/g," ") : String(v)) + m.unit;
+      return `<div class="bar-row">
+        <span class="who">${p.name}</span>
+        <div class="bar-track"><div class="bar" data-w="${(ratio*100).toFixed(1)}" style="background:${p.accent}"></div></div>
+        <span class="val${v===bestVal?' best':''}">${label}</span>
+      </div>`;
+    }).join("");
+  metricsEl.appendChild(wrap);
+});
+
+/* GSAP reveals + bar animation */
+if (window.gsap) {
+  gsap.registerPlugin(ScrollTrigger);
+  if (!reduced) {
+    document.querySelectorAll('.reveal').forEach(el => {
+      gsap.to(el, { opacity:1, y:0, duration:.9, ease:"power3.out",
+        scrollTrigger:{ trigger:el, start:"top 88%", once:true } });
+    });
+    document.querySelectorAll('.bar').forEach(b => {
+      gsap.to(b, { width:b.dataset.w + "%", duration:1.2, ease:"power3.out",
+        scrollTrigger:{ trigger:b, start:"top 92%", once:true } });
+    });
+  } else {
+    document.querySelectorAll('.bar').forEach(b => b.style.width = b.dataset.w + "%");
+  }
+} else {
+  document.querySelectorAll('.reveal').forEach(el => { el.style.opacity=1; el.style.transform="none"; });
+  document.querySelectorAll('.bar').forEach(b => b.style.width = b.dataset.w + "%");
+}
+</script>
+
+<script type="module">
+/* ---------------- 3D stage ---------------- */
+const stage = document.getElementById('stage');
+const reduced = document.documentElement.classList.contains('reduced');
+let THREE;
+try { THREE = await import('three'); }
+catch(e){ document.body.classList.add('no-webgl'); console.warn('three failed to load', e); }
+
+if (THREE) try {
+  const PH = [
+    { color:0xc2511f, cam:"apple",   w:1.42, h:3.00, d:0.155, brand:"iPhone 17 Pro",   hue:["#1b1033","#ff7a3c"], logo:"" },
+    { color:0x8a8f98, cam:"samsung", w:1.56, h:3.30, d:0.16,  brand:"Galaxy S26 Ultra", hue:["#0a1834","#7aa7ff"], logo:"SAMSUNG" },
+    { color:0xb98f3e, cam:"honor",   w:1.50, h:3.22, d:0.16,  brand:"Magic 8 Pro",      hue:["#2e2106","#ffd66e"], logo:"HONOR" }
+  ];
+
+  const isMobile = matchMedia('(max-width: 720px)').matches;
+  const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile ? 1.75 : 2));
+  renderer.setSize(stage.clientWidth, stage.clientHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  stage.prepend(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(34, stage.clientWidth/stage.clientHeight, .1, 50);
+  camera.position.set(0, 0, isMobile ? 8.6 : 7.4);
+
+  /* cheap procedural environment for metallic reflections */
+  const envCanvas = document.createElement('canvas');
+  envCanvas.width = 256; envCanvas.height = 128;
+  const ec = envCanvas.getContext('2d');
+  const g = ec.createLinearGradient(0,0,0,128);
+  g.addColorStop(0,"#3a3a40"); g.addColorStop(.55,"#101013"); g.addColorStop(1,"#050506");
+  ec.fillStyle = g; ec.fillRect(0,0,256,128);
+  ec.fillStyle = "rgba(255,255,255,.85)";
+  ec.fillRect(20,8,60,26); ec.fillRect(150,14,70,20);
+  ec.fillStyle = "rgba(255,203,0,.5)"; ec.fillRect(95,30,40,14);
+  const envTex = new THREE.CanvasTexture(envCanvas);
+  envTex.mapping = THREE.EquirectangularReflectionMapping;
+  envTex.colorSpace = THREE.SRGBColorSpace;
+  scene.environment = envTex;
+
+  scene.add(new THREE.AmbientLight(0xffffff, .35));
+  const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(3,4,5); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffcb00, .7); rim.position.set(-4,-2,-4); scene.add(rim);
+  const fill = new THREE.DirectionalLight(0x88aaff, .4); fill.position.set(-3,2,4); scene.add(fill);
+
+  function roundedRect(w, h, r){
+    const s = new THREE.Shape();
+    s.moveTo(-w/2+r, -h/2);
+    s.lineTo(w/2-r, -h/2); s.quadraticCurveTo(w/2, -h/2, w/2, -h/2+r);
+    s.lineTo(w/2, h/2-r);  s.quadraticCurveTo(w/2, h/2, w/2-r, h/2);
+    s.lineTo(-w/2+r, h/2); s.quadraticCurveTo(-w/2, h/2, -w/2, h/2-r);
+    s.lineTo(-w/2, -h/2+r);s.quadraticCurveTo(-w/2, -h/2, -w/2+r, -h/2);
+    return s;
+  }
+
+  function screenTexture(p){
+    const c = document.createElement('canvas'); c.width = 512; c.height = 1024;
+    const x = c.getContext('2d');
+    const r = 70;
+    x.beginPath(); x.roundRect(0,0,512,1024,r); x.clip();
+    const grad = x.createLinearGradient(0,0,512,1024);
+    grad.addColorStop(0, p.hue[0]); grad.addColorStop(1, p.hue[1]);
+    x.fillStyle = grad; x.fillRect(0,0,512,1024);
+    /* soft glow blob */
+    const rg = x.createRadialGradient(256,330,40,256,330,330);
+    rg.addColorStop(0,"rgba(255,255,255,.30)"); rg.addColorStop(1,"rgba(255,255,255,0)");
+    x.fillStyle = rg; x.fillRect(0,0,512,1024);
+    /* status + clock */
+    x.fillStyle = "rgba(255,255,255,.92)";
+    x.font = "600 38px system-ui"; x.textAlign = "center";
+    x.fillText("09:41", 256, 150);
+    x.font = "800 44px system-ui";
+    x.fillText(p.brand, 256, 880);
+    x.font = "500 26px system-ui"; x.fillStyle = "rgba(255,255,255,.65)";
+    x.fillText("on MTN", 256, 925);
+    /* camera cutout */
+    x.fillStyle = "#000";
+    x.beginPath(); x.roundRect(186,38,140,38,19); x.fill();
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  }
+
+  function buildPhone(p){
+    const grp = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.ExtrudeGeometry(roundedRect(p.w, p.h, .22), { depth:p.d, bevelEnabled:true, bevelThickness:.025, bevelSize:.025, bevelSegments:4, curveSegments:24 }),
+      new THREE.MeshPhysicalMaterial({ color:p.color, metalness:.78, roughness:.32, clearcoat:.7, clearcoatRoughness:.25 })
+    );
+    body.geometry.center();
+    grp.add(body);
+
+    const half = p.d/2 + .03;
+    /* screen */
+    const screen = new THREE.Mesh(
+      new THREE.PlaneGeometry(p.w*.94, p.h*.95),
+      new THREE.MeshBasicMaterial({ map:screenTexture(p), transparent:true })
+    );
+    screen.position.z = half + .002;
+    grp.add(screen);
+
+    /* back camera modules */
+    const lensMat = new THREE.MeshPhysicalMaterial({ color:0x0c0c10, metalness:.6, roughness:.18, clearcoat:1 });
+    const ringMat = new THREE.MeshStandardMaterial({ color:0x2c2c32, metalness:.9, roughness:.25 });
+    const glassMat = new THREE.MeshPhysicalMaterial({ color:0x10131c, metalness:.2, roughness:.05, clearcoat:1 });
+    function lens(x, y, rad){
+      const ring = new THREE.Mesh(new THREE.CylinderGeometry(rad, rad, .045, 36), ringMat);
+      ring.rotation.x = Math.PI/2; ring.position.set(x, y, -half - .02);
+      const glass = new THREE.Mesh(new THREE.CylinderGeometry(rad*.62, rad*.62, .05, 36), glassMat);
+      glass.rotation.x = Math.PI/2; glass.position.set(x, y, -half - .035);
+      grp.add(ring, glass);
+    }
+    if (p.cam === "apple"){
+      const plateau = new THREE.Mesh(
+        new THREE.ExtrudeGeometry(roundedRect(p.w*.86, p.h*.24, .14), { depth:.045, bevelEnabled:true, bevelThickness:.012, bevelSize:.012, bevelSegments:2, curveSegments:16 }),
+        new THREE.MeshPhysicalMaterial({ color:p.color, metalness:.78, roughness:.36, clearcoat:.6 })
+      );
+      plateau.geometry.center();
+      plateau.position.set(0, p.h*.335, -half - .015);
+      grp.add(plateau);
+      lens(-p.w*.26, p.h*.40, .145); lens(-p.w*.26, p.h*.27, .145); lens(0, p.h*.335, .145);
+    } else if (p.cam === "samsung"){
+      lens(-p.w*.30, p.h*.385, .125); lens(-p.w*.30, p.h*.255, .125); lens(-p.w*.30, p.h*.125, .125);
+      lens(-p.w*.07, p.h*.32, .095);
+    } else {
+      const mod = new THREE.Mesh(new THREE.CylinderGeometry(p.w*.30, p.w*.30, .05, 48), lensMat);
+      mod.rotation.x = Math.PI/2; mod.position.set(0, p.h*.30, -half - .02);
+      grp.add(mod);
+      lens(-p.w*.115, p.h*.355, .085); lens(p.w*.115, p.h*.355, .085);
+      lens(-p.w*.115, p.h*.245, .085); lens(p.w*.115, p.h*.245, .085);
+    }
+    return grp;
+  }
+
+  const phones = PH.map(p => { const g = buildPhone(p); scene.add(g); return g; });
+  const baseY = 0.05;
+  phones.forEach(g => g.position.y = baseY);
+
+  /* layout: single (selected centered) or all three */
+  let mode = "single", sel = 0;
+  const place = (animate) => {
+    phones.forEach((g, i) => {
+      let x, s, ry;
+      if (mode === "all"){
+        x = (i-1) * (isMobile ? 1.85 : 2.5); s = isMobile ? .62 : .8; ry = 0;
+      } else {
+        x = i === sel ? 0 : (i < sel ? -9 : 9); s = i === sel ? 1 : .6; ry = 0;
+      }
+      if (window.gsap && animate && !reduced){
+        gsap.to(g.position, { x, duration:.8, ease:"power3.inOut" });
+        gsap.to(g.scale, { x:s, y:s, z:s, duration:.8, ease:"power3.inOut" });
+        gsap.to(g.rotation, { y:ry, x:0, duration:.8, ease:"power3.inOut" });
+      } else {
+        g.position.x = x; g.scale.setScalar(s); g.rotation.set(0, ry, 0);
+      }
+    });
+  };
+  place(false);
+
+  /* drag to rotate (whole lineup in "all" mode, selected phone in single mode) */
+  let dragging = false, px = 0, py = 0, vx = 0, vy = 0, idleT = 0;
+  const hint = document.getElementById('dragHint');
+  const el = renderer.domElement;
+  el.addEventListener('pointerdown', e => {
+    dragging = true; px = e.clientX; py = e.clientY; vx = vy = 0;
+    el.setPointerCapture(e.pointerId);
+    if (hint) hint.style.opacity = 0;
+  });
+  el.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    const dx = (e.clientX - px) / el.clientWidth, dy = (e.clientY - py) / el.clientHeight;
+    px = e.clientX; py = e.clientY;
+    vx = dx * 5; vy = dy * 3;
+    targets().forEach(g => {
+      g.rotation.y += vx;
+      g.rotation.x = Math.max(-.7, Math.min(.7, g.rotation.x + vy));
+    });
+    idleT = 0;
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev => el.addEventListener(ev, () => dragging = false));
+  const targets = () => mode === "all" ? phones : [phones[sel]];
+
+  /* tabs */
+  const tabs = [...document.querySelectorAll('.tab')];
+  tabs.forEach(t => t.addEventListener('click', () => {
+    tabs.forEach(o => o.classList.toggle('on', o === t));
+    if (t.dataset.i === "all"){ mode = "all"; }
+    else { mode = "single"; sel = +t.dataset.i; setInfoExt(sel); }
+    place(true);
+    idleT = 0;
+  }));
+  /* expose setInfo from the classic script */
+  const setInfoExt = i => { window.dispatchEvent(new CustomEvent('phone-select', { detail: i })); };
+
+  /* render loop */
+  const clock = new THREE.Clock();
+  let raf = null, visible = true;
+  function tick(){
+    raf = requestAnimationFrame(tick);
+    const dt = clock.getDelta();
+    if (!dragging){
+      /* inertia */
+      vx *= .94; vy *= .9;
+      targets().forEach(g => {
+        g.rotation.y += vx;
+        g.rotation.x = Math.max(-.7, Math.min(.7, g.rotation.x + vy));
+        g.rotation.x += (0 - g.rotation.x) * .04;
+      });
+      /* gentle auto-rotate after idle */
+      idleT += dt;
+      if (idleT > 2.5 && !reduced) targets().forEach(g => g.rotation.y += dt * .35);
+    }
+    /* float */
+    const t = clock.elapsedTime;
+    phones.forEach((g,i) => g.position.y = baseY + Math.sin(t*1.1 + i*1.7) * .05);
+    renderer.render(scene, camera);
+  }
+  tick();
+
+  new IntersectionObserver(([e]) => {
+    visible = e.isIntersecting;
+    if (!visible && raf){ cancelAnimationFrame(raf); raf = null; }
+    else if (visible && !raf && !document.hidden) tick();
+  }).observe(stage);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && raf){ cancelAnimationFrame(raf); raf = null; }
+    else if (!document.hidden && visible && !raf) tick();
+  });
+  addEventListener('resize', () => {
+    renderer.setSize(stage.clientWidth, stage.clientHeight);
+    camera.aspect = stage.clientWidth / stage.clientHeight;
+    camera.updateProjectionMatrix();
+  });
+} catch(err){
+  document.body.classList.add('no-webgl');
+  console.warn('3D stage unavailable:', err);
+}
+</script>
+
+<script>
+/* bridge: 3D tab clicks update the spec card (and tabs work even if 3D failed) */
+window.addEventListener('phone-select', e => { setInfo(e.detail); });
+/* tabs update the info card with or without WebGL */
+document.querySelectorAll('.tab[data-i]').forEach(t => t.addEventListener('click', () => {
+  if (t.dataset.i !== "all") setInfo(+t.dataset.i);
+  document.querySelectorAll('.tab').forEach(o => o.classList.toggle('on', o === t));
+}));
+</script>
+</body>
+</html>
