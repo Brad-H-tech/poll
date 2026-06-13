@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fyltec — Peace of mind in a digital world</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#28c7c7;--teal2:#3dd6d6;--teal-soft:#7fe3e3;
+    --navy:#0a1422;--navy2:#0d1b2e;--navy3:#112137;
+    --ink:#1a2433;--mut:#5b6b7e;--mut2:#8a9bb0;
+    --paper:#f4f6f8;--white:#fff;--line:#e3e8ee;
+    --hero-grad:radial-gradient(120% 120% at 75% 10%,#16314f 0%,#0c1a2e 45%,#070f1c 100%);
+  }
+  html{scroll-behavior:smooth}
+  body{font-family:'Segoe UI',-apple-system,Helvetica,Arial,sans-serif;background:var(--white);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{text-decoration:none;color:inherit}
+  img{max-width:100%;display:block}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+
+  /* ---------- HEADER ---------- */
+  header{position:absolute;top:0;left:0;right:0;z-index:20}
+  .nav{display:flex;align-items:center;gap:34px;padding:26px 0}
+  .brand{display:flex;align-items:center;gap:10px;font-size:25px;font-weight:700;color:#fff;letter-spacing:.2px}
+  .brand .mark{width:34px;height:34px}
+  nav.links{display:flex;gap:34px;margin:0 auto}
+  nav.links a{color:#dfe7f0;font-size:15px;font-weight:500;opacity:.92;transition:.15s}
+  nav.links a:hover{color:var(--teal2);opacity:1}
+  .appstore{display:inline-flex;align-items:center;gap:9px;background:#0b1626;border:1px solid #2a3a52;color:#fff;border-radius:10px;padding:9px 16px;font-size:12px;line-height:1.15;transition:.15s}
+  .appstore:hover{border-color:var(--teal);background:#0f1d33}
+  .appstore svg{width:22px;height:22px;flex:none}
+  .appstore .big{font-size:15px;font-weight:600}
+  .appstore .sm{font-size:10px;letter-spacing:.3px;opacity:.85}
+
+  /* ---------- HERO ---------- */
+  .hero{background:var(--hero-grad);color:#fff;position:relative;overflow:hidden;padding:150px 0 70px}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center}
+  .eyebrow{font-size:12px;letter-spacing:2.5px;font-weight:600;color:var(--teal2);text-transform:uppercase;margin-bottom:22px}
+  .hero h1{font-size:62px;line-height:1.04;font-weight:800;letter-spacing:-1px;margin-bottom:26px}
+  .hero h1 .tl{color:var(--teal2)}
+  .hero p.lead{font-size:18px;color:#c4d2e2;max-width:480px;margin-bottom:34px;line-height:1.6}
+  .cta-row{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+  .btn-store{display:inline-flex;align-items:center;gap:11px;background:var(--teal);color:#06262a;border-radius:12px;padding:13px 24px;font-weight:600;transition:.18s;box-shadow:0 10px 30px rgba(40,199,199,.28)}
+  .btn-store:hover{background:var(--teal2);transform:translateY(-2px)}
+  .btn-store svg{width:24px;height:24px}
+  .btn-store .big{font-size:16px;line-height:1.1}
+  .btn-store .sm{font-size:10px;letter-spacing:.3px;opacity:.8}
+  .learn{color:#fff;font-weight:600;font-size:16px;display:inline-flex;align-items:center;gap:7px;transition:.15s}
+  .learn:hover{color:var(--teal2);gap:11px}
+
+  /* ---------- PHONE MOCKUP ---------- */
+  .device{position:relative;display:flex;justify-content:center;align-items:center}
+  .phone{position:relative;width:285px;background:#0c1828;border:9px solid #182636;border-radius:42px;padding:16px 14px 14px;box-shadow:0 40px 80px rgba(0,0,0,.5);z-index:2}
+  .phone:before{content:"";position:absolute;top:13px;left:50%;transform:translateX(-50%);width:78px;height:6px;background:#1c2c40;border-radius:6px}
+  .ph-top{display:flex;justify-content:space-between;align-items:center;font-size:9px;color:#8aa;margin:4px 4px 12px}
+  .ph-brand{display:flex;align-items:center;gap:6px;color:#fff;font-weight:700;font-size:16px}
+  .ph-brand .mark{width:20px;height:20px}
+  .status-card{background:linear-gradient(135deg,#123b3b,#0e2f3a);border:1px solid #1d5454;border-radius:16px;padding:14px;display:flex;align-items:center;gap:11px;margin-bottom:14px}
+  .status-card .ico{width:30px;height:30px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;flex:none}
+  .status-card .ico svg{width:17px;height:17px}
+  .status-card b{color:#fff;font-size:13px;display:block}
+  .status-card span{color:#9fdede;font-size:10px}
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+  .tile{background:#10243a;border:1px solid #1a3047;border-radius:13px;padding:11px 7px;text-align:center}
+  .tile .ti{width:26px;height:26px;border-radius:9px;background:#16314f;display:flex;align-items:center;justify-content:center;margin:0 auto 7px}
+  .tile .ti svg{width:15px;height:15px;color:var(--teal2)}
+  .tile b{color:#eaf2fb;font-size:9.5px;display:block;font-weight:600}
+  .tile span{color:#5f7591;font-size:7.5px;display:block;line-height:1.25;margin-top:2px}
+  .rec-h{color:#8aa0b8;font-size:9px;text-transform:uppercase;letter-spacing:.5px;margin:0 2px 9px;font-weight:600}
+  .rec{display:flex;align-items:center;gap:9px;background:#0f2034;border-radius:11px;padding:8px 9px;margin-bottom:7px}
+  .rec .rd{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none}
+  .rec .rd svg{width:12px;height:12px}
+  .rec b{color:#e6eefa;font-size:10px;display:block}
+  .rec span{color:#5f7591;font-size:8px}
+  .rec .tm{margin-left:auto;color:#5f7591;font-size:8px}
+  .rd.red{background:#3a1620;color:#ff6b6b}
+  .rd.amber{background:#3a2c14;color:#ffb84d}
+  .rd.teal{background:#0f3636;color:var(--teal2)}
+  .ph-nav{display:flex;justify-content:space-around;border-top:1px solid #16283d;margin-top:12px;padding-top:11px}
+  .ph-nav svg{width:18px;height:18px;color:#4a6075}
+  .ph-nav svg.act{color:var(--teal2)}
+  /* watch */
+  .watch{position:absolute;right:-46px;bottom:24px;width:118px;height:140px;background:#0c1622;border:7px solid #182636;border-radius:34px;display:flex;align-items:center;justify-content:center;z-index:1;box-shadow:0 26px 50px rgba(0,0,0,.5)}
+  .watch .wface{width:100%;height:100%;border-radius:24px;background:radial-gradient(circle at 50% 40%,#103a3a,#0a1622);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+  .watch .wmark{width:38px;height:38px}
+  .watch .wt{color:#bfeaea;font-size:12px;font-weight:700;letter-spacing:.5px}
+
+  /* ---------- VALUE STRIP ---------- */
+  .strip{background:linear-gradient(180deg,#070f1c,#091327);color:#fff;padding:8px 0 60px;position:relative;z-index:5}
+  .vals{display:grid;grid-template-columns:repeat(4,1fr);gap:30px}
+  .val{display:flex;gap:14px;align-items:flex-start}
+  .val .vi{width:42px;height:42px;flex:none;border-radius:11px;border:1px solid #20354f;background:#0e1d31;display:flex;align-items:center;justify-content:center}
+  .val .vi svg{width:22px;height:22px;color:var(--teal2)}
+  .val h4{font-size:15px;color:var(--teal2);font-weight:700;margin-bottom:4px}
+  .val p{font-size:13px;color:#94a6bb;line-height:1.45}
+
+  /* ---------- HOW IT WORKS ---------- */
+  .sec{padding:84px 0}
+  .light{background:linear-gradient(180deg,#eef2f5,#f6f8fa)}
+  .sec-head{text-align:center;margin-bottom:54px}
+  .sec-head h2{font-size:38px;font-weight:800;letter-spacing:-.5px;color:var(--ink)}
+  .sec-head h2 .tl{color:var(--teal)}
+  .sec-head p{color:var(--mut);font-size:17px;margin-top:10px}
+  .how{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.25fr;gap:8px;align-items:start}
+  .step{text-align:center;position:relative;padding:0 8px}
+  .step .sc{width:74px;height:74px;border-radius:50%;background:#fff;border:1px solid #dde6ee;box-shadow:0 8px 22px rgba(20,40,70,.07);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;position:relative}
+  .step .sc svg{width:32px;height:32px;color:var(--teal)}
+  .step .sc:after{content:"";position:absolute;top:50%;right:-58%;width:54%;border-top:2px dashed #b9ccda}
+  .step:nth-child(4) .sc:after{display:none}
+  .step h4{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--ink)}
+  .step p{font-size:13.5px;color:var(--mut);line-height:1.5}
+  .privacy{background:linear-gradient(160deg,#0e2a44,#0a1a2e);border-radius:18px;padding:26px 26px 24px;color:#fff;box-shadow:0 20px 45px rgba(10,26,46,.18)}
+  .privacy .pc{width:46px;height:46px;border-radius:12px;background:#12365a;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+  .privacy .pc svg{width:24px;height:24px;color:var(--teal2)}
+  .privacy h4{font-size:17px;font-weight:700;margin-bottom:12px}
+  .privacy p{font-size:12.5px;color:#aebfd2;line-height:1.55;margin-bottom:11px}
+  .privacy a{color:var(--teal2);font-size:13px;font-weight:600;display:inline-flex;align-items:center;gap:6px;margin-top:4px;transition:.15s}
+  .privacy a:hover{gap:10px}
+
+  /* ---------- EVERYTHING ---------- */
+  .ev-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+  .feat-list{display:grid;grid-template-columns:1fr 1fr;gap:30px 34px}
+  .feat{display:flex;gap:14px;align-items:flex-start}
+  .feat .fi{width:44px;height:44px;flex:none;border-radius:11px;background:#e9f7f7;display:flex;align-items:center;justify-content:center}
+  .feat .fi svg{width:22px;height:22px;color:var(--teal)}
+  .feat h4{font-size:16px;font-weight:700;margin-bottom:5px;color:var(--ink)}
+  .feat p{font-size:13px;color:var(--mut);line-height:1.5}
+  .ev-phone{position:relative;display:flex;justify-content:center}
+  .ev-shield{position:absolute;right:-6px;bottom:0;width:230px;height:260px;z-index:0;opacity:.9}
+  .ev-shield svg{width:100%;height:100%}
+
+  /* activity phone */
+  .aphone{position:relative;z-index:2;width:262px;background:#0c1828;border:9px solid #182636;border-radius:40px;padding:16px 13px 12px;box-shadow:0 34px 70px rgba(10,26,46,.32)}
+  .aphone:before{content:"";position:absolute;top:13px;left:50%;transform:translateX(-50%);width:72px;height:6px;background:#1c2c40;border-radius:6px}
+  .a-top{display:flex;align-items:center;justify-content:space-between;color:#e6eefa;font-size:13px;font-weight:700;margin:6px 4px 14px}
+  .a-top .bk{color:#5f7591;font-size:14px}
+  .a-tabs{display:flex;gap:8px;margin:0 2px 12px}
+  .a-tab{flex:1;text-align:center;font-size:9px;padding:6px;border-radius:9px;color:#6e8298;font-weight:600}
+  .a-tab.on{background:#10314f;color:var(--teal2)}
+  .a-day{color:#6e8298;font-size:8px;text-transform:uppercase;letter-spacing:.6px;margin:0 4px 8px;font-weight:700}
+  .a-nav{display:flex;justify-content:space-around;border-top:1px solid #16283d;margin-top:10px;padding-top:10px}
+  .a-nav svg{width:17px;height:17px;color:#4a6075}
+  .a-nav svg.act{color:var(--teal2)}
+
+  /* ---------- FINAL CTA ---------- */
+  .final{background:var(--hero-grad);padding:80px 0}
+  .final-card{display:grid;grid-template-columns:.9fr 1.1fr;gap:0;border-radius:22px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,.4);background:#0d1b2e}
+  .final-img{background:linear-gradient(120deg,#1a2f24,#243a2a);position:relative;min-height:340px;background-size:cover;background-position:center}
+  .final-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+  .final-body{padding:54px 50px;color:#fff}
+  .final-body h2{font-size:36px;font-weight:800;line-height:1.12;margin-bottom:18px;letter-spacing:-.5px}
+  .final-body h2 .tl{color:var(--teal2)}
+  .final-body p{color:#bccadb;font-size:16px;margin-bottom:30px;line-height:1.6;max-width:430px}
+  .store-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:26px}
+  .store-btn{display:inline-flex;align-items:center;gap:11px;border-radius:12px;padding:11px 20px;color:#fff;border:1px solid #2a3a52;background:#0b1626;transition:.15s}
+  .store-btn:hover{border-color:var(--teal);background:#0f1d33}
+  .store-btn svg{width:26px;height:26px;flex:none}
+  .store-btn .big{font-size:15px;font-weight:600;line-height:1.1}
+  .store-btn .sm{font-size:10px;opacity:.82}
+  .final-body .site{color:#8a9bb0;font-size:14px;font-weight:600}
+
+  /* ---------- FOOTER ---------- */
+  footer{background:#070f1c;color:#fff;padding:60px 0 30px}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1fr;gap:34px;padding-bottom:40px;border-bottom:1px solid #18283d}
+  .foot-brand .brand{margin-bottom:14px}
+  .foot-brand p{color:#7e90a6;font-size:13.5px;line-height:1.6;max-width:260px}
+  .foot-col h5{font-size:13px;font-weight:700;letter-spacing:.5px;margin-bottom:16px;color:#fff}
+  .foot-col a{display:block;color:#8294aa;font-size:13.5px;margin-bottom:11px;transition:.15s}
+  .foot-col a:hover{color:var(--teal2)}
+  .socials{display:flex;gap:12px}
+  .socials a{width:36px;height:36px;border-radius:9px;border:1px solid #20354f;display:flex;align-items:center;justify-content:center;color:#9fb1c6;transition:.15s}
+  .socials a:hover{border-color:var(--teal);color:var(--teal2)}
+  .socials svg{width:17px;height:17px}
+  .foot-bot{display:flex;justify-content:space-between;align-items:center;padding-top:24px;color:#647488;font-size:12.5px;flex-wrap:wrap;gap:10px}
+  .foot-bot a{color:#647488}
+  .foot-bot a:hover{color:var(--teal2)}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media(max-width:980px){
+    nav.links{display:none}
+    .hero-grid{grid-template-columns:1fr;gap:60px}
+    .hero h1{font-size:46px}
+    .vals{grid-template-columns:1fr 1fr;gap:26px}
+    .how{grid-template-columns:1fr 1fr;gap:34px 12px}
+    .step .sc:after{display:none}
+    .how .privacy{grid-column:span 2}
+    .ev-grid{grid-template-columns:1fr;gap:50px}
+    .feat-list{max-width:560px}
+    .final-card{grid-template-columns:1fr}
+    .final-img{min-height:220px}
+    .foot-grid{grid-template-columns:1fr 1fr;gap:30px}
+  }
+  @media(max-width:560px){
+    .wrap{padding:0 18px}
+    .hero h1{font-size:36px}
+    .vals{grid-template-columns:1fr}
+    .how{grid-template-columns:1fr}
+    .how .privacy{grid-column:auto}
+    .feat-list{grid-template-columns:1fr}
+    .final-body{padding:38px 26px}
+    .sec-head h2{font-size:30px}
+    .watch{right:-20px;width:96px;height:116px}
+    .foot-grid{grid-template-columns:1fr 1fr}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header>
+  <div class="wrap nav">
+    <a href="#" class="brand">
+      <svg class="mark" viewBox="0 0 48 48" fill="none">
+        <path d="M24 3 6 10v12c0 11 7.6 19.3 18 23 10.4-3.7 18-12 18-23V10L24 3Z" fill="#0e2a3e" stroke="#28c7c7" stroke-width="2.5"/>
+        <path d="M18 16h12v3.4h-8.3v4.2H29v3.4h-7.3V33H18V16Z" fill="#28c7c7"/>
+      </svg>
+      Fyltec
+    </a>
+    <nav class="links">
+      <a href="#home">Home</a>
+      <a href="#features">Features</a>
+      <a href="#how">How It Works</a>
+      <a href="#about">About</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a href="#" class="appstore">
+      <svg viewBox="0 0 24 24" fill="#fff"><path d="M16.5 12.6c0-2 1.6-3 1.7-3-.9-1.3-2.4-1.5-2.9-1.5-1.2-.1-2.4.7-3 .7-.6 0-1.6-.7-2.6-.7-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.4 2 2.5 2 1 0 1.3-.6 2.5-.6s1.5.6 2.5.6 1.8-.9 2.5-1.9c.8-1.1 1.1-2.2 1.1-2.3 0 0-2.1-.8-2.5-3.1Zm-2-5.7c.5-.7.9-1.6.8-2.6-.8 0-1.8.6-2.4 1.2-.5.6-.9 1.5-.8 2.5.9.1 1.8-.4 2.4-1.1Z"/></svg>
+      <span><span class="sm">Download on the</span><br><span class="big">App Store</span></span>
+    </a>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="home">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <div class="eyebrow">Smarter protection. Happier families.</div>
+      <h1>Peace of mind<br>in a <span class="tl">digital</span> world.</h1>
+      <p class="lead">Fyltec is a parental control app that helps you protect your children online, guide their digital habits and keep them safe — across every device, every day.</p>
+      <div class="cta-row">
+        <a href="#" class="btn-store">
+          <svg viewBox="0 0 24 24" fill="#06262a"><path d="M16.5 12.6c0-2 1.6-3 1.7-3-.9-1.3-2.4-1.5-2.9-1.5-1.2-.1-2.4.7-3 .7-.6 0-1.6-.7-2.6-.7-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.4 2 2.5 2 1 0 1.3-.6 2.5-.6s1.5.6 2.5.6 1.8-.9 2.5-1.9c.8-1.1 1.1-2.2 1.1-2.3 0 0-2.1-.8-2.5-3.1Zm-2-5.7c.5-.7.9-1.6.8-2.6-.8 0-1.8.6-2.4 1.2-.5.6-.9 1.5-.8 2.5.9.1 1.8-.4 2.4-1.1Z"/></svg>
+          <span><span class="sm">Download on the</span><br><span class="big">App Store</span></span>
+        </a>
+        <a href="#features" class="learn">Learn More <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+    </div>
+
+    <div class="device">
+      <!-- PHONE -->
+      <div class="phone">
+        <div class="ph-top"><span>9:41</span><span>5G ▮▮▮ 100%</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:0 4px 14px">
+          <div class="ph-brand">
+            <svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 3 6 10v12c0 11 7.6 19.3 18 23 10.4-3.7 18-12 18-23V10L24 3Z" fill="#0e2a3e" stroke="#28c7c7" stroke-width="2.5"/><path d="M18 16h12v3.4h-8.3v4.2H29v3.4h-7.3V33H18V16Z" fill="#28c7c7"/></svg>
+            Fyltec
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6e8298" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+        </div>
+        <div class="status-card">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="#06262a" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div><b>All systems protected</b><span>Your family is safe and secure</span></div>
+        </div>
+        <div class="tiles">
+          <div class="tile"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5l-8-3Z"/></svg></div><b>Protection</b><span>Content &amp; app filtering</span></div>
+          <div class="tile"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-5.7 7-11a7 7 0 0 0-14 0c0 5.3 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg></div><b>Location</b><span>Live map &amp; safe zones</span></div>
+          <div class="tile"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><b>Screen Time</b><span>Schedules &amp; limits</span></div>
+        </div>
+        <div class="rec-h">Recent Activity</div>
+        <div class="rec"><div class="rd red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg></div><div><b>Blocked</b><span>Inappropriate content</span></div><span class="tm">2m ago</span></div>
+        <div class="rec"><div class="rd amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></div><div><b>App Limit Reached</b><span>YouTube</span></div><span class="tm">15m ago</span></div>
+        <div class="rec"><div class="rd teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 21s7-5.7 7-11a7 7 0 0 0-14 0c0 5.3 7 11 7 11Z"/><circle cx="12" cy="10" r="2"/></svg></div><div><b>Left Safe Zone</b><span>School</span></div><span class="tm">1h ago</span></div>
+        <div class="ph-nav">
+          <svg class="act" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M11 18h2"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1l-.4-2.5h-4l-.4 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.4L5 11a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6c.1-.3.1-.7.1-1Z"/></svg>
+        </div>
+      </div>
+      <!-- WATCH -->
+      <div class="watch">
+        <div class="wface">
+          <svg class="wmark" viewBox="0 0 48 48" fill="none"><path d="M24 4 7 11v11c0 10 6.9 17.6 17 21 10.1-3.4 17-11 17-21V11L24 4Z" fill="#0e2a3e" stroke="#28c7c7" stroke-width="2.5"/><path d="M18 16h12v3.4h-8.3v4.2H29v3.4h-7.3V33H18V16Z" fill="#28c7c7"/></svg>
+          <span class="wt">Fyltec</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VALUE STRIP ============ -->
+<section class="strip">
+  <div class="wrap vals">
+    <div class="val"><div class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5l-8-3Z"/></svg></div><div><h4>Protect</h4><p>Block harmful content and apps</p></div></div>
+    <div class="val"><div class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 21s7-5.7 7-11a7 7 0 0 0-14 0c0 5.3 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg></div><div><h4>Guide</h4><p>Know where they are and keep them safe</p></div></div>
+    <div class="val"><div class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><h4>Balance</h4><p>Healthy screen time that builds good habits</p></div></div>
+    <div class="val"><div class="vi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.4"/><path d="M3 20c0-3 2.7-5 6-5s6 2 6 5M15 20c0-2.4 1.6-4 4-4"/></svg></div><div><h4>Built for Families</h4><p>Simple for parents. Respectful for kids. Stronger together.</p></div></div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="sec light" id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>How <span class="tl">Fyltec</span> works</h2>
+      <p>Powerful protection made simple.</p>
+    </div>
+    <div class="how">
+      <div class="step">
+        <div class="sc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg></div>
+        <h4>1. Install</h4>
+        <p>Download Fyltec on your device.</p>
+      </div>
+      <div class="step">
+        <div class="sc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <h4>2. Set Up</h4>
+        <p>Connect your child's device and customize protection.</p>
+      </div>
+      <div class="step">
+        <div class="sc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16l-6 8v5l-4 2v-7L4 5Z"/></svg></div>
+        <h4>3. Protect</h4>
+        <p>Our smart filters block harmful content and apps in real time.</p>
+      </div>
+      <div class="step">
+        <div class="sc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></div>
+        <h4>4. Stay Informed</h4>
+        <p>Monitor activity, screen time and location from your dashboard.</p>
+      </div>
+      <div class="privacy">
+        <div class="pc"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+        <h4>Built with privacy in mind</h4>
+        <p>Fyltec uses advanced DNS filtering technology to block harmful content at the network level.</p>
+        <p>We don't read messages or see personal content. Your family's privacy always comes first.</p>
+        <a href="#">Learn more about our privacy <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ EVERYTHING YOU NEED ============ -->
+<section class="sec" id="features" style="background:linear-gradient(180deg,#f6f8fa,#eef2f5)">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Everything you need to keep<br>your family <span class="tl">safe online</span></h2>
+    </div>
+    <div class="ev-grid">
+      <div class="feat-list">
+        <div class="feat"><div class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 5v6c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V5l-8-3Z"/></svg></div><div><h4>Content Filtering</h4><p>Blocks adult content, violence, gambling and other harmful categories.</p></div></div>
+        <div class="feat"><div class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div><h4>Screen Time Controls</h4><p>Set daily limits, schedules and encourage healthy digital habits.</p></div></div>
+        <div class="feat"><div class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s7-5.7 7-11a7 7 0 0 0-14 0c0 5.3 7 11 7 11Z"/><circle cx="12" cy="10" r="2.4"/></svg></div><div><h4>Live Location &amp; Safe Zones</h4><p>See real-time location and get alerts when they leave safe areas.</p></div></div>
+        <div class="feat"><div class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><div><h4>App &amp; Website Controls</h4><p>Allow or block specific apps and websites that are right for your family.</p></div></div>
+        <div class="feat"><div class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></div><div><h4>Activity Insights</h4><p>View activity summaries and stay informed without being intrusive.</p></div></div>
+        <div class="feat"><div class="fi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg></div><div><h4>Instant Alerts</h4><p>Get notified about important events and potential risks right away.</p></div></div>
+      </div>
+
+      <div class="ev-phone">
+        <div class="ev-shield">
+          <svg viewBox="0 0 240 270" fill="none"><path d="M120 8 18 48v78c0 70 47 120 102 138 55-18 102-68 102-138V48L120 8Z" fill="none" stroke="#bfe6e6" stroke-width="3" opacity=".6"/><path d="M120 30 38 62v66c0 58 39 100 82 116 43-16 82-58 82-116V62L120 30Z" fill="#dff4f4" opacity=".35"/></svg>
+        </div>
+        <div class="aphone">
+          <div class="ph-top" style="margin:2px 4px 8px"><span>9:41</span><span>5G ▮▮▮ 100%</span></div>
+          <div class="a-top"><span class="bk">‹</span><span>Activity</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5f7591" stroke-width="2"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></div>
+          <div class="a-tabs"><div class="a-tab on">Timeline</div><div class="a-tab">Reports</div></div>
+          <div class="a-day">Today</div>
+          <div class="rec"><div class="rd red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/></svg></div><div><b>Blocked</b><span>Inappropriate content</span></div><span class="tm">2m</span></div>
+          <div class="rec"><div class="rd amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></div><div><b>App Limit Reached</b><span>YouTube</span></div><span class="tm">15m</span></div>
+          <div class="rec"><div class="rd teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 21s7-5.7 7-11a7 7 0 0 0-14 0c0 5.3 7 11 7 11Z"/><circle cx="12" cy="10" r="2"/></svg></div><div><b>Left Safe Zone</b><span>School</span></div><span class="tm">1:22</span></div>
+          <div class="rec"><div class="rd teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div><div><b>Search Detected</b><span>Filtered safe search</span></div><span class="tm">11:05</span></div>
+          <div class="rec"><div class="rd teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12l5 5L20 7"/></svg></div><div><b>App Used</b><span>Spotify</span></div><span class="tm">10:30</span></div>
+          <div class="a-nav">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M11 18h2"/></svg>
+            <svg class="act" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7 7 0 0 0-1.7-1l-.4-2.5h-4l-.4 2.5a7 7 0 0 0-1.7 1l-2.4-1-2 3.4L5 11a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.4 2.5h4l.4-2.5a7 7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6c.1-.3.1-.7.1-1Z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="final" id="about">
+  <div class="wrap">
+    <div class="final-card">
+      <div class="final-img">
+        <img src="https://images.unsplash.com/photo-1543342384-1f1350e27861?auto=format&fit=crop&w=900&q=70" alt="Happy family using a tablet together" onerror="this.style.display='none'">
+      </div>
+      <div class="final-body">
+        <h2>Start protecting your<br>family <span class="tl">today</span></h2>
+        <p>Join thousands of parents who trust Fyltec to keep their children safe online.</p>
+        <div class="store-row">
+          <a href="#" class="store-btn">
+            <svg viewBox="0 0 24 24" fill="#fff"><path d="M16.5 12.6c0-2 1.6-3 1.7-3-.9-1.3-2.4-1.5-2.9-1.5-1.2-.1-2.4.7-3 .7-.6 0-1.6-.7-2.6-.7-1.3 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.4 2 2.5 2 1 0 1.3-.6 2.5-.6s1.5.6 2.5.6 1.8-.9 2.5-1.9c.8-1.1 1.1-2.2 1.1-2.3 0 0-2.1-.8-2.5-3.1Zm-2-5.7c.5-.7.9-1.6.8-2.6-.8 0-1.8.6-2.4 1.2-.5.6-.9 1.5-.8 2.5.9.1 1.8-.4 2.4-1.1Z"/></svg>
+            <span><span class="sm">Download on the</span><br><span class="big">App Store</span></span>
+          </a>
+          <a href="#" class="store-btn">
+            <svg viewBox="0 0 24 24"><path d="M4 3.5 13.5 12 4 20.5c-.3-.2-.5-.6-.5-1V4.5c0-.4.2-.8.5-1Z" fill="#28c7c7"/><path d="m15.3 13.8 2.6 2.3-2.9 1.6-2.5-2.2 2.8-1.7Z" fill="#ffce47"/><path d="m15.3 10.2-2.8-1.7 2.5-2.2 2.9 1.6-2.6 2.3Z" fill="#ff6b6b"/><path d="m13.5 12-9-8.5 11 6.7-2 1.8Zm0 0 2 1.8-11 6.7 9-8.5Z" fill="#4dd6a0"/></svg>
+            <span><span class="sm">Coming Soon</span><br><span class="big">Google Play</span></span>
+          </a>
+        </div>
+        <span class="site">Fyltec.com</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer id="faq">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a href="#" class="brand">
+          <svg class="mark" viewBox="0 0 48 48" fill="none"><path d="M24 3 6 10v12c0 11 7.6 19.3 18 23 10.4-3.7 18-12 18-23V10L24 3Z" fill="#0e2a3e" stroke="#28c7c7" stroke-width="2.5"/><path d="M18 16h12v3.4h-8.3v4.2H29v3.4h-7.3V33H18V16Z" fill="#28c7c7"/></svg>
+          Fyltec
+        </a>
+        <p>Smarter protection for happier families. Keep your children safe online — across every device, every day.</p>
+      </div>
+      <div class="foot-col">
+        <h5>Product</h5>
+        <a href="#features">Features</a>
+        <a href="#how">How It Works</a>
+        <a href="#">Pricing</a>
+        <a href="#">Download</a>
+      </div>
+      <div class="foot-col">
+        <h5>Company</h5>
+        <a href="#about">About</a>
+        <a href="#">Blog</a>
+        <a href="#">Careers</a>
+        <a href="#">Contact</a>
+      </div>
+      <div class="foot-col">
+        <h5>Support</h5>
+        <a href="#faq">FAQ</a>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Help Center</a>
+      </div>
+      <div class="foot-col">
+        <h5>Follow Us</h5>
+        <div class="socials">
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 9h3V6h-3c-2 0-3.5 1.5-3.5 3.5V11H8v3h2.5v7h3v-7H16l.5-3H13.5V9.5C13.5 9.2 13.7 9 14 9Z"/></svg></a>
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1.2" fill="currentColor" stroke="none"/></svg></a>
+          <a href="#" aria-label="Twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4l7 9-7 7h2l6-5.8L17 20h3l-7.4-9.4L19 4h-2l-5.4 5.4L7 4H4Z"/></svg></a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bot">
+      <span>© 2026 Fyltec. All rights reserved.</span>
+      <span><a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Cookies</a></span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
