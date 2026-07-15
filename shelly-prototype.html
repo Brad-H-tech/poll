@@ -271,6 +271,20 @@
   :root[data-theme="dark"] .toast{background:#fff;color:#111}
   @media (prefers-color-scheme: dark){:root:not([data-theme]) .toast{background:#fff;color:#111}}
 
+  /* ============ Views (consultant vs manager) ============ */
+  body.consultant .mgr-only{display:none!important}
+  .uppanel{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;cursor:pointer;
+    border:2px dashed color-mix(in srgb,var(--brand) 60%,var(--line-strong));
+    background:linear-gradient(155deg,color-mix(in srgb,var(--brand) 10%,var(--surface-1)),var(--surface-1) 70%);transition:.15s}
+  .uppanel:hover{border-color:var(--brand-deep);transform:translateY(-1px)}
+  .uppanel .ut h3{font-size:16px}
+  .uppanel .ut p{margin:5px 0 0;color:var(--ink-2);font-size:13px;max-width:600px}
+  .pin-inp{width:100%;font:inherit;font-size:17px;letter-spacing:.25em;text-align:center;padding:12px;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:11px;color:var(--ink);outline:none;margin-bottom:16px}
+  .pin-inp:focus{border-color:var(--brand-deep)}
+  .m-row label{display:flex;align-items:center;gap:9px;cursor:pointer;width:100%;font-weight:600}
+  .m-row input[type=checkbox]{accent-color:var(--brand-deep);width:16px;height:16px}
+
   /* tooltip */
   .tip{position:fixed;z-index:80;pointer-events:none;opacity:0;transform:translateY(4px);
     transition:opacity .12s,transform .12s;background:var(--ink);color:var(--bg);
@@ -315,8 +329,12 @@
       <span class="sub">Sales Intelligence</span>
     </div>
     <div class="top-spacer"></div>
-    <div class="base-pills" id="basePills" role="group" aria-label="Loaded bases"></div>
-    <button class="upbtn" id="upBtn">
+    <div class="base-pills mgr-only" id="basePills" role="group" aria-label="Loaded bases"></div>
+    <div class="seg" id="viewSeg" role="tablist" aria-label="View">
+      <button data-v="book" role="tab" aria-pressed="true">Book</button>
+      <button data-v="mgr" role="tab" aria-pressed="false">Manager</button>
+    </div>
+    <button class="upbtn mgr-only" id="upBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V4M6 10l6-6 6 6M4 21h16"/></svg>
       <span>Upload this month's base</span>
     </button>
@@ -329,57 +347,13 @@
   <div class="wrap">
     <span class="eyebrow"><span class="dot"></span>MTN Dealer Console · Prototype</span>
     <h1>Every contacted customer,<br><span class="hl">tracked to the close.</span></h1>
-    <p>Drop each month's base straight onto this page — Shelly reads the raw ledger in your browser,
-       recomputes the whole picture, and gives the floor a working book: filter anything, log every
-       call outcome, and never lose a follow-up.</p>
+    <p>Consultants land straight in the Book: filter anything, log every call outcome, never lose a
+       follow-up. The manager view holds the numbers — leaderboard, mix, demand — and the monthly
+       base upload that refreshes it all.</p>
   </div>
 </div>
 
 <main class="wrap">
-  <section class="grid bento" id="kpis" aria-label="Headline metrics"></section>
-
-  <div class="section-hd">
-    <div>
-      <span class="lbln">Performance</span>
-      <h2>Who is closing, and what's selling</h2>
-      <p>Computed live from the active base. <b>Click any bar, slice or status</b> to filter the customer book below.</p>
-    </div>
-  </div>
-  <section class="grid bento" aria-label="Performance charts">
-    <div class="card pad-lg col-7">
-      <div class="card-hd">
-        <div><h3>Agent leaderboard</h3>
-          <div class="h-desc">Per CSR · ranked <span id="lbToggleLabel">by revenue</span></div></div>
-        <div class="seg" role="tablist" id="lbSeg">
-          <button role="tab" aria-pressed="true" data-mode="rsp">Revenue</button>
-          <button role="tab" aria-pressed="false" data-mode="items">Volume</button>
-        </div>
-      </div>
-      <div id="leaderboard"></div>
-      <div class="hint">↳ click an agent to open their book</div>
-    </div>
-
-    <div class="card pad-lg col-5">
-      <div class="card-hd"><div><h3>Contract mix</h3>
-        <div class="h-desc">Share of lines by deal type · click to filter</div></div></div>
-      <div class="donut-wrap"><div id="donut"></div><div class="legend" id="donutLegend"></div></div>
-    </div>
-
-    <div class="card pad-lg col-7">
-      <div class="card-hd"><div><h3>Top packages</h3>
-        <div class="h-desc">Most-sold tariffs · click to filter the book</div></div></div>
-      <div id="packages"></div>
-    </div>
-
-    <div class="card pad-lg col-5">
-      <div class="card-hd"><div><h3>Device demand</h3>
-        <div class="h-desc">Hardware lines by brand · click to filter</div></div></div>
-      <div id="brands"></div>
-      <div class="card-hd" style="margin:22px 0 14px"><div><h3 style="font-size:13.5px">Invoice status</h3></div></div>
-      <div class="stat-list" id="status"></div>
-    </div>
-  </section>
-
   <div class="section-hd" id="explorer">
     <div>
       <span class="lbln">The Book</span>
@@ -434,6 +408,69 @@
     </div>
   </section>
 
+  <div class="mgr-only">
+    <div class="section-hd">
+      <div>
+        <span class="lbln">Manager only</span>
+        <h2>Command centre</h2>
+        <p>Consultants never see this section — the Book above is their whole screen. Load each month's base here and read the floor below.</p>
+      </div>
+    </div>
+    <section class="card pad-lg uppanel" id="upPanel" aria-label="Upload this month's base">
+      <div class="ut">
+        <h3>📤 Load this month's base</h3>
+        <p>Drop the raw <b>.csv</b> or <b>.xlsx</b> here (or click). Columns are auto-mapped. If the file
+        carries <b>Outcome / Next action / Notes</b> columns — like Shelly's own CSV export — customer
+        outcomes are updated automatically, so you can round-trip the book through Excel.</p>
+      </div>
+      <button class="upbtn" type="button" tabindex="-1">Choose file</button>
+    </section>
+
+  <section class="grid bento" id="kpis" aria-label="Headline metrics"></section>
+
+  <div class="section-hd">
+    <div>
+      <span class="lbln">Performance</span>
+      <h2>Who is closing, and what's selling</h2>
+      <p>Computed live from the active base. <b>Click any bar, slice or status</b> to filter the customer book below.</p>
+    </div>
+  </div>
+  <section class="grid bento" aria-label="Performance charts">
+    <div class="card pad-lg col-7">
+      <div class="card-hd">
+        <div><h3>Agent leaderboard</h3>
+          <div class="h-desc">Per CSR · ranked <span id="lbToggleLabel">by revenue</span></div></div>
+        <div class="seg" role="tablist" id="lbSeg">
+          <button role="tab" aria-pressed="true" data-mode="rsp">Revenue</button>
+          <button role="tab" aria-pressed="false" data-mode="items">Volume</button>
+        </div>
+      </div>
+      <div id="leaderboard"></div>
+      <div class="hint">↳ click an agent to open their book</div>
+    </div>
+
+    <div class="card pad-lg col-5">
+      <div class="card-hd"><div><h3>Contract mix</h3>
+        <div class="h-desc">Share of lines by deal type · click to filter</div></div></div>
+      <div class="donut-wrap"><div id="donut"></div><div class="legend" id="donutLegend"></div></div>
+    </div>
+
+    <div class="card pad-lg col-7">
+      <div class="card-hd"><div><h3>Top packages</h3>
+        <div class="h-desc">Most-sold tariffs · click to filter the book</div></div></div>
+      <div id="packages"></div>
+    </div>
+
+    <div class="card pad-lg col-5">
+      <div class="card-hd"><div><h3>Device demand</h3>
+        <div class="h-desc">Hardware lines by brand · click to filter</div></div></div>
+      <div id="brands"></div>
+      <div class="card-hd" style="margin:22px 0 14px"><div><h3 style="font-size:13.5px">Invoice status</h3></div></div>
+      <div class="stat-list" id="status"></div>
+    </div>
+  </section>
+  </div>
+
   <div class="note">
     <b>Prototype note.</b> The default base is rebuilt from <b>leslist_of_contacted.xlsx</b>
     (528 line items · 287 accounts). The original <b>shelly-prototype.html</b> and
@@ -460,6 +497,16 @@
   <div class="m-actions">
     <button class="btn2 ghost" id="mCancel">Cancel</button>
     <button class="btn2 solid" id="mOk">Add base</button>
+  </div>
+</div></div>
+
+<div class="modal" id="pinModal"><div class="m-card">
+  <h3 id="pinTitle">Manager PIN</h3>
+  <div class="m-sub" id="pinMsg"></div>
+  <input class="pin-inp" id="pinInp" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" aria-label="Manager PIN">
+  <div class="m-actions">
+    <button class="btn2 ghost" id="pinCancel">Cancel</button>
+    <button class="btn2 solid" id="pinOk">Unlock</button>
   </div>
 </div></div>
 
@@ -588,11 +635,14 @@ function parseCSV(text){
   return grid.filter(r=>r.some(c=>String(c).trim()!==''));
 }
 /* header auto-mapping */
-const HEADER_MAP={csr:['csr','agent'],name:['customername','firstname','name'],surname:['customersurname','surname','lastname'],
+const HEADER_MAP={csr:['csr','agent'],name:['customername','customer','firstname','name'],surname:['customersurname','surname','lastname'],
   acct:['accountnumber','account','baaccount'],msisdn:['primarymsisdn','msisdn','cellnumber','phone'],
   package:['package','priceplan','tariffplan'],act:['activationdate','date'],
   product:['productdescription','product','description','device'],rsp:['handsetrsp','rsp','netprice','price'],
-  ctype:['contracttype','dealtype','type'],status:['invoicestatus','status'],category:['customercategory','category','segment']};
+  ctype:['contracttype','dealtype','type'],status:['invoicestatus','status'],category:['customercategory','category','segment'],
+  outcome:['outcome','result','disposition','callstatus','callresult'],
+  next:['nextaction','nextactiondate','callbackdate','followupdate','callback'],
+  note:['callnotes','notes','comments','comment']};
 function normHdr(h){return String(h||'').toLowerCase().replace(/[^a-z]/g,'');}
 function mapHeaders(hdrRow){
   const map={};
@@ -600,6 +650,7 @@ function mapHeaders(hdrRow){
     const n=normHdr(h);if(!n)return;
     for(const [k,alts] of Object.entries(HEADER_MAP)){
       if(map[k]!==undefined)continue;
+      if(k==='note'&&n.includes('invoice'))continue;
       if(alts.some(a=>n===a)||alts.some(a=>n.includes(a))){map[k]=i;break;}
     }
   });
@@ -617,19 +668,34 @@ function toDateStr(v){
   if(!isNaN(p))return new Date(p).toISOString().slice(0,10);
   return '';
 }
+function normOutcome(v){
+  const s=String(v||'').toLowerCase();
+  if(!s)return '';
+  if(/won|sold|sale|closed|success|upgraded/.test(s))return 'won';
+  if(/call\s*back|callback|cb\b/.test(s))return 'cb';
+  if(/follow/.test(s))return 'fu';
+  if(/not\s*interest|declin|lost|refus|reject/.test(s))return 'lost';
+  if(/no\s*answer|voicemail|unreach|no\s*reply/.test(s))return 'na';
+  return '';
+}
 function gridToRows(grid){
   const map=mapHeaders(grid[0]);
   if(map.acct===undefined&&map.name===undefined)
     throw new Error('Could not find an Account or Customer column in the header row');
-  const rows=[];
+  const rows=[],trackImp=[];
   for(let i=1;i<grid.length;i++){
     const r=grid[i];if(!r||!r.some(c=>String(c??'').trim()!==''))continue;
     const g=k=>map[k]===undefined?'':cleanCell(r[map[k]]);
     let rsp=parseFloat(String(g('rsp')).replace(/[R,\s]/gi,''));if(isNaN(rsp))rsp=0;
     rows.push([g('csr'),g('name'),g('surname'),g('acct'),g('msisdn'),g('package'),
       toDateStr(g('act')),g('product'),Math.round(rsp*100)/100,g('ctype'),g('status'),g('category')]);
+    const acct=g('acct');
+    if(acct&&(map.outcome!==undefined||map.next!==undefined||map.note!==undefined)){
+      const st=normOutcome(g('outcome')),next=toDateStr(g('next')),note=g('note');
+      if(st||next||note)trackImp.push({acct,st,next,note});
+    }
   }
-  return {rows,map};
+  return {rows,map,trackImp};
 }
 
 /* =========================================================
@@ -1059,16 +1125,20 @@ function exportCSV(){
 ========================================================= */
 let pendingBase=null;
 async function handleFiles(files){
+  if(document.body.classList.contains('consultant')){
+    toast('Switch to <b>Manager</b> view to load a base');return;
+  }
   for(const file of files){
     try{
       let grid;
       if(/\.csv$/i.test(file.name))grid=parseCSV(await file.text());
       else grid=await parseXLSX(await file.arrayBuffer());
       if(!grid.length)throw new Error('The file appears to be empty');
-      const {rows,map}=gridToRows(grid);
+      const {rows,map,trackImp}=gridToRows(grid);
       if(!rows.length)throw new Error('No data rows found under the header');
       const label=file.name.replace(/\.(xlsx|csv)$/i,'').replace(/[_-]+/g,' ').trim().slice(0,28);
       const ds=buildDataset(rows,label||'Uploaded base');
+      ds._track=trackImp||[];
       pendingBase=ds;
       const critical=['acct','name','product','rsp'];
       const missing=critical.filter(k=>map[k]===undefined);
@@ -1079,7 +1149,9 @@ async function handleFiles(files){
         <div class="m-row"><span>Booked RSP</span><b>${zark(ds.totalRSP)}</b></div>
         <div class="m-row"><span>Period detected</span><b>${esc(ds.sub||'—')}</b></div>
         <div class="m-row"><span>Columns mapped</span><b>${Object.keys(map).length} of 12</b></div>
-        ${missing.length?`<div class="m-row bad"><span>Missing columns</span><b>${missing.join(', ')}</b></div>`:''}`;
+        ${missing.length?`<div class="m-row bad"><span>Missing columns</span><b>${missing.join(', ')}</b></div>`:''}
+        ${ds._track.length?`<div class="m-row" style="border-color:color-mix(in srgb,var(--pos) 40%,transparent)"><span>Customer outcomes found</span><b>${ds._track.length} — will be applied</b></div>
+        <div class="m-row"><label><input type="checkbox" id="mAddBase" checked> Also load this file as a new base</label></div>`:''}`;
       $('#modal').classList.add('show');
     }catch(err){
       toast('⚠️ '+esc(err.message||'Could not read that file'));
@@ -1088,12 +1160,29 @@ async function handleFiles(files){
 }
 function confirmBase(){
   if(!pendingBase)return;
-  datasets.push(pendingBase);
-  activeIdx=datasets.length-1;
-  const ok=store.set('shelly-bases',datasets.slice(1).map(d=>({label:d.label,rows:d.rows})));
-  store.set('shelly-active',activeIdx);
+  const imp=pendingBase._track||[];
+  let applied=0;
+  for(const t of imp){
+    const cur=tracking[t.acct]=tracking[t.acct]||{};
+    if(t.st){cur.st=t.st;applied++;}
+    if(t.next)cur.next=t.next;
+    if(t.note)cur.note=t.note;
+  }
+  if(imp.length)saveTrack();
+  const addChk=$('#mAddBase');
+  const addBase=!imp.length||!addChk||addChk.checked;
+  let msg='';
+  if(addBase){
+    delete pendingBase._track;
+    datasets.push(pendingBase);
+    activeIdx=datasets.length-1;
+    const ok=store.set('shelly-bases',datasets.slice(1).map(d=>({label:d.label,rows:d.rows})));
+    store.set('shelly-active',activeIdx);
+    msg=`Base loaded: <b>${esc(pendingBase.label)}</b> · ${pendingBase.lineItems} lines`+(ok?'':' (session only — storage full)');
+  }
+  if(applied)msg+=(msg?'<br>':'')+`Outcomes updated on <b>${applied}</b> customers`;
   $('#modal').classList.remove('show');
-  toast(`Base loaded: <b>${esc(pendingBase.label)}</b> · ${pendingBase.lineItems} lines · ${pendingBase.customers.length} accounts${ok?'':' (session only — storage full)'}`);
+  toast(msg||'Nothing to apply');
   pendingBase=null;
   filters=F0();shown=40;
   renderAll();
@@ -1108,8 +1197,47 @@ function renderAll(){
   renderBars('#brands',DS().brands,'brand');
   renderStatus();syncFilterControls();renderExplorer();
 }
+/* ---------- consultant vs manager view ---------- */
+let mgrUnlocked=false;
+function applyView(v){
+  document.body.classList.toggle('consultant',v!=='mgr');
+  $$('#viewSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===v)));
+}
+function openPin(){
+  const has=!!store.get('shelly-pin',null);
+  $('#pinTitle').textContent=has?'Manager PIN':'Set a manager PIN';
+  $('#pinMsg').textContent=has
+    ?'Enter your PIN to open the manager view.'
+    :'First time here: choose a PIN (4+ characters). It is stored only on this device.';
+  $('#pinInp').value='';
+  $('#pinModal').classList.add('show');
+  setTimeout(()=>$('#pinInp').focus(),60);
+}
+function tryUnlock(){
+  const v=$('#pinInp').value.trim(),saved=store.get('shelly-pin',null);
+  if(v.length<4){toast('PIN must be at least 4 characters');return;}
+  if(saved&&v!==saved){toast('Wrong PIN');$('#pinInp').value='';return;}
+  if(!saved)store.set('shelly-pin',v);
+  mgrUnlocked=true;
+  $('#pinModal').classList.remove('show');
+  applyView('mgr');
+  toast('Manager view unlocked');
+}
+
 function init(){
+  applyView('book');
   renderAll();
+
+  $('#viewSeg').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    if(b.dataset.v==='mgr'&&!mgrUnlocked){openPin();return;}
+    applyView(b.dataset.v);
+  });
+  $('#pinOk').onclick=tryUnlock;
+  $('#pinCancel').onclick=()=>$('#pinModal').classList.remove('show');
+  $('#pinInp').addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock();});
+  $('#pinModal').addEventListener('click',e=>{if(e.target.id==='pinModal')$('#pinModal').classList.remove('show');});
+  $('#upPanel').onclick=()=>$('#fileInp').click();
 
   $('#lbSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
     lbMode=b.dataset.mode;$$('#lbSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b));
