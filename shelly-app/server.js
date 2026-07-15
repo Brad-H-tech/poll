@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Shelly — team server. Zero dependencies: Node 18+ only.
+/* Sales Intelligence — team server. Zero dependencies: Node 18+ only.
    Storage: data/store.json (atomic writes). Auth: scrypt + httpOnly cookie sessions.
    Live sync: server-sent events on /api/events. */
 'use strict';
@@ -20,6 +20,26 @@ fs.mkdirSync(DATA, { recursive: true });
 
 /* ---------------- store ---------------- */
 const uid = () => crypto.randomBytes(8).toString('hex');
+const STORES = { s1: 'Store 1', s2: 'Store 2', s3: 'Store 3', s4: 'Store 4', s5: 'Store 5', s6: 'Store 6' };
+let seedRows = null;
+function getSeedRows() {
+  if (seedRows === null) {
+    try { seedRows = JSON.parse(fs.readFileSync(path.join(ROOT, 'seed-rows.json'), 'utf8')); }
+    catch (e) { seedRows = []; }
+  }
+  return seedRows;
+}
+function ensureStoreScope(sid) {
+  if (!STORES[sid]) sid = 's1';
+  store.stores = store.stores || {};
+  if (!store.stores[sid]) {
+    const scope = { bases: [], active: null, tracking: {} };
+    const rows = getSeedRows();
+    if (rows.length) { const id = uid(); scope.bases.push({ id, label: 'Base · May–Jul 2024', rows }); scope.active = id; }
+    store.stores[sid] = scope; persist();
+  }
+  return store.stores[sid];
+}
 function hashPw(pw, salt) {
   salt = salt || crypto.randomBytes(16).toString('hex');
   return { salt, hash: crypto.scryptSync(String(pw), salt, 32).toString('hex') };
@@ -29,16 +49,7 @@ function checkPw(pw, u) {
   return crypto.timingSafeEqual(Buffer.from(h), Buffer.from(u.hash));
 }
 function defaultStore() {
-  const s = { users: [], sessions: {}, bases: [], active: null, tracking: {} };
-  try {
-    const rows = JSON.parse(fs.readFileSync(path.join(ROOT, 'seed-rows.json'), 'utf8'));
-    if (Array.isArray(rows) && rows.length) {
-      const id = uid();
-      s.bases.push({ id, label: 'Base · May–Jul 2024', rows });
-      s.active = id;
-    }
-  } catch (e) { /* no seed — start empty */ }
-  return s;
+  return { users: [], sessions: {}, stores: {} };
 }
 let saveTimer = null;
 let store;
@@ -61,7 +72,7 @@ if (!store.users.length) {
   const pw = process.env.SHELLY_ADMIN_PASSWORD || 'shelly-' + crypto.randomBytes(3).toString('hex');
   store.users.push({ u: 'admin', name: 'Manager', role: 'manager', ...hashPw(pw) });
   persistNow();
-  console.log('\n  ┌─ Shelly first run ─────────────────────────┐');
+  console.log('\n  ┌─ Sales Intelligence first run ─────────────┐');
   console.log('  │  Manager account created                   │');
   console.log('  │  username: admin                           │');
   console.log(`  │  password: ${pw.padEnd(32)}│`);
@@ -70,9 +81,9 @@ if (!store.users.length) {
 }
 
 /* ---------------- sessions & auth ---------------- */
-function newSession(u) {
+function newSession(u, sid) {
   const token = crypto.randomBytes(24).toString('hex');
-  store.sessions[token] = { u, exp: Date.now() + SESSION_DAYS * 864e5 };
+  store.sessions[token] = { u, store: STORES[sid] ? sid : 's1', exp: Date.now() + SESSION_DAYS * 864e5 };
   persist();
   return token;
 }
@@ -82,7 +93,7 @@ function getUser(req) {
   const s = store.sessions[m[1]];
   if (!s || s.exp < Date.now()) { if (s) { delete store.sessions[m[1]]; persist(); } return null; }
   const user = store.users.find(x => x.u === s.u);
-  return user ? { token: m[1], user } : null;
+  return user ? { token: m[1], user, store: s.store || 's1' } : null;
 }
 const attempts = new Map(); // ip -> {n, reset}
 function rateLimited(ip) {
@@ -93,12 +104,15 @@ function rateLimited(ip) {
 }
 
 /* ---------------- SSE ---------------- */
-const clients = new Set();
-function broadcast(event, payload) {
+const clients = new Set(); // {res, store}
+function broadcast(sid, event, payload) {
   const msg = `event: ${event}\ndata: ${JSON.stringify(payload || {})}\n\n`;
-  for (const res of clients) { try { res.write(msg); } catch (e) { clients.delete(res); } }
+  for (const c of clients) {
+    if (sid && c.store !== sid) continue;
+    try { c.res.write(msg); } catch (e) { clients.delete(c); }
+  }
 }
-setInterval(() => broadcast('ping', { t: Date.now() }), 25e3).unref();
+setInterval(() => broadcast(null, 'ping', { t: Date.now() }), 25e3).unref();
 
 /* ---------------- helpers ---------------- */
 function json(res, code, obj) {
@@ -136,16 +150,17 @@ function cleanStr(v, max) { return String(v ?? '').slice(0, max || 200); }
 function publicUser(u) { return { u: u.u, name: u.name, role: u.role, agent: u.agent || '' }; }
 function today() { return new Date().toISOString().slice(0, 10); }
 
-function applyOutcomes(list, byName) {
+const OUTCOME_CODES = ['fu', 'cb', 'quote', 'visit', 'won', 'lost', 'na', 'wrong'];
+function applyOutcomes(scope, sid, list, byName) {
   let applied = 0;
   for (const t of (Array.isArray(list) ? list : [])) {
     const acct = cleanStr(t.acct, 40); if (!acct) continue;
-    const cur = store.tracking[acct] = store.tracking[acct] || {};
+    const cur = scope.tracking[acct] = scope.tracking[acct] || {};
     let touched = false;
-    if (t.st && ['fu', 'cb', 'won', 'lost', 'na'].includes(t.st)) { cur.st = t.st; applied++; touched = true; }
+    if (t.st && OUTCOME_CODES.includes(t.st)) { cur.st = t.st; applied++; touched = true; }
     if (t.next) { cur.next = cleanStr(t.next, 10); touched = true; }
-    if (t.note) { cur.note = cleanStr(t.note, 2000); touched = true; }
-    if (touched) { cur.by = byName; cur.at = today(); broadcast('tracking', { acct, rec: cur }); }
+    if (t.note) { cur.note = cleanStr(t.note, 5000); touched = true; }
+    if (touched) { cur.by = byName; cur.at = today(); broadcast(sid, 'tracking', { acct, rec: cur }); }
   }
   if (applied) persist();
   return applied;
@@ -163,10 +178,11 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/login' && req.method === 'POST') {
       const ip = req.socket.remoteAddress || '?';
       if (rateLimited(ip)) return json(res, 429, { error: 'Too many attempts — wait 15 minutes' });
-      const { u, p: pw } = await readBody(req);
+      const body = await readBody(req);
+      const { u, p: pw } = body;
       const user = store.users.find(x => x.u === cleanStr(u, 40).toLowerCase());
       if (!user || !checkPw(pw || '', user)) return json(res, 401, { error: 'Wrong username or password' });
-      const token = newSession(user.u);
+      const token = newSession(user.u, cleanStr(body.store, 4));
       res.setHeader('Set-Cookie',
         `shelly_sid=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${SESSION_DAYS * 86400}`);
       return json(res, 200, { ok: true, me: publicUser(user) });
@@ -177,6 +193,8 @@ const server = http.createServer(async (req, res) => {
     if (!auth) return json(res, 401, { error: 'Not signed in' });
     const me = auth.user;
     const isMgr = me.role === 'manager';
+    const sid = auth.store;
+    const scope = ensureStoreScope(sid);
 
     if (p === '/api/logout' && req.method === 'POST') {
       delete store.sessions[auth.token]; persist();
@@ -188,9 +206,10 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/state') {
       return json(res, 200, {
         me: publicUser(me),
-        bases: store.bases.map(b => ({ id: b.id, label: b.label, rows: b.rows })),
-        active: store.active,
-        tracking: store.tracking,
+        store: sid, storeName: STORES[sid],
+        bases: scope.bases.map(b => ({ id: b.id, label: b.label, rows: b.rows })),
+        active: scope.active,
+        tracking: scope.tracking,
       });
     }
 
@@ -198,8 +217,9 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache',
         Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
       res.write('retry: 3000\n\n');
-      clients.add(res);
-      req.on('close', () => clients.delete(res));
+      const client = { res, store: sid };
+      clients.add(client);
+      req.on('close', () => clients.delete(client));
       return;
     }
 
@@ -209,13 +229,13 @@ const server = http.createServer(async (req, res) => {
       const acct = cleanStr(decodeURIComponent(m[1]), 40);
       const body = await readBody(req);
       const rec = {
-        st: ['', 'fu', 'cb', 'won', 'lost', 'na'].includes(body.st) ? body.st : '',
+        st: ['', ...OUTCOME_CODES].includes(body.st) ? body.st : '',
         next: cleanStr(body.next, 10),
-        note: cleanStr(body.note, 2000),
+        note: cleanStr(body.note, 5000),
         by: me.name, at: today(),
       };
-      store.tracking[acct] = rec; persist();
-      broadcast('tracking', { acct, rec });
+      scope.tracking[acct] = rec; persist();
+      broadcast(sid, 'tracking', { acct, rec });
       return json(res, 200, { ok: true });
     }
 
@@ -223,35 +243,35 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/bases' && req.method === 'POST') {
       if (!isMgr) return json(res, 403, { error: 'Manager only' });
       const body = await readBody(req);
-      const applied = applyOutcomes(body.outcomes, me.name);
+      const applied = applyOutcomes(scope, sid, body.outcomes, me.name);
       let added = false;
       if (body.addBase !== false) {
         const rows = body.rows;
         if (!Array.isArray(rows) || !rows.length || rows.length > 50000 || !Array.isArray(rows[0]))
           return json(res, 400, { error: 'Invalid rows payload' });
         const id = uid();
-        store.bases.push({ id, label: cleanStr(body.label, 40) || 'Uploaded base', rows });
-        store.active = id; added = true; persist();
-        broadcast('bases', {});
+        scope.bases.push({ id, label: cleanStr(body.label, 40) || 'Uploaded base', rows });
+        scope.active = id; added = true; persist();
+        broadcast(sid, 'bases', {});
       }
       return json(res, 200, { ok: true, added, applied });
     }
     m = /^\/api\/bases\/([a-f0-9]+)\/activate$/.exec(p);
     if (m && req.method === 'POST') {
       if (!isMgr) return json(res, 403, { error: 'Manager only' });
-      if (!store.bases.find(b => b.id === m[1])) return json(res, 404, { error: 'No such base' });
-      store.active = m[1]; persist(); broadcast('bases', {});
+      if (!scope.bases.find(b => b.id === m[1])) return json(res, 404, { error: 'No such base' });
+      scope.active = m[1]; persist(); broadcast(sid, 'bases', {});
       return json(res, 200, { ok: true });
     }
     m = /^\/api\/bases\/([a-f0-9]+)$/.exec(p);
     if (m && req.method === 'DELETE') {
       if (!isMgr) return json(res, 403, { error: 'Manager only' });
-      const i = store.bases.findIndex(b => b.id === m[1]);
+      const i = scope.bases.findIndex(b => b.id === m[1]);
       if (i < 0) return json(res, 404, { error: 'No such base' });
-      if (store.bases.length === 1) return json(res, 400, { error: 'Cannot remove the last base' });
-      store.bases.splice(i, 1);
-      if (store.active === m[1]) store.active = store.bases[store.bases.length - 1].id;
-      persist(); broadcast('bases', {});
+      if (scope.bases.length === 1) return json(res, 400, { error: 'Cannot remove the last base' });
+      scope.bases.splice(i, 1);
+      if (scope.active === m[1]) scope.active = scope.bases[scope.bases.length - 1].id;
+      persist(); broadcast(sid, 'bases', {});
       return json(res, 200, { ok: true });
     }
 
@@ -271,7 +291,7 @@ const server = http.createServer(async (req, res) => {
       if (store.users.find(x => x.u === u)) return json(res, 409, { error: 'Username already exists' });
       const agent = cleanStr(b.agent, 30).toUpperCase().trim();
       store.users.push({ u, name, role, agent, ...hashPw(b.p) }); persist();
-      broadcast('team', {});
+      broadcast(null, 'team', {});
       return json(res, 200, { ok: true });
     }
     m = /^\/api\/users\/([a-z0-9._-]+)\/password$/.exec(p);
@@ -293,7 +313,7 @@ const server = http.createServer(async (req, res) => {
       if (i < 0) return json(res, 404, { error: 'No such user' });
       store.users.splice(i, 1);
       for (const [tok, s] of Object.entries(store.sessions)) if (s.u === m[1]) delete store.sessions[tok];
-      persist(); broadcast('team', {});
+      persist(); broadcast(null, 'team', {});
       return json(res, 200, { ok: true });
     }
 
@@ -303,4 +323,4 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`Shelly running → http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Sales Intelligence running → http://localhost:${PORT}`));

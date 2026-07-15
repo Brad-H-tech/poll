@@ -1,5 +1,6 @@
-<title>Shelly · MTN Dealer Sales Intelligence</title>
+<title>Sales Intelligence</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%23ffcb05%27/%3E%3Ctext x=%2716%27 y=%2723%27 font-size=%2720%27 font-weight=%27bold%27 text-anchor=%27middle%27 font-family=%27Arial%27%3ES%3C/text%3E%3C/svg%3E">
+<script>try{document.documentElement.setAttribute("data-accent",localStorage.getItem("si-accent")||"pink")}catch(e){document.documentElement.setAttribute("data-accent","pink")}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Shelly — sales intelligence & customer tracking console for an MTN dealer. Upload each month's base and work the book.">
 <style>
@@ -42,6 +43,37 @@
       --shadow-lg:0 1px 2px rgba(0,0,0,.5), 0 40px 70px -25px rgba(0,0,0,.85);
     }
   }
+  /* ============ Accent themes ============ */
+  :root[data-accent="pink"]{--brand:#f6aecb;--brand-deep:#c2467c}
+  :root[data-accent="pink"][data-theme="dark"]{--brand-deep:#ef8fbb}
+  @media (prefers-color-scheme: dark){:root[data-accent="pink"]:not([data-theme]){--brand-deep:#ef8fbb}}
+  :root[data-accent="yellow"]{--brand:#ffcb05;--brand-deep:#b98f00}
+  :root[data-accent="yellow"][data-theme="dark"]{--brand-deep:#ffd84a}
+  @media (prefers-color-scheme: dark){:root[data-accent="yellow"]:not([data-theme]){--brand-deep:#ffd84a}}
+  :root[data-accent="blue"]{--brand:#a9c9f2;--brand-deep:#2a6cc4}
+  :root[data-accent="blue"][data-theme="dark"]{--brand-deep:#7db4f0}
+  @media (prefers-color-scheme: dark){:root[data-accent="blue"]:not([data-theme]){--brand-deep:#7db4f0}}
+  :root[data-accent="green"]{--brand:#b3e0b3;--brand-deep:#1c7a1c}
+  :root[data-accent="green"][data-theme="dark"]{--brand-deep:#7ecf7e}
+  @media (prefers-color-scheme: dark){:root[data-accent="green"]:not([data-theme]){--brand-deep:#7ecf7e}}
+  :root[data-accent="purple"]{--brand:#cabff2;--brand-deep:#6a58c7}
+  :root[data-accent="purple"][data-theme="dark"]{--brand-deep:#a99bf0}
+  @media (prefers-color-scheme: dark){:root[data-accent="purple"]:not([data-theme]){--brand-deep:#a99bf0}}
+  :root[data-accent="teal"]{--brand:#a5e0cd;--brand-deep:#0f8a63}
+  :root[data-accent="teal"][data-theme="dark"]{--brand-deep:#5fcfa9}
+  @media (prefers-color-scheme: dark){:root[data-accent="teal"]:not([data-theme]){--brand-deep:#5fcfa9}}
+  .accs{display:flex;gap:7px;align-items:center}
+  .acc{appearance:none;width:17px;height:17px;border-radius:50%;cursor:pointer;padding:0;
+    border:2px solid var(--surface-1);box-shadow:0 0 0 1px var(--line-strong);transition:.15s}
+  .acc:hover{transform:scale(1.15)}
+  .acc[aria-pressed="true"]{box-shadow:0 0 0 2px var(--brand-deep)}
+  tbody tr.main.tinted td{background:color-mix(in srgb,var(--tint) 9%,var(--surface-1))}
+  tbody tr.main.tinted:hover td{background:color-mix(in srgb,var(--tint) 16%,var(--surface-1))}
+  .note-in{width:180px;font:inherit;font-size:12px;background:var(--surface-2);
+    border:1px solid var(--line);border-radius:8px;padding:5px 9px;color:var(--ink)}
+  .note-in:focus{outline:none;border-color:var(--brand-deep)}
+  @media (max-width:640px){#accPick{display:none}}
+
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
@@ -157,7 +189,7 @@
     font-weight:700;color:#fff;flex:0 0 auto;margin-right:9px;vertical-align:-8px}
 
   /* ============ Pipeline strip ============ */
-  .pipe{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:18px 0 0}
+  .pipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin:18px 0 0}
   .pcard{appearance:none;border:1px solid var(--line);background:var(--surface-1);border-radius:14px;
     padding:12px 14px;text-align:left;cursor:pointer;transition:.15s;box-shadow:var(--shadow)}
   .pcard:hover{transform:translateY(-1px)}
@@ -191,7 +223,7 @@
   .sumstrip{display:flex;gap:20px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-3);margin-bottom:12px}
   .sumstrip b{color:var(--ink);font-variant-numeric:tabular-nums;font-size:13px}
   .tbl-scroll{overflow-x:auto;border-radius:14px;border:1px solid var(--line)}
-  table{border-collapse:collapse;width:100%;min-width:930px;font-size:13.5px}
+  table{border-collapse:collapse;width:100%;min-width:1150px;font-size:13.5px}
   thead th{position:sticky;top:0;z-index:2;text-align:left;background:var(--surface-3);color:var(--ink-2);
     font-weight:640;font-size:11.5px;letter-spacing:.02em;text-transform:uppercase;
     padding:11px 12px;white-space:nowrap;cursor:pointer;user-select:none;border-bottom:1px solid var(--line)}
@@ -227,7 +259,7 @@
   .xline .xp{color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .xline .xk{color:var(--ink-3);font-size:11.5px;white-space:nowrap}
   .xline .xv{font-variant-numeric:tabular-nums;font-weight:640;white-space:nowrap}
-  .xnotes textarea{width:100%;min-height:74px;resize:vertical;font:inherit;font-size:13px;color:var(--ink);
+  .xnotes textarea{width:100%;min-height:120px;resize:vertical;font:inherit;font-size:13px;color:var(--ink);
     background:var(--surface-1);border:1px solid var(--line);border-radius:10px;padding:10px;outline:none}
   .xnotes textarea:focus{border-color:var(--brand-deep)}
   .tbl-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;
@@ -340,8 +372,8 @@
 <header class="top">
   <div class="wrap top-in">
     <div class="logo">
-      <span class="mark">S</span><b>Shelly</b>
-      <span class="sub">Sales Intelligence</span>
+      <span class="mark" style="font-size:11px;letter-spacing:-.5px">SI</span><b>Sales Intelligence</b>
+      <span class="sub" id="storeSub">MTN Dealer</span>
     </div>
     <div class="top-spacer"></div>
     <div class="base-pills mgr-only" id="basePills" role="group" aria-label="Loaded bases"></div>
@@ -354,6 +386,7 @@
       <span>Upload this month's base</span>
     </button>
     <span class="who" id="whoami"></span>
+    <div class="accs" id="accPick" title="Colour theme"></div>
     <button class="tgl" id="themeBtn" aria-label="Toggle colour theme" title="Toggle theme">◐</button>
     <button class="tgl" id="logoutBtn" aria-label="Sign out" title="Sign out">⏻</button>
   </div>
@@ -362,7 +395,7 @@
 
 <div class="hero">
   <div class="wrap">
-    <span class="eyebrow"><span class="dot"></span>MTN Dealer Console · Prototype</span>
+    <span class="eyebrow"><span class="dot"></span>MTN Dealer Console</span>
     <h1>Every contacted customer,<br><span class="hl">tracked to the close.</span></h1>
     <p>One shared book for the whole floor. Consultants sign in and work their calls — every outcome,
        callback and note lands on the manager's screen live. The manager view holds the numbers and
@@ -415,6 +448,7 @@
           <th data-k="rsp" style="text-align:right">Value <span class="ar">↕</span></th>
           <th data-k="track">Outcome <span class="ar">↕</span></th>
           <th data-k="next">Next action <span class="ar">↕</span></th>
+          <th data-k="note">Notes <span class="ar">↕</span></th>
         </tr></thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -505,14 +539,14 @@
 
   <div class="note">
     <b>Team edition.</b> Everyone signs in to the same live book — outcomes, callbacks and notes
-    sync instantly between consultants and the manager. Bases are stored on your Shelly server;
+    sync instantly between consultants and the manager. Bases are stored on your team server;
     file parsing still happens in the browser. Seeded from <b>leslist_of_contacted.xlsx</b>
     (528 line items · 287 accounts).
   </div>
 </main>
 
 <footer><div class="wrap">
-  <div>Shelly · MTN Dealer Sales Intelligence — prototype console</div>
+  <div>Sales Intelligence · MTN dealer console</div>
   <div>Team edition · shared live book · manager-gated uploads &amp; analytics</div>
 </div></footer>
 
@@ -532,12 +566,14 @@
 </div></div>
 
 <div class="login" id="login"><div class="l-card">
-  <div class="logo" style="justify-content:center;margin-bottom:6px"><span class="mark">S</span><b style="font-size:19px">Shelly</b></div>
-  <p>Sign in to your team's book</p>
+  <div class="logo" style="justify-content:center;margin-bottom:6px"><span class="mark" style="font-size:11px;letter-spacing:-.5px">SI</span><b style="font-size:17px">Sales Intelligence</b></div>
+  <p>Choose your store and sign in</p>
+  <select class="ti" id="liStore" aria-label="Store"></select>
   <input class="ti" id="liU" placeholder="Username" autocomplete="username">
   <input class="ti" id="liP" type="password" placeholder="Password" autocomplete="current-password">
   <div class="l-err" id="liErr"></div>
   <button class="btn2 solid" id="liGo" style="width:100%">Sign in</button>
+  <div class="accs" id="accPickL" style="justify-content:center;margin-top:4px"></div>
 </div></div>
 
 <div class="toast" id="toast"></div>
@@ -558,9 +594,11 @@ const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov',
 const PALETTE=['#2a78d6','#008300','#e87ba4','#eda100','#eb6834','#4a3aa7','#1baf7a','#e34948'];
 const AGENT_COLORS={SIMONE:'#2a78d6',JOASH:'#008300',NONTU:'#e87ba4',ROXANNE:'#eda100',CAREY:'#eb6834'};
 const BRANDS=['SAMSUNG','OPPO','HONOR','HUAWEI','ZTE','TOZED','APPLE','IPHONE','NOKIA','XIAOMI','VIVO','HISENSE','MOBICEL'];
-const TRACK_OPTS=[['','—'],['fu','Follow-up'],['cb','Callback booked'],['won','Won'],['lost','Not interested'],['na','No answer']];
+const STORES=[['s1','Store 1'],['s2','Store 2'],['s3','Store 3'],['s4','Store 4'],['s5','Store 5'],['s6','Store 6']];
+const TRACK_OPTS=[['','—'],['fu','Follow-up'],['cb','Callback booked'],['quote','Quote sent'],['visit','Coming to store'],['won','Won'],['lost','Not interested'],['na','No answer'],['wrong','Wrong number']];
 const TRACK_LBL=Object.fromEntries(TRACK_OPTS);
-const TRACK_COL={'':'var(--ink-3)',fu:'var(--s1)',cb:'var(--s4)',won:'var(--pos)',lost:'var(--neg)',na:'var(--warn)'};
+const TRACK_COL={'':'var(--ink-3)',fu:'var(--s1)',cb:'#c98500',quote:'#7c68d8',visit:'#0f8a63',won:'var(--pos)',lost:'var(--neg)',na:'var(--warn)',wrong:'#8a897e'};
+const ACCENTS={pink:'#f6aecb',yellow:'#ffcb05',blue:'#a9c9f2',green:'#b3e0b3',purple:'#cabff2',teal:'#a5e0cd'};
 const VAL_BANDS=[['','Any value'],['a','Under R2k'],['b','R2k – R8k'],['c','R8k – R15k'],['d','R15k +']];
 const inBand=(v,b)=>b===''||(b==='a'&&v<2000)||(b==='b'&&v>=2000&&v<8000)||(b==='c'&&v>=8000&&v<15000)||(b==='d'&&v>=15000);
 
@@ -702,6 +740,9 @@ function normOutcome(v){
   if(!s)return '';
   if(/won|sold|sale|closed|success|upgraded/.test(s))return 'won';
   if(/call\s*back|callback|cb\b/.test(s))return 'cb';
+  if(/quote|pricing|price/.test(s))return 'quote';
+  if(/visit|coming|in\s*store|instore/.test(s))return 'visit';
+  if(/wrong/.test(s))return 'wrong';
   if(/follow/.test(s))return 'fu';
   if(/not\s*interest|declin|lost|refus|reject/.test(s))return 'lost';
   if(/no\s*answer|voicemail|unreach|no\s*reply/.test(s))return 'na';
@@ -995,7 +1036,7 @@ function renderStatus(){
    RENDER — tracking pipeline strip
 ========================================================= */
 function trackCounts(){
-  const c={'':0,fu:0,cb:0,won:0,lost:0,na:0};
+  const c={};TRACK_OPTS.forEach(([k])=>c[k]=0);
   for(const cu of DS().customers){const t=tracking[cu.acct];c[(t&&t.st)||'']++;}
   return c;
 }
@@ -1082,6 +1123,7 @@ function sortCustomers(list){
       case 'n':x=a.n;y=b.n;break;
       case 'track':x=t(a);y=t(b);break;
       case 'next':x=nx(a)||'9999';y=nx(b)||'9999';break;
+      case 'note':{const nt=z=>{const w=tracking[z.acct];return (w&&w.note||'').toLowerCase()};x=nt(a);y=nt(b);break;}
       default:x=a.rsp;y=b.rsp;
     }
     return x<y?-sortDir:x>y?sortDir:0;
@@ -1112,7 +1154,7 @@ function renderExplorer(){
   $('#tbody').innerHTML=list.map(c=>{
     const t=tracking[c.acct]||{};
     const open=expanded.has(c.acct);
-    let html=`<tr class="main ${open?'open':''}" data-acct="${esc(c.acct)}">
+    let html=`<tr class="main ${open?'open':''}${t.st?' tinted':''}" ${t.st?`style="--tint:${TRACK_COL[t.st]}"`:''} data-acct="${esc(c.acct)}">
       <td><span class="caret">▶</span></td>
       <td class="cust">${esc(titleCase(c.name))}<small>${esc(c.msisdn||c.acct)}</small></td>
       <td>${agentBadge(c.csr)}</td>
@@ -1122,9 +1164,10 @@ function renderExplorer(){
       <td class="num">${zar(c.rsp)}</td>
       <td>${trackCell(c.acct)}</td>
       <td><input type="date" class="next-inp" data-acct="${esc(c.acct)}" value="${esc(t.next||'')}"></td>
+      <td><input class="note-in" data-acct="${esc(c.acct)}" value="${esc(t.note||'')}" placeholder="quick note…" maxlength="500"></td>
     </tr>`;
     if(open){
-      html+=`<tr class="xrow"><td colspan="9"><div class="xgrid">
+      html+=`<tr class="xrow"><td colspan="10"><div class="xgrid">
         <div class="xitems"><div class="xh">Line items · account ${esc(c.acct)}</div>
           ${c.items.map(i=>`<div class="xline">
             <span class="xp" title="${esc(i.product)}">${esc(i.product||'—')}</span>
@@ -1137,7 +1180,7 @@ function renderExplorer(){
         </div></div></td></tr>`;
     }
     return html;
-  }).join('')||`<tr><td colspan="9" style="text-align:center;padding:34px;color:var(--ink-3)">No accounts match these filters.</td></tr>`;
+  }).join('')||`<tr><td colspan="10" style="text-align:center;padding:34px;color:var(--ink-3)">No accounts match these filters.</td></tr>`;
   $('#rowCount').textContent=`Showing ${Math.min(shown,all.length)} of ${all.length} accounts`;
   const more=$('#moreBtn');more.hidden=all.length<=shown;
   more.textContent=`Show more (${all.length-Math.min(shown,all.length)} left)`;
@@ -1245,8 +1288,10 @@ async function doLogin(){
   if(!u||!p){$('#liErr').textContent='Enter username and password';return;}
   $('#liErr').textContent='';$('#liGo').disabled=true;
   try{
+    const storeId=($('#liStore')&&$('#liStore').value)||'s1';
+    try{localStorage.setItem('si-store',storeId)}catch(e){}
     const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({u,p})});
+      body:JSON.stringify({u,p,store:storeId})});
     if(!r.ok){$('#liErr').textContent=(await r.json().catch(()=>({}))).error||'Login failed';return;}
     $('#login').classList.remove('show');$('#liP').value='';
     await boot();
@@ -1256,6 +1301,7 @@ async function doLogin(){
 async function refreshState(){
   const st=await api('/api/state');
   ME=st.me;tracking=st.tracking||{};
+  $('#storeSub').textContent=st.storeName||'MTN Dealer';
   datasets=st.bases.map(b=>Object.assign(buildDataset(b.rows,b.label),{id:b.id}));
   if(!datasets.length)datasets=[Object.assign(buildDataset([],'No base loaded yet'),{id:null})];
   const ai=datasets.findIndex(d=>d.id===st.active);
@@ -1281,7 +1327,7 @@ function connectSSE(){
     const {acct,rec}=JSON.parse(e.data);
     tracking[acct]=rec;
     const f=document.activeElement;
-    if(f&&f.classList&&f.classList.contains('note-ta')&&f.dataset.acct===acct)return;
+    if(f&&f.classList&&(f.classList.contains('note-ta')||f.classList.contains('note-in'))&&f.dataset.acct===acct)return;
     renderExplorer();
   });
   es.addEventListener('bases',()=>refreshState().catch(()=>{}));
@@ -1313,7 +1359,23 @@ async function renderTeam(){
   }catch(e){}
 }
 
+function populateStores(){
+  const sel=$('#liStore');if(!sel)return;
+  let last='s1';try{last=localStorage.getItem('si-store')||'s1'}catch(e){}
+  sel.innerHTML=STORES.map(([v,t])=>`<option value="${v}" ${v===last?'selected':''}>${t}</option>`).join('');
+}
+function renderAcc(){
+  const cur=document.documentElement.getAttribute('data-accent')||'pink';
+  ['#accPick','#accPickL'].forEach(sel=>{const el=$(sel);if(!el)return;
+    el.innerHTML=Object.entries(ACCENTS).map(([k,c])=>
+      `<button class="acc" title="${k}" data-k="${k}" aria-pressed="${k===cur}" style="background:${c}"></button>`).join('');
+    $$('.acc',el).forEach(b=>b.onclick=()=>{
+      document.documentElement.setAttribute('data-accent',b.dataset.k);
+      try{localStorage.setItem('si-accent',b.dataset.k)}catch(e){}
+      renderAcc();});});
+}
 function init(){
+  populateStores();renderAcc();
   $('#viewSeg').addEventListener('click',e=>{
     const b=e.target.closest('button');if(!b)return;
     if(b.dataset.v==='mgr'&&(!ME||ME.role!=='manager'))return;
@@ -1373,7 +1435,8 @@ function init(){
     if(el.classList.contains('next-inp')){t.next=el.value;pushTrack(a);renderPipe();}
   });
   tbody.addEventListener('input',e=>{
-    const el=e.target;if(!el.classList.contains('note-ta'))return;
+    const el=e.target;
+    if(!el.classList.contains('note-ta')&&!el.classList.contains('note-in'))return;
     const t=tracking[el.dataset.acct]=tracking[el.dataset.acct]||{};
     t.note=el.value;pushTrack(el.dataset.acct,true);
   });
