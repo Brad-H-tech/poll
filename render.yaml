@@ -1,0 +1,22 @@
+# One-click blueprint for Render (https://render.com)
+# In Render: New → Blueprint → connect this repo. Everything below is applied automatically.
+services:
+  - type: web
+    name: sales-intelligence
+    runtime: node
+    rootDir: shelly-app
+    plan: starter            # a paid disk requires a paid plan; use "free" to trial (data resets on redeploy)
+    buildCommand: ""         # zero dependencies — nothing to build
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: SHELLY_ADMIN_PASSWORD
+        generateValue: true          # Render generates a strong admin password (see it in the dashboard)
+      - key: SHELLY_DATA_DIR
+        value: /var/data
+      - key: SHELLY_STORES
+        value: "Store 1, Store 2, Store 3, Store 4, Store 5, Store 6"   # ← put your real store names here
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1

@@ -1570,10 +1570,13 @@ async function renderTeam(){
   }catch(e){}
 }
 
-function populateStores(){
+async function populateStores(){
   const sel=$('#liStore');if(!sel)return;
+  let stores=STORES.map(([id,name])=>({id,name}));
+  try{const r=await fetch('/api/stores');if(r.ok){const j=await r.json();if(Array.isArray(j)&&j.length)stores=j;}}catch(e){}
   let last='s1';try{last=localStorage.getItem('si-store')||'s1'}catch(e){}
-  sel.innerHTML=STORES.map(([v,t])=>`<option value="${v}" ${v===last?'selected':''}>${t}</option>`).join('');
+  if(!stores.some(x=>x.id===last))last=stores[0].id;
+  sel.innerHTML=stores.map(x=>`<option value="${x.id}" ${x.id===last?'selected':''}>${esc(x.name)}</option>`).join('');
 }
 function renderAcc(){
   const cur=document.documentElement.getAttribute('data-accent')||'pink';

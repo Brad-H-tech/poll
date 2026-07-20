@@ -11,7 +11,7 @@ const crypto = require('crypto');
 const PORT = process.env.PORT || 4173;
 const ROOT = __dirname;
 const PUB = path.join(ROOT, 'public');
-const DATA = path.join(ROOT, 'data');
+const DATA = process.env.SHELLY_DATA_DIR || path.join(ROOT, 'data');
 const STORE = path.join(DATA, 'store.json');
 const SESSION_DAYS = 30;
 const BODY_LIMIT = 25 * 1024 * 1024;
@@ -20,7 +20,14 @@ fs.mkdirSync(DATA, { recursive: true });
 
 /* ---------------- store ---------------- */
 const uid = () => crypto.randomBytes(8).toString('hex');
-const STORES = { s1: 'Store 1', s2: 'Store 2', s3: 'Store 3', s4: 'Store 4', s5: 'Store 5', s6: 'Store 6' };
+const STORES = (() => {
+  const raw = process.env.SHELLY_STORES;
+  if (raw) {
+    const names = raw.split(',').map(x => x.trim()).filter(Boolean).slice(0, 24);
+    if (names.length) { const o = {}; names.forEach((n, i) => o['s' + (i + 1)] = n); return o; }
+  }
+  return { s1: 'Store 1', s2: 'Store 2', s3: 'Store 3', s4: 'Store 4', s5: 'Store 5', s6: 'Store 6' };
+})();
 let seedRows = null;
 function getSeedRows() {
   if (seedRows === null) {
@@ -173,6 +180,10 @@ const server = http.createServer(async (req, res) => {
 
   try {
     if (!p.startsWith('/api/')) return serveStatic(req, res, p);
+
+    /* ---- public: health & store list ---- */
+    if (p === '/api/health') return json(res, 200, { ok: true, stores: Object.keys(STORES).length });
+    if (p === '/api/stores') return json(res, 200, Object.entries(STORES).map(([id, name]) => ({ id, name })));
 
     /* ---- public: login ---- */
     if (p === '/api/login' && req.method === 'POST') {
