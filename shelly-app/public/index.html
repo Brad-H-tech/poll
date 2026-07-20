@@ -332,6 +332,56 @@
   .who small{color:var(--ink-3);font-weight:500}
   #teamCard .toolbar .ti{flex:1 1 120px}
 
+  /* ===== Smart views (My Day / Hot List) ===== */
+  .subseg{display:inline-flex;flex-wrap:wrap;gap:4px;background:var(--surface-3);border:1px solid var(--line);
+    border-radius:12px;padding:4px;margin-bottom:16px;align-items:center}
+  .subseg>button{appearance:none;border:0;background:transparent;color:var(--ink-2);font:inherit;font-size:13px;
+    font-weight:600;padding:7px 14px;border-radius:9px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+  .subseg>button[aria-pressed="true"]{background:var(--surface-1);color:var(--ink);box-shadow:var(--shadow)}
+  .subseg .cnt{font-size:11px;font-weight:800;background:#e2542f;color:#fff;border-radius:999px;padding:1px 7px;min-width:18px;text-align:center}
+  .subseg .cnt:empty{display:none}
+  .subseg-ai{margin-left:8px;font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--brand-deep);opacity:.85}
+  .aihint{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--brand-deep);
+    background:color-mix(in srgb,var(--brand) 22%,transparent);border-radius:6px;padding:2px 7px;vertical-align:2px}
+  .board-h{font-size:11.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);
+    margin:18px 2px 10px;display:flex;align-items:center;gap:8px}
+  .board-h:first-child{margin-top:2px}
+  .board-h .n{color:#fff;font-size:10px;border-radius:6px;padding:1px 7px;font-weight:800}
+  .bcard{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--line);border-radius:13px;
+    background:var(--surface-2);margin-bottom:9px}
+  .bcard:last-child{margin-bottom:0}
+  .bcard .av{width:30px;height:30px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px}
+  .bcard .bmain{min-width:0;flex:1}
+  .bcard .bnm{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bcard .bsub{font-size:11.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bcard .bsub .mono{font-family:var(--mono)}
+  .rpill{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;flex:0 0 auto}
+  .factors{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+  .fc{font-size:10px;font-weight:600;color:var(--ink-2);background:var(--surface-3);border-radius:5px;padding:2px 7px}
+  .score{font-family:var(--mono);font-weight:800;font-size:15px;text-align:right;line-height:1.05;flex:0 0 auto}
+  .score small{display:block;font-size:9px;font-weight:700;letter-spacing:.04em;color:var(--ink-3)}
+  .contact{display:flex;gap:7px;flex:0 0 auto}
+  .cbtn2{width:34px;height:34px;border-radius:10px;flex:0 0 auto;display:grid;place-items:center;cursor:pointer;
+    border:1px solid var(--line);background:var(--surface-1);color:var(--ink-2);transition:.15s;text-decoration:none}
+  .cbtn2:hover{transform:translateY(-1px)}
+  .cbtn2 svg{width:16px;height:16px}
+  .cbtn2.tel{background:#2a6cc4;border-color:#2a6cc4;color:#fff}
+  .cbtn2.wa{background:#25d366;border-color:#25d366;color:#fff}
+  .cbtn2.dis{opacity:.3;pointer-events:none}
+  .board-empty{text-align:center;padding:38px 16px;color:var(--ink-3);font-size:13.5px}
+  .board-empty .big{font-size:32px;margin-bottom:10px}
+  .cust .mini{display:inline-flex;gap:5px;margin-left:8px;vertical-align:-3px}
+  .mini a{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;text-decoration:none;border:1px solid var(--line);background:var(--surface-2)}
+  .mini a.tel{color:#2a6cc4}.mini a.wa{color:#1c9c4e}
+  .mini a svg{width:12px;height:12px}
+  @media (max-width:560px){
+    .bcard{gap:9px;padding:10px 11px;flex-wrap:wrap}
+    .bcard .bmain{flex:1 1 100%;order:-1}
+    .score small{display:none}
+    .subseg{width:100%}.subseg>button{flex:1;justify-content:center;padding:7px 8px}
+    .who{display:none}
+  }
+
   /* tooltip */
   .tip{position:fixed;z-index:80;pointer-events:none;opacity:0;transform:translateY(4px);
     transition:opacity .12s,transform .12s;background:var(--ink);color:var(--bg);
@@ -413,6 +463,14 @@
     </div>
   </div>
 
+  <div class="subseg" id="subSeg" role="tablist" aria-label="Choose a view">
+    <button role="tab" data-sv="book" aria-pressed="true">📖 The Book</button>
+    <button role="tab" data-sv="day" aria-pressed="false">🗓️ My Day <span class="cnt" id="svDayCnt"></span></button>
+    <button role="tab" data-sv="hot" aria-pressed="false">🔥 Hot List</button>
+    <span class="subseg-ai">✨ smart views</span>
+  </div>
+
+  <div id="bookView">
   <div class="pipe" id="pipe" role="group" aria-label="Tracking pipeline"></div>
 
   <section class="card pad-lg" style="margin-top:16px" aria-label="Customer tracker">
@@ -458,6 +516,25 @@
       <button class="more" id="moreBtn" hidden>Show more</button>
       <span>Values in ZAR · handset RSP, VAT incl.</span>
     </div>
+  </section>
+  </div><!-- /bookView -->
+
+  <section class="card pad-lg" id="dayView" hidden aria-label="My Day">
+    <div class="card-hd">
+      <div><h3>🗓️ My Day <span class="aihint">smart</span></h3>
+        <div class="h-desc">Your callbacks — overdue first, then due today. One tap to call or WhatsApp.</div></div>
+      <button class="fbtn" id="dayMineBtn" hidden aria-pressed="true" title="Only my customers">★ Only mine</button>
+    </div>
+    <div id="dayBoard"></div>
+  </section>
+
+  <section class="card pad-lg" id="hotView" hidden aria-label="Hot List">
+    <div class="card-hd">
+      <div><h3>🔥 Hot List <span class="aihint">AI-ranked</span></h3>
+        <div class="h-desc">Best opportunities first — scored on value, upgrade-eligibility and device tier. Call the hot ones first.</div></div>
+      <button class="fbtn" id="hotMineBtn" hidden aria-pressed="true" title="Only my customers">★ Only mine</button>
+    </div>
+    <div id="hotBoard"></div>
   </section>
 
   <div class="mgr-only">
@@ -1156,7 +1233,7 @@ function renderExplorer(){
     const open=expanded.has(c.acct);
     let html=`<tr class="main ${open?'open':''}${t.st?' tinted':''}" ${t.st?`style="--tint:${TRACK_COL[t.st]}"`:''} data-acct="${esc(c.acct)}">
       <td><span class="caret">▶</span></td>
-      <td class="cust">${esc(titleCase(c.name))}<small>${esc(c.msisdn||c.acct)}</small></td>
+      <td class="cust">${esc(titleCase(c.name))}${miniContact(c)}<small>${esc(c.msisdn||c.acct)}</small></td>
       <td>${agentBadge(c.csr)}</td>
       <td>${dealTag(c.deal)}</td>
       <td class="prod" title="${esc(c.prod)}">${esc(c.prod)}</td>
@@ -1265,6 +1342,134 @@ async function confirmBase(){
 }
 
 /* =========================================================
+   SMART VIEWS — My Day + Hot List + one-tap contact
+========================================================= */
+let subView='book', dayMine=false, hotMine=false;
+const SVG_TEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.5 2.8.6a2 2 0 0 1 1.7 2Z"/></svg>';
+const SVG_WA='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.7-.1a11 11 0 0 1-5.6-4.9c-.4-.7-.7-1.5-.7-2.2 0-.6.3-1.2.7-1.5.2-.2.4-.2.5-.2h.4c.2 0 .3 0 .5.4l.7 1.6c0 .2 0 .3-.1.4l-.3.4c-.2.1-.3.3-.1.5a8 8 0 0 0 3 2.6c.3.1.4.1.6-.1l.6-.8c.2-.2.3-.1.5-.1l1.6.8c.2.1.3.2.4.3 0 .2 0 .8-.2 1.3Z"/></svg>';
+const digits=s=>String(s||'').replace(/[^0-9]/g,'');
+const TODAY=()=>new Date().toISOString().slice(0,10);
+function waMsg(c){
+  const first=titleCase((c.name||'').split(/\s+/)[0]||'there');
+  const who=(ME&&ME.name)?ME.name:'the store';
+  const store=($('#storeSub')&&$('#storeSub').textContent)||'MTN';
+  return `Hi ${first}, it's ${who} from MTN ${store} 🙂 You're due for an upgrade — can I show you this month's deals?`;
+}
+function contactHTML(c){
+  const d=digits(c.msisdn);
+  if(!d)return `<div class="contact"><span class="cbtn2 dis" title="No number on file">${SVG_TEL}</span></div>`;
+  return `<div class="contact">`+
+    `<a class="cbtn2 tel" href="tel:+${d}" title="Call ${esc(c.msisdn)}" aria-label="Call">${SVG_TEL}</a>`+
+    `<a class="cbtn2 wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener" title="WhatsApp with a ready message" aria-label="WhatsApp">${SVG_WA}</a></div>`;
+}
+function miniContact(c){
+  const d=digits(c.msisdn); if(!d)return '';
+  return `<span class="mini">`+
+    `<a class="tel" href="tel:+${d}" title="Call" aria-label="Call">${SVG_TEL}</a>`+
+    `<a class="wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">${SVG_WA}</a></span>`;
+}
+function daysBetween(a,b){return Math.round((Date.parse(a)-Date.parse(b))/864e5);}
+
+/* ---- My Day ---- */
+function myDayList(){
+  const mine=dayMine&&ME&&ME.agent, today=TODAY(), out=[];
+  DS().customers.forEach(c=>{
+    if(mine&&c.csr!==ME.agent)return;
+    const t=tracking[c.acct]; if(!t)return;
+    if(t.st==='won'||t.st==='lost'||t.st==='wrong')return;
+    if(t.next){
+      const kind=t.next<today?'overdue':t.next===today?'today':'upcoming';
+      out.push({c,kind,next:t.next,note:t.note||TRACK_LBL[t.st]||''});
+    }else if(['fu','cb','quote','visit','na'].includes(t.st)){
+      out.push({c,kind:'nodate',next:'',note:t.note||TRACK_LBL[t.st]});
+    }
+  });
+  return out;
+}
+function dayCounts(){const l=myDayList();return {due:l.filter(e=>e.kind==='overdue'||e.kind==='today').length,total:l.length};}
+function renderSubCount(){const c=dayCounts();$('#svDayCnt').textContent=c.due?c.due:'';}
+const URG={overdue:{fg:'#e2542f',bg:'color-mix(in srgb,#e2542f 14%,transparent)'},
+  today:{fg:'#c98500',bg:'color-mix(in srgb,#c98500 16%,transparent)'},
+  upcoming:{fg:'#2a6cc4',bg:'color-mix(in srgb,#2a6cc4 13%,transparent)'},
+  nodate:{fg:'var(--ink-3)',bg:'var(--surface-3)'}};
+function urgLabel(e,today){
+  if(e.kind==='overdue'){const d=Math.abs(daysBetween(e.next,today));return d===1?'yesterday':d+' days late';}
+  if(e.kind==='today')return 'Today';
+  if(e.kind==='upcoming'){const d=daysBetween(e.next,today);return d===1?'tomorrow':'in '+d+' days';}
+  return TRACK_LBL[(tracking[e.c.acct]||{}).st]||'Follow up';
+}
+function dayCard(e,today){
+  const col=URG[e.kind];
+  return `<div class="bcard">
+    <span class="av" style="background:${agentColor((e.c.csr||'?').toUpperCase())}">${esc((e.c.name||'?')[0])}</span>
+    <div class="bmain"><div class="bnm">${esc(titleCase(e.c.name))}</div>
+      <div class="bsub"><span class="mono">${esc(e.c.msisdn||e.c.acct)}</span>${e.note?' · '+esc(e.note):''}</div></div>
+    <span class="rpill" style="color:${col.fg};background:${col.bg}">${esc(urgLabel(e,today))}</span>
+    ${contactHTML(e.c)}
+  </div>`;
+}
+function renderMyDay(){
+  const today=TODAY(), list=myDayList();
+  const groups=[['overdue','Overdue','#e2542f'],['today','Due today','#c98500'],['nodate','Follow-ups (no date set)','#8a897e'],['upcoming','Coming up','#2a6cc4']];
+  let html='';
+  groups.forEach(([k,label,clr])=>{
+    let items=list.filter(e=>e.kind===k);
+    if(!items.length)return;
+    items.sort((a,b)=>k==='overdue'?(a.next<b.next?-1:1):k==='upcoming'?(a.next<b.next?-1:1):(b.c.rsp-a.c.rsp));
+    html+=`<div class="board-h">${label} <span class="n" style="background:${clr}">${items.length}</span></div>`+
+      items.map(e=>dayCard(e,today)).join('');
+  });
+  $('#dayBoard').innerHTML=html||`<div class="board-empty"><div class="big">🗓️</div>
+    No callbacks booked${dayMine&&ME&&ME.agent?' for you':''} yet.<br>Set a <b>Next action</b> date on a customer in the Book and it lands here.</div>`;
+}
+
+/* ---- Hot List ---- */
+function hotScore(c){
+  let s=0; const f=[]; const v=c.rsp||0;
+  if(v>0){s+=Math.min(58,v/450); f.push('R'+(v>=1000?Math.round(v/1000)+'k':Math.round(v))+' value');}
+  if(/upgrade/i.test(c.deal||'')){s+=16;f.push('upgrade-due');}
+  const p=(c.prod||'').toLowerCase();
+  if(/ultra|pro max|flagship|p\d0 pro|iphone 1[4-9]|s2\d ultra/.test(p)){s+=13;f.push('flagship device');}
+  else if(/iphone|galaxy s\d|nova 1|reno1|honor 90|honor x9/.test(p)){s+=6;}
+  if((c.n||0)>=3){s+=6;f.push((c.n)+' lines');}
+  const t=tracking[c.acct];
+  if(!t||!t.st){s+=10;} else if(t.st==='won'){s=-1;} else if(t.st==='lost'||t.st==='wrong'){s=-1;}
+  return {score:Math.round(s),factors:f.slice(0,3)};
+}
+function renderHotList(){
+  const mine=hotMine&&ME&&ME.agent;
+  let rows=DS().customers.filter(c=>!mine||c.csr===ME.agent)
+    .map(c=>({c,...hotScore(c)})).filter(x=>x.score>=0)
+    .sort((a,b)=>b.score-a.score).slice(0,50);
+  if(!rows.length){$('#hotBoard').innerHTML=`<div class="board-empty"><div class="big">🔥</div>No leads to rank yet.</div>`;return;}
+  $('#hotBoard').innerHTML=rows.map(x=>{
+    const c=x.c, hot=x.score>=72, warm=x.score>=52;
+    const badge=hot?['🔥 HOT','#e2542f','color-mix(in srgb,#e2542f 14%,transparent)']
+      :warm?['⭐ WARM','#c98500','color-mix(in srgb,#c98500 16%,transparent)']
+      :['· cool','var(--ink-3)','var(--surface-3)'];
+    return `<div class="bcard">
+      <span class="av" style="background:${agentColor((c.csr||'?').toUpperCase())}">${esc((c.name||'?')[0])}</span>
+      <div class="bmain"><div class="bnm">${esc(titleCase(c.name))}</div>
+        <div class="factors">${x.factors.map(f=>`<span class="fc">${esc(f)}</span>`).join('')}</div></div>
+      <span class="rpill" style="color:${badge[1]};background:${badge[2]}">${badge[0]}</span>
+      <div class="score" style="color:${badge[1]}">${x.score}<small>score</small></div>
+      ${contactHTML(c)}
+    </div>`;
+  }).join('');
+}
+
+/* ---- view switching ---- */
+function renderSubView(v){
+  subView=v;
+  $('#bookView').hidden=v!=='book';
+  $('#dayView').hidden=v!=='day';
+  $('#hotView').hidden=v!=='hot';
+  $$('#subSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sv===v)));
+  if(v==='day')renderMyDay();
+  if(v==='hot')renderHotList();
+}
+
+/* =========================================================
    RENDER ALL + EVENTS
 ========================================================= */
 function renderAll(){
@@ -1272,6 +1477,7 @@ function renderAll(){
   renderBars('#packages',DS().packages,'pkg');
   renderBars('#brands',DS().brands,'brand');
   renderStatus();syncFilterControls();renderExplorer();
+  renderSubCount();renderSubView(subView);
 }
 /* ---------- auth, roles & live sync ---------- */
 function applyView(v){
@@ -1316,6 +1522,11 @@ async function boot(){
   applyView('book');
   const hasAgent=!!ME.agent&&DS().csr.some(c=>c.name===ME.agent);
   $('#myBookBtn').hidden=!hasAgent;
+  dayMine=hotMine=hasAgent;
+  $('#dayMineBtn').hidden=!hasAgent;$('#hotMineBtn').hidden=!hasAgent;
+  $('#dayMineBtn').setAttribute('aria-pressed',String(dayMine));
+  $('#hotMineBtn').setAttribute('aria-pressed',String(hotMine));
+  renderSubCount();
   if(hasAgent&&ME.role!=='manager'){filters.agent=ME.agent;shown=40;syncFilterControls();renderExplorer();}
   if(mgr)renderTeam();
   connectSSE();
@@ -1328,7 +1539,7 @@ function connectSSE(){
     tracking[acct]=rec;
     const f=document.activeElement;
     if(f&&f.classList&&(f.classList.contains('note-ta')||f.classList.contains('note-in'))&&f.dataset.acct===acct)return;
-    renderExplorer();
+    renderExplorer();renderSubCount();if(subView!=='book')renderSubView(subView);
   });
   es.addEventListener('bases',()=>refreshState().catch(()=>{}));
   es.addEventListener('team',()=>{if(ME&&ME.role==='manager')renderTeam();});
@@ -1397,6 +1608,9 @@ function init(){
       .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
   };
   $('#upPanel').onclick=()=>$('#fileInp').click();
+  $('#subSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;renderSubView(b.dataset.sv);});
+  $('#dayMineBtn').onclick=()=>{dayMine=!dayMine;$('#dayMineBtn').setAttribute('aria-pressed',String(dayMine));renderMyDay();renderSubCount();};
+  $('#hotMineBtn').onclick=()=>{hotMine=!hotMine;$('#hotMineBtn').setAttribute('aria-pressed',String(hotMine));renderHotList();};
   $('#myBookBtn').onclick=()=>{
     filters.agent=filters.agent===ME.agent?'':ME.agent;
     shown=40;syncFilterControls();renderExplorer();
@@ -1430,9 +1644,11 @@ function init(){
   tbody.addEventListener('change',e=>{
     const el=e.target,a=el.dataset.acct;if(!a)return;
     const t=tracking[a]=tracking[a]||{};
-    if(el.classList.contains('track-sel')){t.st=el.value;pushTrack(a);renderExplorer();
+    if(el.classList.contains('track-sel')){t.st=el.value;pushTrack(a);renderExplorer();renderSubCount();
+      if(subView!=='book')renderSubView(subView);
       if(el.value)toast(`${TRACK_LBL[el.value]} · saved for the team`);}
-    if(el.classList.contains('next-inp')){t.next=el.value;pushTrack(a);renderPipe();}
+    if(el.classList.contains('next-inp')){t.next=el.value;pushTrack(a);renderPipe();renderSubCount();
+      if(subView!=='book')renderSubView(subView);}
   });
   tbody.addEventListener('input',e=>{
     const el=e.target;
