@@ -235,19 +235,52 @@ const server = http.createServer(async (req, res) => {
     }
 
     /* ---- tracking: any signed-in user ---- */
-    let m = /^\/api\/tracking\/(.+)$/.exec(p);
+    let m = /^\/api\/tracking\/(.+)\/activity$/.exec(p);
+    if (m && req.method === 'POST') {
+      const acct = cleanStr(decodeURIComponent(m[1]), 40);
+      const body = await readBody(req);
+      if (!['wa', 'call', 'na', 'sms'].includes(body.t)) return json(res, 400, { error: 'Unknown activity type' });
+      const cur = scope.tracking[acct] = scope.tracking[acct] || {};
+      cur.acts = Array.isArray(cur.acts) ? cur.acts : [];
+      cur.acts.unshift({ t: body.t, by: me.name, at: new Date().toISOString().slice(0, 16).replace('T', ' ') });
+      cur.acts = cur.acts.slice(0, 30);
+      persist();
+      broadcast(sid, 'tracking', { acct, rec: cur });
+      return json(res, 200, { ok: true });
+    }
+    m = /^\/api\/tracking\/(.+)$/.exec(p);
     if (m && req.method === 'PUT') {
       const acct = cleanStr(decodeURIComponent(m[1]), 40);
       const body = await readBody(req);
+      const prev = scope.tracking[acct] || {};
       const rec = {
         st: ['', ...OUTCOME_CODES].includes(body.st) ? body.st : '',
         next: cleanStr(body.next, 10),
         note: cleanStr(body.note, 5000),
         by: me.name, at: today(),
+        acts: Array.isArray(prev.acts) ? prev.acts : [],
       };
       scope.tracking[acct] = rec; persist();
       broadcast(sid, 'tracking', { acct, rec });
       return json(res, 200, { ok: true });
+    }
+
+    /* ---- add a customer manually (walk-in / new lead) ---- */
+    if (p === '/api/customers' && req.method === 'POST') {
+      const b = await readBody(req);
+      const name = cleanStr(b.name, 60).trim();
+      if (!name) return json(res, 400, { error: 'A name is required' });
+      let ms = String(b.msisdn || '').replace(/[^0-9]/g, '');
+      if (ms.length === 10 && ms[0] === '0') ms = '27' + ms.slice(1);
+      const base = scope.bases.find(x => x.id === scope.active);
+      if (!base) return json(res, 400, { error: 'Load a base first' });
+      const acct = 'WI' + uid().slice(0, 8).toUpperCase();
+      base.rows.push([me.agent || '', name, '', acct, ms, '', today(), 'Walk-in / manual lead', 0, 'New / Add Sim', '', 'Consumer']);
+      const note = cleanStr(b.note, 5000);
+      if (note) scope.tracking[acct] = { st: '', next: '', note, by: me.name, at: today(), acts: [] };
+      persist();
+      broadcast(sid, 'bases', {});
+      return json(res, 200, { ok: true, acct });
     }
 
     /* ---- bases: manager only ---- */

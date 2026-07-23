@@ -485,6 +485,57 @@
     .who{display:none}
   }
 
+  /* ===== Quick Log sheet ===== */
+  .qback{position:fixed;inset:0;z-index:96;background:rgba(12,10,10,.45);backdrop-filter:blur(3px)}
+  .qsheet{position:fixed;z-index:97;left:50%;transform:translateX(-50%);bottom:0;width:min(500px,100%);
+    max-height:86vh;overflow-y:auto;background:var(--surface-1);border:1px solid var(--line);
+    border-radius:24px 24px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));box-shadow:var(--shadow-lg)}
+  @media (min-width:700px){.qsheet{bottom:auto;top:50%;transform:translate(-50%,-50%);border-radius:22px}}
+  .qs-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .qs-head b{font-size:16px;display:block}
+  .qs-head small{color:var(--ink-3);font-size:12px;font-family:var(--mono)}
+  .qs-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0 4px}
+  .qs-btn{display:flex;align-items:center;gap:10px;padding:13px 12px;border-radius:14px;border:1px solid var(--line);
+    background:var(--surface-2);font:inherit;font-size:13.5px;font-weight:650;color:var(--ink);cursor:pointer;transition:.13s;text-align:left}
+  .qs-btn:hover{transform:translateY(-1px)}
+  .qs-btn .qi{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:#fff;flex:0 0 auto}
+  .qs-btn .qi svg{width:16px;height:16px}
+  .qs-chips{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 4px}
+  .qs-note{width:100%;min-height:62px;resize:vertical;font:inherit;font-size:14px;color:var(--ink);margin-top:12px;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px;outline:none}
+  .qs-note:focus{border-color:var(--brand-deep)}
+  .qs-acts{margin:12px 0 2px;display:flex;flex-direction:column;gap:6px}
+  .qs-acts .qa{display:flex;gap:9px;align-items:center;font-size:12px;color:var(--ink-2)}
+  .qs-acts .qa i{width:7px;height:7px;border-radius:50%;flex:0 0 auto;font-style:normal}
+  .qs-acts .qa small{color:var(--ink-3);margin-left:auto;white-space:nowrap}
+  .qs-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+  .qzap{appearance:none;width:30px;height:30px;border-radius:9px;border:1px solid color-mix(in srgb,var(--brand-deep) 35%,transparent);
+    background:color-mix(in srgb,var(--brand) 22%,transparent);color:var(--brand-deep);cursor:pointer;display:grid;place-items:center;transition:.13s}
+  .qzap:hover{transform:scale(1.1)}
+  .qzap svg{width:14px;height:14px}
+  .bcard{cursor:pointer}
+
+  /* ===== Bottom nav (mobile app feel) ===== */
+  .bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:70;
+    background:color-mix(in srgb,var(--surface-1) 92%,transparent);backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom))}
+  .bottomnav button{flex:1;appearance:none;border:0;background:none;font:inherit;font-size:10.5px;font-weight:650;
+    color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:12px;cursor:pointer;position:relative}
+  .bottomnav button svg{width:20px;height:20px}
+  .bottomnav button[aria-pressed="true"]{color:var(--brand-deep)}
+  .bottomnav .bn-add .bi{width:40px;height:40px;border-radius:14px;background:var(--brand);color:var(--brand-ink);
+    display:grid;place-items:center;margin-top:-14px;box-shadow:0 8px 18px -8px var(--brand)}
+  .bottomnav .bn-add .bi svg{width:18px;height:18px}
+  .bn-dot{position:absolute;top:2px;right:26%;min-width:16px;height:16px;border-radius:999px;background:#e2542f;color:#fff;
+    font-size:9.5px;font-weight:800;display:grid;place-items:center;padding:0 4px}
+  .bn-dot:empty{display:none}
+  @media (max-width:979px){
+    body.authed .bottomnav{display:flex}
+    body.authed{padding-bottom:78px}
+    body.authed .subseg{display:none}
+    .track-sel,.next-inp{padding-top:8px;padding-bottom:8px}
+  }
+
   /* tooltip */
   .tip{position:fixed;z-index:80;pointer-events:none;opacity:0;transform:translateY(4px);
     transition:opacity .12s,transform .12s;background:var(--ink);color:var(--bg);
@@ -632,6 +683,7 @@
       <select class="sel" id="fTrack" aria-label="Tracking status"></select>
       <button class="abtn" id="csvBtn" title="Export the filtered view">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>CSV</button>
+      <button class="abtn" id="addCustBtn" title="Add a walk-in or new lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add customer</button>
       <button class="abtn" id="clearBtn">Clear</button>
     </div>
     <div class="chips" id="chips"></div>
@@ -794,6 +846,43 @@
   <button class="btn2 solid" id="liGo" style="width:100%">Sign in</button>
   <div class="accs" id="accPickL" style="justify-content:center;margin-top:4px"></div>
 </div></div>
+
+<div class="qback" id="qback" hidden></div>
+<div class="qsheet" id="qsheet" hidden role="dialog" aria-label="Quick log">
+  <div class="qs-head">
+    <div><b id="qsName">—</b><small id="qsSub"></small></div>
+    <div class="contact" id="qsContact"></div>
+  </div>
+  <div class="qs-grid" id="qsGrid"></div>
+  <div class="qs-chips" id="qsChips" hidden></div>
+  <textarea class="qs-note" id="qsNote" placeholder="Quick note — what was said…"></textarea>
+  <div class="qs-acts" id="qsActs"></div>
+  <div class="qs-foot">
+    <button class="btn2 ghost" id="qsClose">Close</button>
+    <button class="btn2 solid" id="qsSave">Save note</button>
+  </div>
+</div>
+
+<div class="modal" id="custModal"><div class="m-card">
+  <h3>Add a customer</h3>
+  <div class="m-sub">A walk-in or new lead — lands in this store's book instantly, assigned to you.</div>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+    <input class="ti" id="ncName" placeholder="Full name" autocomplete="off">
+    <input class="ti" id="ncCell" placeholder="Cell number (e.g. 083 123 4567)" inputmode="tel" autocomplete="off">
+    <textarea class="ti" id="ncNote" placeholder="What do they want? (optional)" style="min-height:64px;resize:vertical"></textarea>
+  </div>
+  <div class="m-actions">
+    <button class="btn2 ghost" id="ncCancel">Cancel</button>
+    <button class="btn2 solid" id="ncAdd">Add to the book</button>
+  </div>
+</div></div>
+
+<nav class="bottomnav" id="bottomNav" aria-label="Quick navigation">
+  <button data-nav="book" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.6A1.6 1.6 0 0 1 5.6 3H18a1 1 0 0 1 1 1v13.8a1 1 0 0 1-1 1H5.6A1.6 1.6 0 0 0 4 20.4Z"/><path d="M4 4.6A1.6 1.6 0 0 0 5.6 6.2H19"/></svg>Book</button>
+  <button data-nav="day" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>My Day<span class="bn-dot" id="bnDayCnt"></span></button>
+  <button class="bn-add" id="bnAdd" aria-label="Add customer"><span class="bi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>Add</button>
+  <button data-nav="hot" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.6 2c.5 2.4-.9 3.7-2.2 5C10 8.4 8.6 9.8 8.6 12.2a5.4 5.4 0 0 0 10.8 0c0-1.7-.8-3.2-1.7-4.4-.2 1-.9 1.6-1.7 1.6-.9 0-1.5-.7-1.5-1.8 0-2 1-3.5-1.3-5.6Z"/></svg>Hot List</button>
+</nav>
 
 <div class="toast" id="toast"></div>
 <div class="tip" id="tip" role="status" aria-live="polite"></div>
@@ -1374,7 +1463,7 @@ function renderExplorer(){
     const t=tracking[c.acct]||{};
     const open=expanded.has(c.acct);
     let html=`<tr class="main ${open?'open':''}${t.st?' tinted':''}" ${t.st?`style="--tint:${TRACK_COL[t.st]}"`:''} data-acct="${esc(c.acct)}">
-      <td><span class="caret">▶</span></td>
+      <td><button class="qzap" data-zap="${esc(c.acct)}" title="Quick log" aria-label="Quick log"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.2 2 4.8 13.2h5.5L10.8 22l8.4-11.2h-5.5Z"/></svg></button></td>
       <td class="cust">${esc(titleCase(c.name))}${miniContact(c)}<small>${esc(c.msisdn||c.acct)}</small></td>
       <td>${agentBadge(c.csr)}</td>
       <td>${dealTag(c.deal)}</td>
@@ -1395,6 +1484,7 @@ function renderExplorer(){
         </div>
         <div class="xnotes"><div class="xh" style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px">Call notes</div>
           <textarea class="note-ta" data-acct="${esc(c.acct)}" placeholder="What was said, what they want, objections…">${esc(t.note||'')}</textarea>
+          ${(t.acts&&t.acts.length)?`<div class="qs-acts" style="margin-top:10px">${t.acts.slice(0,4).map(a=>`<div class="qa"><i style="background:${ACT_COL[a.t]||'var(--ink-3)'}"></i>${esc(ACT_LBL[a.t]||a.t)}<small>${esc(a.by||'')} · ${esc((a.at||'').slice(5))}</small></div>`).join('')}</div>`:''}
           ${t.by?`<div class="hint">Last update by <b>&nbsp;${esc(t.by)}</b>&nbsp;· ${esc(t.at||'')}</div>`:''}
         </div></div></td></tr>`;
     }
@@ -1530,7 +1620,9 @@ function myDayList(){
 }
 function dayCounts(){const l=myDayList();return {due:l.filter(e=>e.kind==='overdue'||e.kind==='today').length,total:l.length};}
 function renderSubCount(){const c=dayCounts();const t=c.due?c.due:'';
-  $('#svDayCnt').textContent=t;const sn=$('#snDayCnt');if(sn)sn.textContent=t;}
+  $('#svDayCnt').textContent=t;
+  const sn=$('#snDayCnt');if(sn)sn.textContent=t;
+  const bn=$('#bnDayCnt');if(bn)bn.textContent=t;}
 const URG={overdue:{fg:'#e2542f',bg:'color-mix(in srgb,#e2542f 14%,transparent)'},
   today:{fg:'#c98500',bg:'color-mix(in srgb,#c98500 16%,transparent)'},
   upcoming:{fg:'#2a6cc4',bg:'color-mix(in srgb,#2a6cc4 13%,transparent)'},
@@ -1543,7 +1635,7 @@ function urgLabel(e,today){
 }
 function dayCard(e,today){
   const col=URG[e.kind];
-  return `<div class="bcard">
+  return `<div class="bcard" data-acct="${esc(e.c.acct)}">
     <span class="av" style="background:${agentColor((e.c.csr||'?').toUpperCase())}">${esc((e.c.name||'?')[0])}</span>
     <div class="bmain"><div class="bnm">${esc(titleCase(e.c.name))}</div>
       <div class="bsub"><span class="mono">${esc(e.c.msisdn||e.c.acct)}</span>${e.note?' · '+esc(e.note):''}</div></div>
@@ -1590,7 +1682,7 @@ function renderHotList(){
     const badge=hot?['🔥 HOT','#e2542f','color-mix(in srgb,#e2542f 14%,transparent)']
       :warm?['⭐ WARM','#c98500','color-mix(in srgb,#c98500 16%,transparent)']
       :['· cool','var(--ink-3)','var(--surface-3)'];
-    return `<div class="bcard">
+    return `<div class="bcard" data-acct="${esc(c.acct)}">
       <span class="av" style="background:${agentColor((c.csr||'?').toUpperCase())}">${esc((c.name||'?')[0])}</span>
       <div class="bmain"><div class="bnm">${esc(titleCase(c.name))}</div>
         <div class="factors">${x.factors.map(f=>`<span class="fc">${esc(f)}</span>`).join('')}</div></div>
@@ -1599,6 +1691,99 @@ function renderHotList(){
       ${contactHTML(c)}
     </div>`;
   }).join('');
+}
+
+/* ---- Quick Log ---- */
+const ACT_LBL={wa:'WhatsApped — waiting for feedback',call:'Phoned — spoke',na:'Phoned — no answer',sms:'SMS sent'};
+const ACT_COL={wa:'#1c9c4e',call:'#2a6cc4',na:'var(--warn)',sms:'#7c68d8'};
+let qsAcct=null;
+function findCust(acct){return DS().customers.find(c=>c.acct===acct);}
+function postActivity(acct,type){
+  const t=tracking[acct]=tracking[acct]||{};
+  t.acts=t.acts||[];
+  t.acts.unshift({t:type,by:ME&&ME.name,at:new Date().toISOString().slice(0,16).replace('T',' ')});
+  api('/api/tracking/'+encodeURIComponent(acct)+'/activity',{method:'POST',body:JSON.stringify({t:type})})
+    .catch(e=>{if(e.message!=='auth')toast('⚠️ Not saved — server unreachable');});
+  renderQsActs();
+}
+function renderQsActs(){
+  const t=tracking[qsAcct]||{};
+  $('#qsActs').innerHTML=(t.acts||[]).slice(0,5).map(a=>
+    `<div class="qa"><i style="background:${ACT_COL[a.t]||'var(--ink-3)'}"></i>${esc(ACT_LBL[a.t]||a.t)}
+     <small>${esc(a.by||'')} · ${esc((a.at||'').slice(5))}</small></div>`).join('');
+}
+function qsRefresh(){renderExplorer();renderPipe();renderSubCount();if(subView!=='book')renderSubView(subView);}
+function openQuick(acct){
+  const c=findCust(acct);if(!c)return;
+  qsAcct=acct;
+  const t=tracking[acct]||{};
+  $('#qsName').textContent=titleCase(c.name);
+  $('#qsSub').textContent=(c.msisdn||c.acct)+' · '+zar(c.rsp)+(c.prod&&c.prod!=='—'?' · '+c.prod.slice(0,26):'');
+  $('#qsContact').innerHTML=contactHTML(c);
+  $('#qsNote').value=t.note||'';
+  $('#qsChips').hidden=true;
+  const B=(k,label,color,icon)=>`<button class="qs-btn" data-q="${k}"><span class="qi" style="background:${color}">${icon}</span>${label}</button>`;
+  $('#qsGrid').innerHTML=
+    B('wa','WhatsApped','#25d366',SVG_WA)+
+    B('na','No answer','#d95926',SVG_TEL)+
+    B('call','Spoke — note it','#2a6cc4',SVG_TEL)+
+    B('cb','Book callback','#c98500','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4.5" width="18" height="16" rx="3.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>')+
+    B('won','WON 🎉'.replace(' 🎉',''),'var(--pos)','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg>')+
+    B('lost','Not interested','var(--neg)','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>');
+  renderQsActs();
+  $('#qback').hidden=false;$('#qsheet').hidden=false;
+}
+function closeQuick(){
+  if(qsAcct){const t=tracking[qsAcct]=tracking[qsAcct]||{};
+    const v=$('#qsNote').value;
+    if((t.note||'')!==v){t.note=v;pushTrack(qsAcct);}}
+  $('#qback').hidden=true;$('#qsheet').hidden=true;$('#qsChips').hidden=true;
+  qsAcct=null;qsRefresh();
+}
+function quickAction(k){
+  if(!qsAcct)return;
+  const t=tracking[qsAcct]=tracking[qsAcct]||{};
+  const c=findCust(qsAcct);
+  if(k==='wa'){
+    postActivity(qsAcct,'wa');
+    if(!t.st){t.st='fu';pushTrack(qsAcct);}
+    const d=digits(c&&c.msisdn);
+    if(d)window.open('https://wa.me/'+d+'?text='+encodeURIComponent(waMsg(c)),'_blank');
+    toast('Logged: WhatsApped — waiting for feedback');return;
+  }
+  if(k==='call'){postActivity(qsAcct,'call');$('#qsNote').focus();toast('Logged: phoned — add your note');return;}
+  if(k==='na'){t.st='na';pushTrack(qsAcct);postActivity(qsAcct,'na');toast('Logged: no answer');qsRefresh();return;}
+  if(k==='cb'){
+    const chips=$('#qsChips');chips.hidden=false;
+    const mk=(off,lbl)=>{const d=new Date();d.setDate(d.getDate()+off);return `<button class="fbtn" data-cb="${d.toISOString().slice(0,10)}">${lbl}</button>`;};
+    chips.innerHTML=mk(1,'Tomorrow')+mk(2,'In 2 days')+mk(7,'Next week')+
+      `<input type="date" class="next-inp" id="qsCbDate" style="width:150px">`;
+    return;
+  }
+  if(k==='won'){t.st='won';pushTrack(qsAcct);toast('WON — saved for the team 🎉');closeQuick();return;}
+  if(k==='lost'){t.st='lost';pushTrack(qsAcct);toast('Marked not interested');closeQuick();return;}
+}
+function setCallback(date){
+  if(!qsAcct||!date)return;
+  const t=tracking[qsAcct]=tracking[qsAcct]||{};
+  t.st='cb';t.next=date;pushTrack(qsAcct);
+  toast('Callback booked · '+date);
+  closeQuick();
+}
+
+/* ---- Add customer ---- */
+async function addCustomer(){
+  const name=$('#ncName').value.trim(),cell=$('#ncCell').value.trim(),note=$('#ncNote').value.trim();
+  if(!name){toast('Give the customer a name');return;}
+  $('#ncAdd').disabled=true;
+  try{
+    await api('/api/customers',{method:'POST',body:JSON.stringify({name,msisdn:cell,note})});
+    $('#custModal').classList.remove('show');
+    $('#ncName').value=$('#ncCell').value=$('#ncNote').value='';
+    await refreshState();
+    toast(`<b>${esc(titleCase(name))}</b> added to the book`);
+  }catch(e){if(e.message!=='auth')toast('⚠️ '+esc(e.message));}
+  $('#ncAdd').disabled=false;
 }
 
 /* ---- view switching ---- */
@@ -1619,6 +1804,7 @@ function renderSubView(v){
   $('#hotView').hidden=v!=='hot';
   $$('#subSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sv===v)));
   $$('#sidenav .sn-item').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.nav===v)));
+  $$('#bottomNav [data-nav]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.nav===v)));
   if(v==='day')renderMyDay();
   if(v==='hot')renderHotList();
 }
@@ -1790,6 +1976,23 @@ function init(){
   $('#upPanel').onclick=()=>$('#fileInp').click();
   $('#subSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;renderSubView(b.dataset.sv);});
   $('#heroCta').onclick=()=>{navTo('day');};
+  ['#dayBoard','#hotBoard'].forEach(sel=>$(sel).addEventListener('click',e=>{
+    if(e.target.closest('a,select,input'))return;
+    const card=e.target.closest('.bcard');
+    if(card&&card.dataset.acct)openQuick(card.dataset.acct);
+  }));
+  $('#qsGrid').addEventListener('click',e=>{const b=e.target.closest('.qs-btn');if(b)quickAction(b.dataset.q);});
+  $('#qsChips').addEventListener('click',e=>{const b=e.target.closest('[data-cb]');if(b)setCallback(b.dataset.cb);});
+  $('#qsChips').addEventListener('change',e=>{if(e.target.id==='qsCbDate'&&e.target.value)setCallback(e.target.value);});
+  $('#qsClose').onclick=closeQuick;
+  $('#qsSave').onclick=()=>{closeQuick();toast('Note saved');};
+  $('#qback').onclick=closeQuick;
+  $('#addCustBtn').onclick=()=>$('#custModal').classList.add('show');
+  $('#bnAdd').onclick=()=>$('#custModal').classList.add('show');
+  $('#ncCancel').onclick=()=>$('#custModal').classList.remove('show');
+  $('#ncAdd').onclick=addCustomer;
+  $('#custModal').addEventListener('click',e=>{if(e.target.id==='custModal')$('#custModal').classList.remove('show');});
+  $('#bottomNav').addEventListener('click',e=>{const b=e.target.closest('[data-nav]');if(b)navTo(b.dataset.nav);});
   $('#profBtn').onclick=e=>{e.stopPropagation();const m=$('#pmenu');m.hidden=!m.hidden;
     $('#profBtn').setAttribute('aria-expanded',String(!m.hidden));};
   document.addEventListener('click',e=>{
@@ -1835,6 +2038,8 @@ function init(){
     renderExplorer();});
   const tbody=$('#tbody');
   tbody.addEventListener('click',e=>{
+    const z=e.target.closest('.qzap');
+    if(z){e.stopPropagation();openQuick(z.dataset.zap);return;}
     if(e.target.closest('select,input,textarea,button,a'))return;
     const tr=e.target.closest('tr.main');if(!tr)return;
     const a=tr.dataset.acct;
