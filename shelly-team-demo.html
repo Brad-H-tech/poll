@@ -62,6 +62,13 @@
   :root[data-accent="teal"]{--brand:#a5e0cd;--brand-deep:#0f8a63}
   :root[data-accent="teal"][data-theme="dark"]{--brand-deep:#5fcfa9}
   @media (prefers-color-scheme: dark){:root[data-accent="teal"]:not([data-theme]){--brand-deep:#5fcfa9}}
+  :root{--hero-a:#151b3d;--hero-b:#233a86;--hero-c:#3f6ccf;--hero-hl:#a9c6ff}
+  :root[data-accent="pink"]{--hero-a:#38102a;--hero-b:#7c2453;--hero-c:#c2467c;--hero-hl:#ffbcda}
+  :root[data-accent="yellow"]{--hero-a:#332203;--hero-b:#7a5a0a;--hero-c:#bd8b06;--hero-hl:#ffe08a}
+  :root[data-accent="blue"]{--hero-a:#151b3d;--hero-b:#233a86;--hero-c:#3f6ccf;--hero-hl:#a9c6ff}
+  :root[data-accent="green"]{--hero-a:#0c2910;--hero-b:#1d6428;--hero-c:#2f9038;--hero-hl:#aae8aa}
+  :root[data-accent="purple"]{--hero-a:#1e1340;--hero-b:#41308c;--hero-c:#7263d0;--hero-hl:#cfc4ff}
+  :root[data-accent="teal"]{--hero-a:#06291f;--hero-b:#0e6249;--hero-c:#1a9a70;--hero-hl:#9fe8cf}
   .accs{display:flex;gap:7px;align-items:center}
   .acc{appearance:none;width:17px;height:17px;border-radius:50%;cursor:pointer;padding:0;
     border:2px solid var(--surface-1);box-shadow:0 0 0 1px var(--line-strong);transition:.15s}
@@ -332,6 +339,22 @@
   .who small{color:var(--ink-3);font-weight:500}
   #teamCard .toolbar .ti{flex:1 1 120px}
 
+  /* ===== Profile menu (top right) ===== */
+  .prof{position:relative}
+  .pav{display:grid;place-items:center;width:100%;height:100%;border-radius:10px;font-weight:700;font-size:13px}
+  .pav svg{width:17px;height:17px}
+  .pmenu{position:absolute;right:0;top:46px;min-width:210px;background:var(--surface-1);border:1px solid var(--line);
+    border-radius:15px;box-shadow:var(--shadow-lg);padding:8px;z-index:90}
+  .pm-head{padding:7px 11px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .pm-head .pm-lbl{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+  .pm-head .who{display:block;margin-top:2px}
+  .pm-item{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:0;font:inherit;
+    font-size:13.5px;font-weight:600;color:var(--ink-2);padding:9px 11px;border-radius:10px;cursor:pointer;transition:.13s}
+  .pm-item:hover{background:var(--surface-3);color:var(--ink)}
+  .pm-item svg{width:16px;height:16px;flex:0 0 auto}
+  .pm-sub{padding:2px 11px 9px}
+  .pm-line{height:1px;background:var(--line);margin:6px 2px}
+
   /* ===== Left sidebar (CRM style) ===== */
   .sidenav{position:fixed;left:0;top:0;bottom:0;width:214px;z-index:60;display:flex;flex-direction:column;
     padding:16px 12px 14px;gap:3px;overflow-y:auto;
@@ -384,8 +407,8 @@
   .hero{padding:34px 0 8px}
   .hero::before{display:none}
   .herobanner{display:grid;grid-template-columns:1.55fr 1fr;gap:28px;align-items:center;position:relative;overflow:hidden;
-    background:linear-gradient(125deg,#151b3d 0%,#233a86 46%,#3f6ccf 100%);
-    border-radius:26px;padding:34px 36px;color:#fff;box-shadow:0 30px 60px -30px rgba(30,44,120,.55)}
+    background:linear-gradient(125deg,var(--hero-a) 0%,var(--hero-b) 46%,var(--hero-c) 100%);
+    border-radius:26px;padding:34px 36px;color:#fff;box-shadow:0 30px 60px -30px rgba(0,0,0,.45);transition:background .4s}
   .herobanner::before{content:"";position:absolute;right:-70px;top:-90px;width:340px;height:340px;border-radius:50%;
     background:radial-gradient(circle,rgba(255,255,255,.16),transparent 70%);pointer-events:none}
   .herobanner::after{content:"";position:absolute;left:-40px;bottom:-90px;width:240px;height:240px;border-radius:50%;
@@ -394,9 +417,9 @@
     text-transform:uppercase;color:rgba(255,255,255,.88);background:rgba(255,255,255,.13);
     border:1px solid rgba(255,255,255,.22);padding:5px 12px;border-radius:999px}
   .herobanner h1{font-size:clamp(25px,3.5vw,37px);margin:16px 0 10px;color:#fff;letter-spacing:-.03em}
-  .herobanner h1 span{color:#a9c6ff}
+  .herobanner h1 span{color:var(--hero-hl)}
   .herobanner p{color:rgba(255,255,255,.82);font-size:15px;margin:0 0 20px;max-width:430px}
-  .hb-cta{display:inline-flex;align-items:center;gap:9px;background:#fff;color:#1a2352;font-weight:700;font-size:14px;
+  .hb-cta{display:inline-flex;align-items:center;gap:9px;background:#fff;color:#1d1d28;font-weight:700;font-size:14px;
     border:0;border-radius:13px;padding:11px 18px;cursor:pointer;transition:.15s;box-shadow:0 12px 26px -14px rgba(0,0,0,.6)}
   .hb-cta:hover{transform:translateY(-1px)}
   .hb-cta svg{width:16px;height:16px}
@@ -515,10 +538,19 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V4M6 10l6-6 6 6M4 21h16"/></svg>
       <span>Upload this month's base</span>
     </button>
-    <span class="who" id="whoami"></span>
-    <div class="accs" id="accPick" title="Colour theme"></div>
-    <button class="tgl" id="themeBtn" aria-label="Toggle colour theme" title="Toggle theme">◐</button>
-    <button class="tgl" id="logoutBtn" aria-label="Sign out" title="Sign out">⏻</button>
+    <button class="tgl" id="themeBtn" aria-label="Toggle light or dark" title="Light / dark">◐</button>
+    <div class="prof" id="prof">
+      <button class="tgl" id="profBtn" aria-haspopup="menu" aria-expanded="false" title="Profile">
+        <span class="pav" id="profAv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.2" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg></span></button>
+      <div class="pmenu" id="pmenu" hidden role="menu">
+        <div class="pm-head"><span class="pm-lbl">Profile</span><span class="who" id="whoami"></span></div>
+        <button class="pm-item" id="pmTheme" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 1 9-9c0 2.2-1.8 3-3.2 3H16a2 2 0 0 0-1.4 3.4c.5.5.4 1.6-.6 2.1-.6.3-1.3.5-2 .5Z"/><circle cx="7.5" cy="11" r="1.1" fill="currentColor" stroke="none"/><circle cx="10.5" cy="7" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="7.5" r="1.1" fill="currentColor" stroke="none"/></svg> Theme</button>
+        <div class="pm-sub" id="pmThemeRow" hidden><div class="accs" id="accPick"></div></div>
+        <button class="pm-item" id="pmSettings" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2.4-1.4L13.7 2h-3.4l-.4 2.6A7 7 0 0 0 7.5 6L5.1 5 3.1 8.4l2 1.6a7 7 0 0 0 0 2.8l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2.4 1.4l.4 2.6h3.4l.4-2.6a7 7 0 0 0 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4Z"/></svg> Settings</button>
+        <div class="pm-line"></div>
+        <button class="pm-item" id="logoutBtn" role="menuitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l-5-5 5-5M5 12h11"/></svg> Logout</button>
+      </div>
+    </div>
   </div>
 </header>
 <input type="file" id="fileInp" accept=".xlsx,.csv" multiple>
@@ -1730,6 +1762,7 @@ function applyView(v){
 function showLogin(){
   if(es){es.close();es=null;}
   document.body.classList.remove('authed');
+  {const m=$('#pmenu');if(m)m.hidden=true;}
   $('#login').classList.add('show');
   setTimeout(()=>$('#liU').focus(),80);
 }
@@ -1776,6 +1809,9 @@ async function boot(){
   $('#snRole').textContent=mgr?'manager':'consultant';
   $('#snAv').textContent=(ME.name||'?')[0].toUpperCase();
   $('#snAv').style.background=agentColor((ME.agent||ME.name||'?').toUpperCase());
+  $('#profAv').textContent=(ME.name||'?')[0].toUpperCase();
+  $('#profAv').style.background=agentColor((ME.agent||ME.name||'?').toUpperCase());
+  $('#profAv').style.color='#fff';
   { const ss2=$('#storeSub'); if(ss2)$('#snStore').textContent=ss2.textContent; }
   if(hasAgent&&ME.role!=='manager'){filters.agent=ME.agent;shown=40;syncFilterControls();renderExplorer();}
   if(mgr)renderTeam();
@@ -1863,6 +1899,15 @@ function init(){
   $('#upPanel').onclick=()=>$('#fileInp').click();
   $('#subSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;renderSubView(b.dataset.sv);});
   $('#heroCta').onclick=()=>{navTo('day');};
+  $('#profBtn').onclick=e=>{e.stopPropagation();const m=$('#pmenu');m.hidden=!m.hidden;
+    $('#profBtn').setAttribute('aria-expanded',String(!m.hidden));};
+  document.addEventListener('click',e=>{
+    if(!document.contains(e.target))return;
+    if(!e.target.closest('#prof')){const m=$('#pmenu');if(m)m.hidden=true;}});
+  $('#pmTheme').onclick=e=>{e.stopPropagation();const r=$('#pmThemeRow');r.hidden=!r.hidden;};
+  $('#pmSettings').onclick=()=>{$('#pmenu').hidden=true;
+    if(ME&&ME.role==='manager')navTo('team');
+    else toast('Settings are managed by your store manager');};
   $('#sidenav').addEventListener('click',e=>{
     const b=e.target.closest('.sn-item');if(b){navTo(b.dataset.nav);return;}
     const sw=e.target.closest('.snsw');if(sw){
