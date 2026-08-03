@@ -474,13 +474,17 @@
   .cbtn2 svg{width:16px;height:16px}
   .cbtn2.tel{background:#2a6cc4;border-color:#2a6cc4;color:#fff}
   .cbtn2.wa{background:#25d366;border-color:#25d366;color:#fff}
+  .cbtn2.em.has{background:#7c68d8;border-color:#7c68d8;color:#fff}
+  .cbtn2.em.no{background:var(--surface-3);border-color:var(--line);color:var(--ink-3);opacity:.55;cursor:not-allowed}
   .cbtn2.dis{opacity:.3;pointer-events:none}
   .board-empty{text-align:center;padding:38px 16px;color:var(--ink-3);font-size:13.5px}
   .board-empty .big{font-size:32px;margin-bottom:10px}
   .cust .mini{display:inline-flex;gap:5px;margin-left:8px;vertical-align:-3px}
-  .mini a{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;text-decoration:none;border:1px solid var(--line);background:var(--surface-2)}
+  .mini a,.mini span.em{width:20px;height:20px;border-radius:6px;display:grid;place-items:center;text-decoration:none;border:1px solid var(--line);background:var(--surface-2)}
   .mini a.tel{color:#2a6cc4}.mini a.wa{color:#1c9c4e}
-  .mini a svg{width:12px;height:12px}
+  .mini a.em{color:#fff;background:#7c68d8;border-color:#7c68d8}
+  .mini span.em{color:var(--ink-3);opacity:.45}
+  .mini a svg,.mini span.em svg{width:12px;height:12px}
   @media (max-width:560px){
     .bcard{gap:9px;padding:10px 11px;flex-wrap:wrap}
     .bcard .bmain{flex:1 1 100%;order:-1}
@@ -973,6 +977,7 @@
   <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
     <input class="ti" id="ncName" placeholder="Full name" autocomplete="off">
     <input class="ti" id="ncCell" placeholder="Cell number (e.g. 083 123 4567)" inputmode="tel" autocomplete="off">
+    <input class="ti" id="ncEmail" placeholder="Email (optional)" inputmode="email" autocomplete="off">
     <textarea class="ti" id="ncNote" placeholder="What do they want? (optional)" style="min-height:64px;resize:vertical"></textarea>
   </div>
   <div class="m-actions">
@@ -1007,9 +1012,10 @@ const PALETTE=['#2a78d6','#008300','#e87ba4','#eda100','#eb6834','#4a3aa7','#1ba
 const AGENT_COLORS={SIMONE:'#2a78d6',JOASH:'#008300',NONTU:'#e87ba4',ROXANNE:'#eda100',CAREY:'#eb6834'};
 const BRANDS=['SAMSUNG','OPPO','HONOR','HUAWEI','ZTE','TOZED','APPLE','IPHONE','NOKIA','XIAOMI','VIVO','HISENSE','MOBICEL'];
 const STORES=[['s1','Montrose'],['s2','Kokstad'],['s3','Scottburgh'],['s4','Shelly Beach'],['s5','Howick'],['s6','Vryheid'],['s7','Admin']];
-const TRACK_OPTS=[['','—'],['fu','Follow-up'],['cb','Callback booked'],['quote','Quote sent'],['visit','Coming to store'],['won','Won'],['lost','Not interested'],['na','No answer'],['wrong','Wrong number']];
+const TRACK_OPTS=[['','—'],['fu','Follow-up'],['cb','Callback booked'],['quote','Quote sent'],['visit','Coming to store'],['won','Won'],['lost','Not interested'],['na','No answer'],['nowa','NOT on WhatsApp'],['upg','Already upgraded'],['wrong','Wrong number']];
 const TRACK_LBL=Object.fromEntries(TRACK_OPTS);
-const TRACK_COL={'':'var(--ink-3)',fu:'var(--s1)',cb:'#c98500',quote:'#7c68d8',visit:'#0f8a63',won:'var(--pos)',lost:'var(--neg)',na:'var(--warn)',wrong:'#8a897e'};
+const TRACK_COL={'':'var(--ink-3)',fu:'var(--s1)',cb:'#c98500',quote:'#7c68d8',visit:'#0f8a63',won:'var(--pos)',lost:'var(--neg)',na:'var(--warn)',nowa:'#b5651d',upg:'#2e8b8b',wrong:'#8a897e'};
+const CLOSED_ST=['won','lost','wrong','upg'];
 const ACCENTS={pink:'#f6aecb',yellow:'#ffcb05',blue:'#a9c9f2',green:'#b3e0b3',purple:'#cabff2',teal:'#a5e0cd'};
 const VAL_BANDS=[['','Any offer'],['a','Under R300 p/m'],['b','R300 – R600 p/m'],['c','R600 – R1 000 p/m'],['d','R1 000+ p/m']];
 const inBand=(v,b)=>b===''||(b==='a'&&v<300)||(b==='b'&&v>=300&&v<600)||(b==='c'&&v>=600&&v<1000)||(b==='d'&&v>=1000);
@@ -1118,7 +1124,7 @@ const HEADER_MAP={csr:['csr','agent','consultant'],name:['customername','custome
   acct:['accountnumber','account','baaccount'],msisdn:['primarymsisdn','msisdn','cellnumber','mobile','phone'],
   package:['package','priceplan','tariffplan','plan'],act:['activationdate','date'],
   product:['productdescription','product','description','device'],rsp:['handsetrsp','rsp','netprice','price'],
-  offer:['offer'],
+  offer:['offer'],email:['email','emailaddress'],
   ctype:['contracttype','dealtype','type'],status:['invoicestatus','status'],category:['customercategory','plantype','category','segment'],
   outcome:['outcome','result','disposition','callstatus','callresult'],
   next:['nextaction','nextactiondate','callbackdate','followupdate','callback'],
@@ -1151,6 +1157,8 @@ function toDateStr(v){
 function normOutcome(v){
   const s=String(v||'').toLowerCase();
   if(!s)return '';
+  if(/already\s*upgrad/.test(s))return 'upg';
+  if(/not?\s*on\s*whats/.test(s))return 'nowa';
   if(/won|sold|sale|closed|success|upgraded/.test(s))return 'won';
   if(/call\s*back|callback|cb\b/.test(s))return 'cb';
   if(/quote|pricing|price/.test(s))return 'quote';
@@ -1174,8 +1182,9 @@ function gridToRows(grid){
     if(!rsp&&offer){const m=offer.match(/R\s*([\d\s,]+)/);if(m)rsp=parseInt(m[1].replace(/[^\d]/g,''),10)||0;}
     let ct=g('ctype');
     if(!ct&&/out of contract/i.test(g('status')))ct='Upgrade';
+    const em=g('email');
     rows.push([g('csr'),g('name'),g('surname'),g('acct'),g('msisdn'),g('package'),
-      toDateStr(g('act')),g('product'),Math.round(rsp*100)/100,ct,g('status'),g('category'),offer]);
+      toDateStr(g('act')),g('product'),Math.round(rsp*100)/100,ct,g('status'),g('category'),offer,/@/.test(em)?em:'']);
     const acct=g('acct');
     if(acct&&(map.outcome!==undefined||map.next!==undefined||map.note!==undefined)){
       const st=normOutcome(g('outcome')),next=toDateStr(g('next')),note=g('note');
@@ -1202,7 +1211,7 @@ function buildDataset(rows,label){
   const csr={},pkg={},bkt={},stat={},cat={},brand={},monthMap={};
   const cust=new Map();
   for(const r of rows){
-    const [cs,nm,sn,acct,ms,pk,act,prod,rsp,ct,st,cc]=r;const offer=r[12]||'';
+    const [cs,nm,sn,acct,ms,pk,act,prod,rsp,ct,st,cc]=r;const offer=r[12]||'',email=r[13]||'';
     if(![cs,nm,acct,prod].some(x=>x))continue;
     d.lineItems++;d.totalRSP+=rsp;
     if(/upgrade/i.test(ct))d.upgrades++;else if(/new/i.test(ct))d.newLines++;
@@ -1220,13 +1229,14 @@ function buildDataset(rows,label){
       if(acct)s.accts.add(acct);
     }
     if(acct){
-      const c=cust.get(acct)||{acct,name:'',csr:'',msisdn:'',cat:'',offer:'',rsp:0,items:[]};
+      const c=cust.get(acct)||{acct,name:'',csr:'',msisdn:'',cat:'',offer:'',email:'',rsp:0,items:[]};
       if(!c.name&&(nm||sn))c.name=(nm+' '+sn).trim();
       if(!c.csr&&agent)c.csr=agent;
       if(!c.msisdn&&ms)c.msisdn=ms;
       if(!c.cat&&cc)c.cat=cc;
       c.rsp+=rsp;
       if(!c.offer&&offer)c.offer=offer;
+      if(!c.email&&email)c.email=email;
       c.items.push({product:prod,package:pk,ctype:ct,rsp,status:st,date:act,offer});
       cust.set(acct,c);
     }
@@ -1747,10 +1757,25 @@ async function confirmBase(){
 let subView='book', dayMine=false, hotMine=false;
 const SVG_TEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.5 2.8.6a2 2 0 0 1 1.7 2Z"/></svg>';
 const SVG_WA='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.7-.1a11 11 0 0 1-5.6-4.9c-.4-.7-.7-1.5-.7-2.2 0-.6.3-1.2.7-1.5.2-.2.4-.2.5-.2h.4c.2 0 .3 0 .5.4l.7 1.6c0 .2 0 .3-.1.4l-.3.4c-.2.1-.3.3-.1.5a8 8 0 0 0 3 2.6c.3.1.4.1.6-.1l.6-.8c.2-.2.3-.1.5-.1l1.6.8c.2.1.3.2.4.3 0 .2 0 .8-.2 1.3Z"/></svg>';
+const SVG_MAIL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>';
 const digits=s=>String(s||'').replace(/[^0-9]/g,'');
 const TODAY=()=>new Date().toISOString().slice(0,10);
+function mailBtn(c,mini){
+  const e=String(c.email||'').trim();
+  if(e){
+    const href='mailto:'+encodeURIComponent(e)+'?subject='+encodeURIComponent('Your MTN upgrade')+'&body='+encodeURIComponent(waMsg(c));
+    return `<a class="${mini?'em':'cbtn2 em has'}" href="${href}" title="Email ${esc(e)}" aria-label="Email">${SVG_MAIL}</a>`;
+  }
+  return `<span class="${mini?'em':'cbtn2 em no'}" title="No email on file" aria-label="No email on file">${SVG_MAIL}</span>`;
+}
+function claimBtnHTML(c){
+  if(!ME||ME.role==='manager'||!ME.agent)return '';
+  if(assignedTo(c))return '';
+  if(claimStatus(c.acct))return '';
+  return `<button class="claimbtn" data-claim="${esc(c.acct)}">＋ Claim</button>`;
+}
 function waMsg(c){
-  const first=titleCase((c.name||'').split(/\s+/)[0]||'there');
+  const first=titleCase((c.name||'').split(/\s+/).filter(w=>!/^(mr|mrs|ms|miss|dr|prof|mnr|mev|adv)\.?$/i.test(w))[0]||'there');
   const who=(ME&&ME.name)?ME.name:'the team';
   const store=($('#storeSub')&&$('#storeSub').textContent)||'MTN';
   const tpl=(SETTINGS.wa_tpl&&SETTINGS.wa_tpl.trim())||DEFAULT_TPL;
@@ -1764,16 +1789,17 @@ function waMsg(c){
 }
 function contactHTML(c){
   const d=digits(c.msisdn);
-  if(!d)return `<div class="contact"><span class="cbtn2 dis" title="No number on file">${SVG_TEL}</span></div>`;
-  return `<div class="contact">`+
+  if(!d)return `<div class="contact">${claimBtnHTML(c)}<span class="cbtn2 dis" title="No number on file">${SVG_TEL}</span>${mailBtn(c)}</div>`;
+  return `<div class="contact">`+claimBtnHTML(c)+
     `<a class="cbtn2 tel" href="tel:+${d}" title="Call ${esc(c.msisdn)}" aria-label="Call">${SVG_TEL}</a>`+
-    `<a class="cbtn2 wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener" title="WhatsApp with a ready message" aria-label="WhatsApp">${SVG_WA}</a></div>`;
+    `<a class="cbtn2 wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener" title="WhatsApp with a ready message" aria-label="WhatsApp">${SVG_WA}</a>`+
+    mailBtn(c)+`</div>`;
 }
 function miniContact(c){
-  const d=digits(c.msisdn); if(!d)return '';
-  return `<span class="mini">`+
-    `<a class="tel" href="tel:+${d}" title="Call" aria-label="Call">${SVG_TEL}</a>`+
-    `<a class="wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">${SVG_WA}</a></span>`;
+  const d=digits(c.msisdn);
+  const tel=d?`<a class="tel" href="tel:+${d}" title="Call" aria-label="Call">${SVG_TEL}</a>`+
+    `<a class="wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">${SVG_WA}</a>`:'';
+  return `<span class="mini">${tel}${mailBtn(c,true)}</span>`;
 }
 function daysBetween(a,b){return Math.round((Date.parse(a)-Date.parse(b))/864e5);}
 
@@ -1783,11 +1809,11 @@ function myDayList(){
   DS().customers.forEach(c=>{
     if(mine&&assignedTo(c)!==ME.agent)return;
     const t=tracking[c.acct]; if(!t)return;
-    if(t.st==='won'||t.st==='lost'||t.st==='wrong')return;
+    if(CLOSED_ST.includes(t.st))return;
     if(t.next){
       const kind=t.next<today?'overdue':t.next===today?'today':'upcoming';
       out.push({c,kind,next:t.next,note:t.note||TRACK_LBL[t.st]||''});
-    }else if(['fu','cb','quote','visit','na'].includes(t.st)){
+    }else if(['fu','cb','quote','visit','na','nowa'].includes(t.st)){
       out.push({c,kind:'nodate',next:'',note:t.note||TRACK_LBL[t.st]});
     }
   });
@@ -1854,7 +1880,7 @@ function hotScore(c){
   if(v>0){s+=Math.min(38,v/28);f.push('R'+Math.round(v)+'/m offer');}
   if((c.n||0)>=2){s+=6;f.push((c.n)+' lines');}
   const t=tracking[c.acct];
-  if(!t||!t.st){s+=10;} else if(t.st==='won'||t.st==='lost'||t.st==='wrong'){s=-1;}
+  if(!t||!t.st){s+=10;} else if(CLOSED_ST.includes(t.st)){s=-1;}
   return {score:Math.round(s),factors:f.slice(0,3)};
 }
 function renderHotList(){
@@ -1880,8 +1906,8 @@ function renderHotList(){
 }
 
 /* ---- Quick Log ---- */
-const ACT_LBL={wa:'WhatsApped — waiting for feedback',call:'Phoned — spoke',na:'Phoned — no answer',sms:'SMS sent'};
-const ACT_COL={wa:'#1c9c4e',call:'#2a6cc4',na:'var(--warn)',sms:'#7c68d8'};
+const ACT_LBL={wa:'WhatsApped — waiting for feedback',call:'Phoned — spoke',na:'Phoned — no answer',sms:'SMS sent',em:'Emailed — waiting for reply'};
+const ACT_COL={wa:'#1c9c4e',call:'#2a6cc4',na:'var(--warn)',sms:'#7c68d8',em:'#7c68d8'};
 let qsAcct=null;
 function findCust(acct){return DS().customers.find(c=>c.acct===acct);}
 function postActivity(acct,type){
@@ -1914,7 +1940,10 @@ function openQuick(acct){
     B('na','No answer','#d95926',SVG_TEL)+
     B('call','Spoke — note it','#2a6cc4',SVG_TEL)+
     B('cb','Book callback','#c98500','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4.5" width="18" height="16" rx="3.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>')+
+    B('em',(c.email?'Emailed':'No email on file'),c.email?'#7c68d8':'var(--ink-3)',SVG_MAIL)+
+    B('nowa','NOT on WhatsApp','#b5651d',SVG_WA)+
     B('won','WON 🎉'.replace(' 🎉',''),'var(--pos)','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5 9.5 17.5 19.5 6.5"/></svg>')+
+    B('upg','Already upgraded','#2e8b8b','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5 M6 11l6-6 6 6"/></svg>')+
     B('lost','Not interested','var(--neg)','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>');
   renderQsActs();
   $('#qback').hidden=false;$('#qsheet').hidden=false;
@@ -1946,6 +1975,15 @@ function quickAction(k){
       `<input type="date" class="next-inp" id="qsCbDate" style="width:150px">`;
     return;
   }
+  if(k==='em'){
+    if(!(c&&c.email)){toast('No email address on file for this customer');return;}
+    postActivity(qsAcct,'em');
+    if(!t.st){t.st='fu';pushTrack(qsAcct);}
+    location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Your MTN upgrade')+'&body='+encodeURIComponent(waMsg(c));
+    toast('Logged: emailed — waiting for reply');return;
+  }
+  if(k==='nowa'){t.st='nowa';pushTrack(qsAcct);toast('Marked NOT on WhatsApp — phone them instead');qsRefresh();return;}
+  if(k==='upg'){t.st='upg';pushTrack(qsAcct);toast('Marked already upgraded');closeQuick();return;}
   if(k==='won'){t.st='won';pushTrack(qsAcct);toast('WON — saved for the team 🎉');closeQuick();return;}
   if(k==='lost'){t.st='lost';pushTrack(qsAcct);toast('Marked not interested');closeQuick();return;}
 }
@@ -1959,13 +1997,13 @@ function setCallback(date){
 
 /* ---- Add customer ---- */
 async function addCustomer(){
-  const name=$('#ncName').value.trim(),cell=$('#ncCell').value.trim(),note=$('#ncNote').value.trim();
+  const name=$('#ncName').value.trim(),cell=$('#ncCell').value.trim(),note=$('#ncNote').value.trim(),email=$('#ncEmail').value.trim();
   if(!name){toast('Give the customer a name');return;}
   $('#ncAdd').disabled=true;
   try{
-    await api('/api/customers',{method:'POST',body:JSON.stringify({name,msisdn:cell,note})});
+    await api('/api/customers',{method:'POST',body:JSON.stringify({name,msisdn:cell,note,email})});
     $('#custModal').classList.remove('show');
-    $('#ncName').value=$('#ncCell').value=$('#ncNote').value='';
+    $('#ncName').value=$('#ncCell').value=$('#ncNote').value=$('#ncEmail').value='';
     await refreshState();
     toast(`<b>${esc(titleCase(name))}</b> added to the book`);
   }catch(e){if(e.message!=='auth')toast('⚠️ '+esc(e.message));}
@@ -1994,7 +2032,7 @@ function missionList(){
   return DS().customers
     .filter(c=>assignedTo(c)===ME.agent)
     .filter(c=>{const t=tracking[c.acct]||{};
-      if(['won','lost','wrong'].includes(t.st))return false;
+      if(CLOSED_ST.includes(t.st))return false;
       if(t.next&&t.next>td)return false;
       return true;})
     .map(c=>({c,r:missionRank(c)}))
@@ -2077,7 +2115,7 @@ function buildReport(){
   const total=users.reduce((a,u)=>a+u.c,0),won=users.reduce((a,u)=>a+u.w,0);
   const untouched=DS().customers.filter(c=>{const t=tracking[c.acct];return !t||(!t.st&&!(t.acts||[]).length);}).length;
   const overdue=DS().customers.filter(c=>{const t=tracking[c.acct];
-    return t&&t.next&&t.next<TODAY()&&!['won','lost','wrong'].includes(t.st);}).length;
+    return t&&t.next&&t.next<TODAY()&&!CLOSED_ST.includes(t.st);}).length;
   const pending=CLAIMS.filter(c=>c.status==='pending').length;
   return {users,total,won,untouched,overdue,pending,
     store:($('#storeSub')&&$('#storeSub').textContent)||'Store',end:TODAY()};
@@ -2331,7 +2369,9 @@ function init(){
   $('#subSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;renderSubView(b.dataset.sv);});
   $('#heroCta').onclick=()=>{navTo('day');};
   ['#dayBoard','#hotBoard'].forEach(sel=>$(sel).addEventListener('click',e=>{
-    if(e.target.closest('a,select,input'))return;
+    const cb=e.target.closest('[data-claim]');
+    if(cb){e.stopPropagation();claimCust(cb.dataset.claim);return;}
+    if(e.target.closest('a,select,input,button'))return;
     const card=e.target.closest('.bcard');
     if(card&&card.dataset.acct)openQuick(card.dataset.acct);
   }));

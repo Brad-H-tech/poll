@@ -161,7 +161,7 @@ function cleanStr(v, max) { return String(v ?? '').slice(0, max || 200); }
 function publicUser(u) { return { u: u.u, name: u.name, role: u.role, agent: u.agent || '' }; }
 function today() { return new Date().toISOString().slice(0, 10); }
 
-const OUTCOME_CODES = ['fu', 'cb', 'quote', 'visit', 'won', 'lost', 'na', 'wrong'];
+const OUTCOME_CODES = ['fu', 'cb', 'quote', 'visit', 'won', 'lost', 'na', 'nowa', 'upg', 'wrong'];
 function applyOutcomes(scope, sid, list, byName) {
   let applied = 0;
   for (const t of (Array.isArray(list) ? list : [])) {
@@ -246,7 +246,7 @@ const server = http.createServer(async (req, res) => {
     if (m && req.method === 'POST') {
       const acct = cleanStr(decodeURIComponent(m[1]), 40);
       const body = await readBody(req);
-      if (!['wa', 'call', 'na', 'sms'].includes(body.t)) return json(res, 400, { error: 'Unknown activity type' });
+      if (!['wa', 'call', 'na', 'sms', 'em'].includes(body.t)) return json(res, 400, { error: 'Unknown activity type' });
       const cur = scope.tracking[acct] = scope.tracking[acct] || {};
       cur.acts = Array.isArray(cur.acts) ? cur.acts : [];
       cur.acts.unshift({ t: body.t, by: me.name, at: new Date().toISOString().slice(0, 16).replace('T', ' ') });
@@ -282,7 +282,8 @@ const server = http.createServer(async (req, res) => {
       const base = scope.bases.find(x => x.id === scope.active);
       if (!base) return json(res, 400, { error: 'Load a base first' });
       const acct = 'WI' + uid().slice(0, 8).toUpperCase();
-      base.rows.push([me.agent || '', name, '', acct, ms, '', today(), 'Walk-in / manual lead', 0, 'New / Add Sim', '', 'Consumer']);
+      const email = /@/.test(String(b.email || '')) ? cleanStr(b.email, 120).trim() : '';
+      base.rows.push([me.agent || '', name, '', acct, ms, '', today(), 'Walk-in / manual lead', 0, 'New / Add Sim', '', 'Consumer', '', email]);
       const note = cleanStr(b.note, 5000);
       if (note) scope.tracking[acct] = { st: '', next: '', note, by: me.name, at: today(), acts: [] };
       persist();
