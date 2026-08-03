@@ -26,23 +26,23 @@ const STORES = (() => {
     const names = raw.split(',').map(x => x.trim()).filter(Boolean).slice(0, 24);
     if (names.length) { const o = {}; names.forEach((n, i) => o['s' + (i + 1)] = n); return o; }
   }
-  return { s1: 'Store 1', s2: 'Store 2', s3: 'Store 3', s4: 'Store 4', s5: 'Store 5', s6: 'Store 6' };
+  return { s1: 'Montrose', s2: 'Kokstad', s3: 'Scottburgh', s4: 'Shelly Beach', s5: 'Howick', s6: 'Vryheid', s7: 'Admin' };
 })();
-let seedRows = null;
-function getSeedRows() {
-  if (seedRows === null) {
-    try { seedRows = JSON.parse(fs.readFileSync(path.join(ROOT, 'seed-rows.json'), 'utf8')); }
-    catch (e) { seedRows = []; }
+let seedStores = null;
+function getSeedRows(sid) {
+  if (seedStores === null) {
+    try { seedStores = JSON.parse(fs.readFileSync(path.join(ROOT, 'seed-stores.json'), 'utf8')); }
+    catch (e) { seedStores = {}; }
   }
-  return seedRows;
+  return seedStores[sid] || [];
 }
 function ensureStoreScope(sid) {
   if (!STORES[sid]) sid = 's1';
   store.stores = store.stores || {};
   if (!store.stores[sid]) {
     const scope = { bases: [], active: null, tracking: {}, settings: {}, claims: [], assign: {} };
-    const rows = getSeedRows();
-    if (rows.length) { const id = uid(); scope.bases.push({ id, label: 'Base · May–Jul 2024', rows }); scope.active = id; }
+    const rows = getSeedRows(sid);
+    if (rows.length) { const id = uid(); scope.bases.push({ id, label: 'Upgrade base · Aug 2026', rows }); scope.active = id; }
     store.stores[sid] = scope; persist();
   }
   const sc = store.stores[sid];

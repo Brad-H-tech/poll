@@ -248,6 +248,8 @@
     background:var(--surface-3);border:1px solid var(--line);color:var(--ink-2)}
   .tag.up{color:var(--s1);background:color-mix(in srgb,var(--s1) 12%,transparent);border-color:color-mix(in srgb,var(--s1) 30%,transparent)}
   .tag.new{color:var(--s2);background:color-mix(in srgb,var(--s2) 12%,transparent);border-color:color-mix(in srgb,var(--s2) 30%,transparent)}
+  .tag.oo{color:var(--neg);background:color-mix(in srgb,var(--neg) 11%,transparent);border-color:color-mix(in srgb,var(--neg) 30%,transparent)}
+  .tag.due{color:#a06a00;background:color-mix(in srgb,#c98500 13%,transparent);border-color:color-mix(in srgb,#c98500 32%,transparent)}
   .csr-cell{white-space:nowrap;color:var(--ink-2);font-weight:560;font-size:12.5px}
   .caret{display:inline-block;transition:transform .2s;color:var(--ink-3);font-size:10px;width:14px}
   tr.open .caret{transform:rotate(90deg)}
@@ -757,10 +759,10 @@
           <th style="width:26px"></th>
           <th data-k="name">Customer <span class="ar">↕</span></th>
           <th data-k="csr">Agent <span class="ar">↕</span></th>
-          <th data-k="deal">Deal <span class="ar">↕</span></th>
+          <th data-k="deal">Status <span class="ar">↕</span></th>
           <th data-k="prod">Lead device <span class="ar">↕</span></th>
           <th data-k="n" style="text-align:right">Lines <span class="ar">↕</span></th>
-          <th data-k="rsp" style="text-align:right">Value <span class="ar">↕</span></th>
+          <th data-k="rsp" style="text-align:right">Offer <span class="ar">↕</span></th>
           <th data-k="track">Outcome <span class="ar">↕</span></th>
           <th data-k="next">Next action <span class="ar">↕</span></th>
           <th data-k="note">Notes <span class="ar">↕</span></th>
@@ -771,7 +773,7 @@
     <div class="tbl-foot">
       <span id="rowCount"></span>
       <button class="more" id="moreBtn" hidden>Show more</button>
-      <span>Values in ZAR · handset RSP, VAT incl.</span>
+      <span>Values in ZAR · offer price per month</span>
     </div>
   </section>
   </div><!-- /bookView -->
@@ -838,7 +840,7 @@
       <div class="card-hd"><div><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2.4-1.4L13.7 2h-3.4l-.4 2.6A7 7 0 0 0 7.5 6L5.1 5 3.1 8.4l2 1.6a7 7 0 0 0 0 2.8l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2.4 1.4l.4 2.6h3.4l.4-2.6a7 7 0 0 0 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4Z"/></svg> WhatsApp message</h3>
         <div class="h-desc">What consultants send when they tap the green button · this store only</div></div></div>
       <div style="font-size:12.5px;color:var(--ink-2);margin-bottom:9px">
-        <span class="plch">{name}</span><span class="plch">{fullname}</span><span class="plch">{plan}</span><span class="plch">{device}</span><span class="plch">{store}</span><span class="plch">{agent}</span>
+        <span class="plch">{name}</span><span class="plch">{fullname}</span><span class="plch">{plan}</span><span class="plch">{offer}</span><span class="plch">{device}</span><span class="plch">{store}</span><span class="plch">{agent}</span>
         fill themselves in per customer.</div>
       <textarea class="tplbox" id="tplBox"></textarea>
       <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:13px 0 0">Live preview</div>
@@ -1004,13 +1006,13 @@ const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov',
 const PALETTE=['#2a78d6','#008300','#e87ba4','#eda100','#eb6834','#4a3aa7','#1baf7a','#e34948'];
 const AGENT_COLORS={SIMONE:'#2a78d6',JOASH:'#008300',NONTU:'#e87ba4',ROXANNE:'#eda100',CAREY:'#eb6834'};
 const BRANDS=['SAMSUNG','OPPO','HONOR','HUAWEI','ZTE','TOZED','APPLE','IPHONE','NOKIA','XIAOMI','VIVO','HISENSE','MOBICEL'];
-const STORES=[['s1','Store 1'],['s2','Store 2'],['s3','Store 3'],['s4','Store 4'],['s5','Store 5'],['s6','Store 6']];
+const STORES=[['s1','Montrose'],['s2','Kokstad'],['s3','Scottburgh'],['s4','Shelly Beach'],['s5','Howick'],['s6','Vryheid'],['s7','Admin']];
 const TRACK_OPTS=[['','—'],['fu','Follow-up'],['cb','Callback booked'],['quote','Quote sent'],['visit','Coming to store'],['won','Won'],['lost','Not interested'],['na','No answer'],['wrong','Wrong number']];
 const TRACK_LBL=Object.fromEntries(TRACK_OPTS);
 const TRACK_COL={'':'var(--ink-3)',fu:'var(--s1)',cb:'#c98500',quote:'#7c68d8',visit:'#0f8a63',won:'var(--pos)',lost:'var(--neg)',na:'var(--warn)',wrong:'#8a897e'};
 const ACCENTS={pink:'#f6aecb',yellow:'#ffcb05',blue:'#a9c9f2',green:'#b3e0b3',purple:'#cabff2',teal:'#a5e0cd'};
-const VAL_BANDS=[['','Any value'],['a','Under R2k'],['b','R2k – R8k'],['c','R8k – R15k'],['d','R15k +']];
-const inBand=(v,b)=>b===''||(b==='a'&&v<2000)||(b==='b'&&v>=2000&&v<8000)||(b==='c'&&v>=8000&&v<15000)||(b==='d'&&v>=15000);
+const VAL_BANDS=[['','Any offer'],['a','Under R300 p/m'],['b','R300 – R600 p/m'],['c','R600 – R1 000 p/m'],['d','R1 000+ p/m']];
+const inBand=(v,b)=>b===''||(b==='a'&&v<300)||(b==='b'&&v>=300&&v<600)||(b==='c'&&v>=600&&v<1000)||(b==='d'&&v>=1000);
 
 /* ---------- safe storage ---------- */
 const store={
@@ -1112,11 +1114,12 @@ function parseCSV(text){
   return grid.filter(r=>r.some(c=>String(c).trim()!==''));
 }
 /* header auto-mapping */
-const HEADER_MAP={csr:['csr','agent'],name:['customername','customer','firstname','name'],surname:['customersurname','surname','lastname'],
-  acct:['accountnumber','account','baaccount'],msisdn:['primarymsisdn','msisdn','cellnumber','phone'],
-  package:['package','priceplan','tariffplan'],act:['activationdate','date'],
+const HEADER_MAP={csr:['csr','agent','consultant'],name:['customername','customer','firstname','name'],surname:['customersurname','surname','lastname'],
+  acct:['accountnumber','account','baaccount'],msisdn:['primarymsisdn','msisdn','cellnumber','mobile','phone'],
+  package:['package','priceplan','tariffplan','plan'],act:['activationdate','date'],
   product:['productdescription','product','description','device'],rsp:['handsetrsp','rsp','netprice','price'],
-  ctype:['contracttype','dealtype','type'],status:['invoicestatus','status'],category:['customercategory','category','segment'],
+  offer:['offer'],
+  ctype:['contracttype','dealtype','type'],status:['invoicestatus','status'],category:['customercategory','plantype','category','segment'],
   outcome:['outcome','result','disposition','callstatus','callresult'],
   next:['nextaction','nextactiondate','callbackdate','followupdate','callback'],
   note:['callnotes','notes','comments','comment']};
@@ -1167,8 +1170,12 @@ function gridToRows(grid){
     const r=grid[i];if(!r||!r.some(c=>String(c??'').trim()!==''))continue;
     const g=k=>map[k]===undefined?'':cleanCell(r[map[k]]);
     let rsp=parseFloat(String(g('rsp')).replace(/[R,\s]/gi,''));if(isNaN(rsp))rsp=0;
+    const offer=g('offer');
+    if(!rsp&&offer){const m=offer.match(/R\s*([\d\s,]+)/);if(m)rsp=parseInt(m[1].replace(/[^\d]/g,''),10)||0;}
+    let ct=g('ctype');
+    if(!ct&&/out of contract/i.test(g('status')))ct='Upgrade';
     rows.push([g('csr'),g('name'),g('surname'),g('acct'),g('msisdn'),g('package'),
-      toDateStr(g('act')),g('product'),Math.round(rsp*100)/100,g('ctype'),g('status'),g('category')]);
+      toDateStr(g('act')),g('product'),Math.round(rsp*100)/100,ct,g('status'),g('category'),offer]);
     const acct=g('acct');
     if(acct&&(map.outcome!==undefined||map.next!==undefined||map.note!==undefined)){
       const st=normOutcome(g('outcome')),next=toDateStr(g('next')),note=g('note');
@@ -1195,7 +1202,7 @@ function buildDataset(rows,label){
   const csr={},pkg={},bkt={},stat={},cat={},brand={},monthMap={};
   const cust=new Map();
   for(const r of rows){
-    const [cs,nm,sn,acct,ms,pk,act,prod,rsp,ct,st,cc]=r;
+    const [cs,nm,sn,acct,ms,pk,act,prod,rsp,ct,st,cc]=r;const offer=r[12]||'';
     if(![cs,nm,acct,prod].some(x=>x))continue;
     d.lineItems++;d.totalRSP+=rsp;
     if(/upgrade/i.test(ct))d.upgrades++;else if(/new/i.test(ct))d.newLines++;
@@ -1213,13 +1220,14 @@ function buildDataset(rows,label){
       if(acct)s.accts.add(acct);
     }
     if(acct){
-      const c=cust.get(acct)||{acct,name:'',csr:'',msisdn:'',cat:'',rsp:0,items:[]};
+      const c=cust.get(acct)||{acct,name:'',csr:'',msisdn:'',cat:'',offer:'',rsp:0,items:[]};
       if(!c.name&&(nm||sn))c.name=(nm+' '+sn).trim();
       if(!c.csr&&agent)c.csr=agent;
       if(!c.msisdn&&ms)c.msisdn=ms;
       if(!c.cat&&cc)c.cat=cc;
       c.rsp+=rsp;
-      c.items.push({product:prod,package:pk,ctype:ct,rsp,status:st,date:act});
+      if(!c.offer&&offer)c.offer=offer;
+      c.items.push({product:prod,package:pk,ctype:ct,rsp,status:st,date:act,offer});
       cust.set(acct,c);
     }
   }
@@ -1259,7 +1267,7 @@ function fmtMonthRange(a,b){
 ========================================================= */
 let datasets=[],activeIdx=0,tracking={},ME=null,es=null;
 let SETTINGS={},CLAIMS=[],ASSIGN={};
-const DEFAULT_TPL="Hi {name}! 👋 It's {agent} from MTN {store}. Good news — you're due for an UPGRADE on your {plan} plan. 🎉 Reply here and I'll check your best deal — new phone options included. No obligation!";
+const DEFAULT_TPL="Hi {name}! 👋 It's {agent} from MTN {store}. Good news — you're due for an UPGRADE on your {plan} plan. 🎉 We can move you to {offer}. Reply here and I'll sort it out — no obligation!";
 const QUOTES=["Amateurs wait for motivation. Professionals pick up the phone.",
 "Every upgrade you don't chase, someone else sells.",
 "The best time to call was yesterday. The second best is now.",
@@ -1357,18 +1365,16 @@ function animateVal(el,target,fmt){
 }
 function renderKPIs(){
   const d=DS(),prev=activeIdx>0?datasets[activeIdx-1]:null;
-  const invRate=ds=>{const t=ds.status.reduce((a,s)=>a+s.count,0);
-    const inv=(ds.status.find(s=>/invoiced/i.test(s.name))||{count:0}).count;return t?inv/t*100:0;};
   const defs=[
-    {lbl:'Booked RSP',n:d.totalRSP,fmt:zark,meta:`across ${d.lineItems} line items`,
-      dl:prev?pct(d.totalRSP,prev.totalRSP):null,icon:'M3 17l6-6 4 4 8-8',feature:true,spark:d.months.map(m=>m.rsp)},
+    {lbl:'Offer value / month',n:d.totalRSP,fmt:zark,meta:`across ${d.lineItems} lines in the base`,
+      dl:prev?pct(d.totalRSP,prev.totalRSP):null,icon:'M3 17l6-6 4 4 8-8',feature:true,spark:d.months.length>1?d.months.map(m=>m.rsp):null},
     {lbl:'Accounts in base',n:d.customers.length,fmt:v=>Math.round(v).toLocaleString('en-ZA'),
-      meta:d.category.map(c=>c.count+' '+c.name.toLowerCase()).join(' · ')||'—',
+      meta:d.category.slice(0,3).map(c=>c.count+' '+c.name.toLowerCase()).join(' · ')||'—',
       dl:prev?pct(d.customers.length,prev.customers.length):null,icon:'M16 11a4 4 0 10-8 0 M3 20a7 7 0 0114 0'},
-    {lbl:'Upgrades',n:d.upgrades,fmt:v=>Math.round(v).toLocaleString('en-ZA'),
-      meta:`${d.newLines} new activations`,dl:prev?pct(d.upgrades,prev.upgrades):null,icon:'M12 19V5 M6 11l6-6 6 6'},
-    {lbl:'Invoiced rate',n:invRate(d),fmt:v=>Math.round(v)+'%',
-      meta:'of status-tagged lines billed',dl:prev?pct(invRate(d),invRate(prev)):null,
+    {lbl:'Out of contract',n:d.upgrades,fmt:v=>Math.round(v).toLocaleString('en-ZA'),
+      meta:'ready to upgrade right now',dl:prev?pct(d.upgrades,prev.upgrades):null,icon:'M12 19V5 M6 11l6-6 6 6'},
+    {lbl:'Offers on file',n:d.rows.filter(r=>+r[8]>0).length,fmt:v=>Math.round(v).toLocaleString('en-ZA'),
+      meta:'pre-priced deals ready to pitch',dl:null,
       icon:'M9 12l2 2 4-4 M21 12a9 9 0 11-18 0 9 9 0 0118 0'},
   ];
   $('#kpis').innerHTML=defs.map((c,i)=>`
@@ -1463,7 +1469,8 @@ function renderBars(sel,rows,filterKey){
   });
 }
 function renderStatus(){
-  const map={Invoiced:'var(--pos)',Active:'var(--s1)','Credit Note':'var(--warn)'};
+  const map={Invoiced:'var(--pos)',Active:'var(--s1)','Credit Note':'var(--warn)','Out of contract':'var(--neg)'};
+  for(const s of DS().status)if(/^due/i.test(s.name)&&!map[s.name])map[s.name]='#c98500';
   const rows=DS().status,total=rows.reduce((a,s)=>a+s.count,0)||1;
   $('#status').innerHTML=rows.map(s=>`
     <div class="stat-line" data-v="${esc(s.name)}">
@@ -1514,7 +1521,7 @@ function syncFilterControls(){
   buildSelect($('#fInv'),'Any invoice status',d.status.map(s=>({v:s.name,t:s.name})),filters.inv);
   buildSelect($('#fPkg'),'All packages',d.packages.map(p=>({v:p.name,t:p.name})),filters.pkg);
   buildSelect($('#fBrand'),'All brands',d.brands.map(b=>({v:b.name,t:b.name})),filters.brand);
-  buildSelect($('#fVal'),'Any value',VAL_BANDS.slice(1).map(([v,t])=>({v,t})),filters.val);
+  buildSelect($('#fVal'),'Any offer',VAL_BANDS.slice(1).map(([v,t])=>({v,t})),filters.val);
   const tOpts=[{v:'',t:'No outcome yet'},...TRACK_OPTS.slice(1).map(([v,t])=>({v,t}))];
   const te=$('#fTrack');
   te.innerHTML=`<option value="__any">Any outcome</option>`+
@@ -1567,7 +1574,7 @@ function sortCustomers(list){
     switch(sortK){
       case 'name':x=a.name.toLowerCase();y=b.name.toLowerCase();break;
       case 'csr':x=assignedTo(a);y=assignedTo(b);break;
-      case 'deal':x=a.deal;y=b.deal;break;
+      case 'deal':x=(a.stats&&a.stats[0])||a.deal;y=(b.stats&&b.stats[0])||b.deal;break;
       case 'prod':x=a.prod.toLowerCase();y=b.prod.toLowerCase();break;
       case 'n':x=a.n;y=b.n;break;
       case 'track':x=t(a);y=t(b);break;
@@ -1599,6 +1606,13 @@ function dealTag(d){
   if(d==='Advance / other')return '<span class="tag">Advance</span>';
   const up=/upgrade/i.test(d);return `<span class="tag ${up?'up':'new'}">${esc(d)}</span>`;
 }
+function statusTag(c){
+  const st=(c.stats&&c.stats[0])||'';
+  if(/out of contract/i.test(st))return '<span class="tag oo">Out of contract</span>';
+  if(/^due/i.test(st))return `<span class="tag due">${esc(st)}</span>`;
+  if(st)return `<span class="tag">${esc(st)}</span>`;
+  return dealTag(c.deal);
+}
 function trackCell(acct){
   const t=tracking[acct]||{};
   return `<span class="tdot" style="background:${TRACK_COL[t.st||'']}"></span><select class="track-sel" data-acct="${esc(acct)}">
@@ -1611,7 +1625,7 @@ function renderExplorer(){
   $('#sumstrip').innerHTML=`
     <span><b>${all.length}</b> accounts</span>
     <span><b>${sumLines}</b> line items</span>
-    <span><b>${zark(sumRSP)}</b> total RSP</span>
+    <span><b>${zark(sumRSP)}</b> offer value p/m</span>
     <span><b>${all.length?zark(sumRSP/all.length):'R0'}</b> avg / account</span>`;
   $('#tbody').innerHTML=list.map(c=>{
     const t=tracking[c.acct]||{};
@@ -1620,10 +1634,10 @@ function renderExplorer(){
       <td><button class="qzap" data-zap="${esc(c.acct)}" title="Quick log" aria-label="Quick log"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.2 2 4.8 13.2h5.5L10.8 22l8.4-11.2h-5.5Z"/></svg></button></td>
       <td class="cust">${esc(titleCase(c.name))}${miniContact(c)}<small>${esc(c.msisdn||c.acct)}</small></td>
       <td>${agentCell(c)}</td>
-      <td>${dealTag(c.deal)}</td>
+      <td>${statusTag(c)}</td>
       <td class="prod" title="${esc(c.prod)}">${esc(c.prod)}</td>
       <td class="num">${c.n}</td>
-      <td class="num">${zar(c.rsp)}</td>
+      <td class="num" ${c.offer?`title="${esc(c.offer)}"`:''}>${c.rsp?zar(c.rsp)+'<small style="color:var(--ink-3)">/m</small>':'—'}</td>
       <td>${trackCell(c.acct)}</td>
       <td><input type="date" class="next-inp" data-acct="${esc(c.acct)}" value="${esc(t.next||'')}"></td>
       <td><input class="note-in" data-acct="${esc(c.acct)}" value="${esc(t.note||'')}" placeholder="quick note…" maxlength="500"></td>
@@ -1632,9 +1646,9 @@ function renderExplorer(){
       html+=`<tr class="xrow"><td colspan="10"><div class="xgrid">
         <div class="xitems"><div class="xh">Line items · account ${esc(c.acct)}</div>
           ${c.items.map(i=>`<div class="xline">
-            <span class="xp" title="${esc(i.product)}">${esc(i.product||'—')}</span>
-            <span class="xk">${esc([i.ctype,i.status,i.date].filter(Boolean).join(' · '))}</span>
-            <span class="xv">${i.rsp?zar(i.rsp):''}</span></div>`).join('')}
+            <span class="xp" title="${esc(i.product||i.package)}">${esc(i.product||i.package||'—')}</span>
+            <span class="xk">${esc([i.status,i.offer||i.package,i.date].filter(Boolean).join(' · '))}</span>
+            <span class="xv">${i.rsp?zar(i.rsp)+'/m':''}</span></div>`).join('')}
         </div>
         <div class="xnotes"><div class="xh" style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px">Call notes</div>
           <textarea class="note-ta" data-acct="${esc(c.acct)}" placeholder="What was said, what they want, objections…">${esc(t.note||'')}</textarea>
@@ -1658,9 +1672,9 @@ function renderExplorer(){
 function exportCSV(){
   const all=sortCustomers(filteredCustomers());
   const esc2=v=>{v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
-  const head=['Account','Customer','MSISDN','Agent','DealType','Category','LeadDevice','Lines','ValueRSP','Outcome','NextAction','Notes'];
+  const head=['Account','Customer','MSISDN','Agent','Status','Category','LeadDevice','Lines','OfferValue','Offer','Outcome','NextAction','Notes'];
   const rows=all.map(c=>{const t=tracking[c.acct]||{};
-    return [c.acct,titleCase(c.name),c.msisdn,titleCase(c.csr||''),c.deal,c.cat,c.prod,c.n,c.rsp,
+    return [c.acct,titleCase(c.name),c.msisdn,titleCase(assignedTo(c)||''),(c.stats&&c.stats[0])||c.deal,c.cat,c.prod,c.n,c.rsp,c.offer||'',
       TRACK_LBL[t.st||''],t.next||'',t.note||''].map(esc2).join(',');});
   const csv=head.join(',')+'\n'+rows.join('\n');
   const a=document.createElement('a');
@@ -1691,14 +1705,14 @@ async function handleFiles(files){
       ds._track=trackImp||[];
       pendingBase=ds;
       const critical=['acct','name','product','rsp'];
-      const missing=critical.filter(k=>map[k]===undefined);
+      const missing=critical.filter(k=>map[k]===undefined&&!(k==='rsp'&&map.offer!==undefined));
       $('#mSub').textContent=file.name;
       $('#mRows').innerHTML=`
         <div class="m-row"><span>Data rows detected</span><b>${ds.lineItems}</b></div>
         <div class="m-row"><span>Accounts</span><b>${ds.customers.length}</b></div>
-        <div class="m-row"><span>Booked RSP</span><b>${zark(ds.totalRSP)}</b></div>
+        <div class="m-row"><span>Offer value / month</span><b>${zark(ds.totalRSP)}</b></div>
         <div class="m-row"><span>Period detected</span><b>${esc(ds.sub||'—')}</b></div>
-        <div class="m-row"><span>Columns mapped</span><b>${Object.keys(map).length} of 12</b></div>
+        <div class="m-row"><span>Columns mapped</span><b>${Object.keys(map).length} of 13</b></div>
         ${missing.length?`<div class="m-row bad"><span>Missing columns</span><b>${missing.join(', ')}</b></div>`:''}
         ${ds._track.length?`<div class="m-row" style="border-color:color-mix(in srgb,var(--pos) 40%,transparent)"><span>Customer outcomes found</span><b>${ds._track.length} — will be applied</b></div>
         <div class="m-row"><label><input type="checkbox" id="mAddBase" checked> Also load this file as a new base</label></div>`:''}`;
@@ -1744,6 +1758,7 @@ function waMsg(c){
     .replace(/\{fullname\}/g,titleCase(c.name||''))
     .replace(/\{plan\}/g,(c.pkgs&&c.pkgs[0])||'current')
     .replace(/\{device\}/g,(c.prod&&c.prod!=='—')?c.prod:'a new phone')
+    .replace(/\{offer\}/g,c.offer||'a better deal')
     .replace(/\{store\}/g,store)
     .replace(/\{agent\}/g,who);
 }
@@ -1819,16 +1834,27 @@ function renderMyDay(){
 }
 
 /* ---- Hot List ---- */
+const MON_IDX={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function dueMonths(c){
+  const st=(c.stats||[]).find(x=>/^due\s/i.test(x));if(!st)return null;
+  const m=st.toLowerCase().match(/due\s+([a-z]{3})[a-z]*\s+(\d{4})/);if(!m)return null;
+  const now=new Date();
+  return (parseInt(m[2],10)-now.getFullYear())*12+((MON_IDX[m[1]]??now.getMonth())-now.getMonth());
+}
 function hotScore(c){
   let s=0; const f=[]; const v=c.rsp||0;
-  if(v>0){s+=Math.min(58,v/450); f.push('R'+(v>=1000?Math.round(v/1000)+'k':Math.round(v))+' value');}
-  if(/upgrade/i.test(c.deal||'')){s+=16;f.push('upgrade-due');}
-  const p=(c.prod||'').toLowerCase();
-  if(/ultra|pro max|flagship|p\d0 pro|iphone 1[4-9]|s2\d ultra/.test(p)){s+=13;f.push('flagship device');}
-  else if(/iphone|galaxy s\d|nova 1|reno1|honor 90|honor x9/.test(p)){s+=6;}
-  if((c.n||0)>=3){s+=6;f.push((c.n)+' lines');}
+  const st=(c.stats||[]).join(' ').toLowerCase();
+  if(/out of contract/.test(st)){s+=32;f.push('out of contract');}
+  else{const m=dueMonths(c);
+    if(m!==null){
+      if(m<=1){s+=20;f.push(m<=0?'due now':'due next month');}
+      else if(m<=3){s+=12;f.push('due in '+m+' mo');}
+      else{s+=4;f.push('due later');}
+    }}
+  if(v>0){s+=Math.min(38,v/28);f.push('R'+Math.round(v)+'/m offer');}
+  if((c.n||0)>=2){s+=6;f.push((c.n)+' lines');}
   const t=tracking[c.acct];
-  if(!t||!t.st){s+=10;} else if(t.st==='won'){s=-1;} else if(t.st==='lost'||t.st==='wrong'){s=-1;}
+  if(!t||!t.st){s+=10;} else if(t.st==='won'||t.st==='lost'||t.st==='wrong'){s=-1;}
   return {score:Math.round(s),factors:f.slice(0,3)};
 }
 function renderHotList(){
