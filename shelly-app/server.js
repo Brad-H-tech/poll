@@ -40,12 +40,16 @@ function ensureStoreScope(sid) {
   if (!STORES[sid]) sid = 's1';
   store.stores = store.stores || {};
   if (!store.stores[sid]) {
-    const scope = { bases: [], active: null, tracking: {} };
+    const scope = { bases: [], active: null, tracking: {}, settings: {}, claims: [], assign: {} };
     const rows = getSeedRows();
     if (rows.length) { const id = uid(); scope.bases.push({ id, label: 'Base · May–Jul 2024', rows }); scope.active = id; }
     store.stores[sid] = scope; persist();
   }
-  return store.stores[sid];
+  const sc = store.stores[sid];
+  sc.settings = sc.settings || {};
+  sc.claims = Array.isArray(sc.claims) ? sc.claims : [];
+  sc.assign = sc.assign || {};
+  return sc;
 }
 function hashPw(pw, salt) {
   salt = salt || crypto.randomBytes(16).toString('hex');
@@ -221,6 +225,9 @@ const server = http.createServer(async (req, res) => {
         bases: scope.bases.map(b => ({ id: b.id, label: b.label, rows: b.rows })),
         active: scope.active,
         tracking: scope.tracking,
+        settings: scope.settings,
+        claims: scope.claims,
+        assign: scope.assign,
       });
     }
 
@@ -281,6 +288,46 @@ const server = http.createServer(async (req, res) => {
       persist();
       broadcast(sid, 'bases', {});
       return json(res, 200, { ok: true, acct });
+    }
+
+    /* ---- settings: read for all, write manager only ---- */
+    if (p === '/api/settings' && req.method === 'PUT') {
+      if (!isMgr) return json(res, 403, { error: 'Manager only' });
+      const b = await readBody(req);
+      const key = cleanStr(b.key, 40).replace(/[^a-z_]/gi, '');
+      if (!['wa_tpl', 'quotes', 'report_to'].includes(key)) return json(res, 400, { error: 'Unknown setting' });
+      scope.settings[key] = cleanStr(b.value, 8000);
+      persist();
+      broadcast(sid, 'settings', {});
+      return json(res, 200, { ok: true });
+    }
+
+    /* ---- claims ---- */
+    if (p === '/api/claims' && req.method === 'POST') {
+      const b = await readBody(req);
+      const acct = cleanStr(b.acct, 40);
+      if (!acct) return json(res, 400, { error: 'No customer' });
+      if (scope.assign[acct]) return json(res, 409, { error: 'Already assigned' });
+      if (scope.claims.some(c => c.acct === acct && c.status === 'pending'))
+        return json(res, 409, { error: 'Someone already has a claim on this customer' });
+      scope.claims.unshift({ acct, customer: cleanStr(b.customer, 60), by: me.name,
+        agent: me.agent || '', status: 'pending', at: today() });
+      scope.claims = scope.claims.slice(0, 500);
+      persist(); broadcast(sid, 'claims', {});
+      return json(res, 200, { ok: true });
+    }
+    m = /^\/api\/claims\/(.+)\/decide$/.exec(p);
+    if (m && req.method === 'POST') {
+      if (!isMgr) return json(res, 403, { error: 'Manager only' });
+      const acct = cleanStr(decodeURIComponent(m[1]), 40);
+      const b = await readBody(req);
+      const verdict = b.verdict === 'approved' ? 'approved' : 'rejected';
+      const cl = scope.claims.find(c => c.acct === acct && c.status === 'pending');
+      if (!cl) return json(res, 404, { error: 'No pending claim' });
+      cl.status = verdict; cl.decided = today();
+      if (verdict === 'approved') scope.assign[acct] = cl.agent || cl.by;
+      persist(); broadcast(sid, 'claims', {}); broadcast(sid, 'bases', {});
+      return json(res, 200, { ok: true });
     }
 
     /* ---- bases: manager only ---- */

@@ -393,6 +393,8 @@
   .snsw.navy{background:linear-gradient(135deg,#161b3c,#2b3d80)}
   .snsw.plum{background:linear-gradient(135deg,#241333,#5a2c7a)}
   .snsw.lightsw{background:#f4f2ef}
+  body.is-mgr .sidenav .sn-item.mgr-only{display:flex!important}
+  body.is-mgr .sidenav .sn-sec.mgr-only{display:block!important}
   .sidenav{display:none}
   @media (min-width:980px){
     body.authed .sidenav{display:flex}
@@ -484,6 +486,62 @@
     .subseg{width:100%}.subseg>button{flex:1;justify-content:center;padding:7px 8px}
     .who{display:none}
   }
+
+  /* ===== Mission ===== */
+  .mission{border:1px solid var(--line);border-left:4px solid var(--brand-deep);border-radius:0 16px 16px 0;
+    background:linear-gradient(120deg,color-mix(in srgb,var(--brand) 26%,var(--surface-1)),var(--surface-1) 62%);
+    padding:17px 19px;margin-bottom:16px}
+  .mission .mtop{display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+  .mission h3{font-size:16.5px;letter-spacing:-.02em}
+  .mission .mcnt{margin-left:auto;font-size:11.5px;font-weight:800;background:var(--brand);color:var(--brand-ink);
+    border-radius:999px;padding:5px 12px;white-space:nowrap}
+  .mquote{font-style:italic;color:var(--ink-2);font-size:13.5px;margin:11px 0 12px;padding-left:12px;
+    border-left:2px solid var(--brand)}
+  .mprog{height:10px;background:var(--surface-3);border-radius:999px;overflow:hidden}
+  .mprog i{display:block;height:100%;border-radius:999px;width:0;transition:width .5s cubic-bezier(.22,1,.36,1);
+    background:linear-gradient(90deg,var(--brand-deep),var(--brand))}
+  .mbtns{display:flex;gap:9px;margin-top:13px;flex-wrap:wrap;align-items:center}
+  .mdone{background:color-mix(in srgb,var(--pos) 13%,transparent);border:1px solid color-mix(in srgb,var(--pos) 32%,transparent);
+    border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:750;color:var(--pos);margin-top:12px}
+  .tick{width:22px;height:22px;border-radius:50%;border:2px solid var(--line-strong);flex:0 0 auto;display:grid;
+    place-items:center;font-size:11px;color:transparent}
+  .tick.on{background:var(--pos);border-color:var(--pos);color:#fff}
+  .bcard.mdoneRow{opacity:.55}
+  .bcard.mdoneRow .bnm{text-decoration:line-through}
+
+  /* ===== Claims ===== */
+  .claimbtn{font:inherit;font-size:12px;font-weight:750;border:1px solid var(--brand);background:color-mix(in srgb,var(--brand) 22%,transparent);
+    color:var(--brand-deep);border-radius:9px;padding:5px 10px;cursor:pointer;white-space:nowrap}
+  .claimbtn:hover{background:var(--brand)}
+  .pendchip{font-size:11px;font-weight:750;color:var(--warm);background:color-mix(in srgb,var(--warm) 15%,transparent);
+    border-radius:999px;padding:4px 10px;white-space:nowrap}
+  .okbtn{font:inherit;font-size:12.5px;font-weight:750;border:0;background:var(--pos);color:#fff;border-radius:10px;padding:8px 14px;cursor:pointer}
+  .nobtn{font:inherit;font-size:12.5px;font-weight:750;border:1px solid var(--line);background:var(--surface-1);
+    color:var(--ink-2);border-radius:10px;padding:8px 14px;cursor:pointer}
+
+  /* ===== Report ===== */
+  .rep{max-width:600px}
+  .rep-head{background:linear-gradient(120deg,var(--hero-b),var(--hero-c));color:#fff;padding:17px 20px;border-radius:14px 14px 0 0}
+  .rep-head .t{font-size:17px;font-weight:800}
+  .rep-head .s{font-size:13px;margin-top:5px;opacity:.92}
+  .rep-body{border:1px solid var(--line);border-top:0;border-radius:0 0 14px 14px;padding:15px 18px;background:var(--surface-1)}
+  .rep-store{font-size:14px;font-weight:800;margin:14px 0 6px}
+  .rep-store:first-child{margin-top:0}
+  .rept{width:100%;border-collapse:collapse;font-size:13px;min-width:0}
+  .rept td{padding:6px;border-bottom:1px solid var(--line)}
+  .rept td.r{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .rept tr.lazy td{background:color-mix(in srgb,var(--neg) 12%,transparent);color:var(--neg);font-weight:750}
+  .rep-eyes{background:color-mix(in srgb,var(--warm) 13%,transparent);border-radius:11px;padding:11px 13px;margin-top:15px;font-size:13px}
+  .rep-eyes .h{font-weight:800;color:var(--warm)}
+  .tplbox{width:100%;min-height:96px;border:1px solid var(--line);border-radius:11px;padding:11px;font:inherit;
+    font-size:13.5px;background:var(--surface-2);color:var(--ink);resize:vertical}
+  .tplbox:focus{outline:none;border-color:var(--brand-deep)}
+  .prevbub{margin-top:11px;background:#dcf8c6;border-radius:12px 12px 12px 4px;padding:11px 13px;font-size:13px;
+    max-width:420px;color:#111;line-height:1.5}
+  :root[data-theme="dark"] .prevbub{background:#0c4a2f;color:#eaf7ee}
+  @media (prefers-color-scheme:dark){:root:not([data-theme]) .prevbub{background:#0c4a2f;color:#eaf7ee}}
+  .plch{display:inline-block;background:color-mix(in srgb,var(--brand) 26%,transparent);color:var(--brand-deep);
+    border-radius:5px;padding:2px 7px;font-family:var(--mono);font-size:11.5px;font-weight:700;margin-right:4px}
 
   /* ===== Quick Log sheet ===== */
   .qback{position:fixed;inset:0;z-index:96;background:rgba(12,10,10,.45);backdrop-filter:blur(3px)}
@@ -613,9 +671,12 @@
   <button class="sn-item" data-nav="book" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.6A1.6 1.6 0 0 1 5.6 3H18a1 1 0 0 1 1 1v13.8a1 1 0 0 1-1 1H5.6A1.6 1.6 0 0 0 4 20.4Z"/><path d="M4 4.6A1.6 1.6 0 0 0 5.6 6.2H19"/></svg> The Book</button>
   <button class="sn-item" data-nav="day" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg> My Day <span class="cnt" id="snDayCnt"></span></button>
   <button class="sn-item" data-nav="hot" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.6 2c.5 2.4-.9 3.7-2.2 5C10 8.4 8.6 9.8 8.6 12.2a5.4 5.4 0 0 0 10.8 0c0-1.7-.8-3.2-1.7-4.4-.2 1-.9 1.6-1.7 1.6-.9 0-1.5-.7-1.5-1.8 0-2 1-3.5-1.3-5.6Z"/></svg> Hot List</button>
-  <div class="sn-sec mgr-only">Manager</div>
+  <div class="sn-sec mgr-only" style="display:none">Manager</div>
   <button class="sn-item mgr-only" data-nav="centre" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg> Command centre</button>
   <button class="sn-item mgr-only" data-nav="upload" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 20h14"/></svg> Load base</button>
+  <button class="sn-item mgr-only" data-nav="claims" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V4.6a1.6 1.6 0 1 1 3.2 0V11m0-1.4a1.6 1.6 0 1 1 3.2 0V12m0-1a1.6 1.6 0 1 1 3.2 0v4.5a5.5 5.5 0 0 1-5.5 5.5h-1.4a5.5 5.5 0 0 1-4.4-2.2L5 15.5a1.6 1.6 0 0 1 2.4-2.1L9 15"/></svg> Claims <span class="cnt" id="snClaimCnt"></span></button>
+  <button class="sn-item mgr-only" data-nav="report" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg> Weekly report</button>
+  <button class="sn-item mgr-only" data-nav="settings" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2.4-1.4L13.7 2h-3.4l-.4 2.6A7 7 0 0 0 7.5 6L5.1 5 3.1 8.4l2 1.6a7 7 0 0 0 0 2.8l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2.4 1.4l.4 2.6h3.4l.4-2.6a7 7 0 0 0 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4Z"/></svg> Message &amp; quotes</button>
   <button class="sn-item mgr-only" data-nav="team" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><path d="M16.2 5.3a3 3 0 0 1 0 5.4M18 19.5a5.5 5.5 0 0 0-3-4.9"/></svg> Team</button>
   <div class="sn-foot">
     <div class="sn-user"><span class="av" id="snAv">?</span>
@@ -662,6 +723,8 @@
     <button role="tab" data-sv="hot" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.6 2c.5 2.4-.9 3.7-2.2 5C10 8.4 8.6 9.8 8.6 12.2a5.4 5.4 0 0 0 10.8 0c0-1.7-.8-3.2-1.7-4.4-.2 1-.9 1.6-1.7 1.6-.9 0-1.5-.7-1.5-1.8 0-2 1-3.5-1.3-5.6Z"/></svg> Hot List</button>
     <span class="subseg-ai"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.4 4.1a3 3 0 0 0 1.9 1.9L19.5 10l-4.2 1.1a3 3 0 0 0-1.9 1.9L12 17l-1.4-4.1a3 3 0 0 0-1.9-1.9L4.5 10l4.2-1a3 3 0 0 0 1.9-1.9Z"/></svg> smart views</span>
   </div>
+
+  <div id="missionWrap"></div>
 
   <div id="bookView">
   <div class="pipe" id="pipe" role="group" aria-label="Tracking pipeline"></div>
@@ -747,6 +810,45 @@
         outcomes are updated automatically, so you can round-trip the book through Excel.</p>
       </div>
       <button class="upbtn" type="button" tabindex="-1">Choose file</button>
+    </section>
+
+    <section class="card pad-lg" id="claimsCard" style="margin-top:16px" aria-label="Claims">
+      <div class="card-hd"><div><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V4.6a1.6 1.6 0 1 1 3.2 0V11m0-1.4a1.6 1.6 0 1 1 3.2 0V12m0-1a1.6 1.6 0 1 1 3.2 0v4.5a5.5 5.5 0 0 1-5.5 5.5h-1.4a5.5 5.5 0 0 1-4.4-2.2L5 15.5a1.6 1.6 0 0 1 2.4-2.1L9 15"/></svg> Claims waiting <span id="claimCntLbl"></span></h3>
+        <div class="h-desc">Consultants asking to take customers nobody owns</div></div></div>
+      <div id="claimsList"></div>
+    </section>
+
+    <section class="card pad-lg" id="reportCard" style="margin-top:16px" aria-label="Weekly report">
+      <div class="card-hd">
+        <div><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg> Weekly report</h3>
+          <div class="h-desc">Last 7 days · who worked, who didn't, and what needs you</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="abtn" id="repWa">Send to WhatsApp</button>
+          <button class="abtn" id="repMail">Email it to me</button>
+        </div>
+      </div>
+      <div id="reportBody" class="rep"></div>
+      <div class="toolbar" style="margin-top:14px">
+        <input class="ti" id="repTo" placeholder="Your WhatsApp number (e.g. 083 869 8045)" style="max-width:280px">
+        <button class="abtn" id="repToSave">Save number</button>
+      </div>
+    </section>
+
+    <section class="card pad-lg" id="settingsCard" style="margin-top:16px" aria-label="Message and quotes">
+      <div class="card-hd"><div><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2.4-1.4L13.7 2h-3.4l-.4 2.6A7 7 0 0 0 7.5 6L5.1 5 3.1 8.4l2 1.6a7 7 0 0 0 0 2.8l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2.4 1.4l.4 2.6h3.4l.4-2.6a7 7 0 0 0 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4Z"/></svg> WhatsApp message</h3>
+        <div class="h-desc">What consultants send when they tap the green button · this store only</div></div></div>
+      <div style="font-size:12.5px;color:var(--ink-2);margin-bottom:9px">
+        <span class="plch">{name}</span><span class="plch">{fullname}</span><span class="plch">{plan}</span><span class="plch">{device}</span><span class="plch">{store}</span><span class="plch">{agent}</span>
+        fill themselves in per customer.</div>
+      <textarea class="tplbox" id="tplBox"></textarea>
+      <div style="font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:13px 0 0">Live preview</div>
+      <div class="prevbub" id="tplPrev"></div>
+      <div class="toolbar" style="margin-top:12px"><button class="abtn" id="tplSave">Save message</button></div>
+
+      <div class="card-hd" style="margin:24px 0 10px"><div><h3 style="font-size:14px">Mission quotes</h3>
+        <div class="h-desc">One per line — these join the built-in bank and rotate daily</div></div></div>
+      <textarea class="tplbox" id="quoteBox" placeholder="Your own war cries…" style="min-height:78px"></textarea>
+      <div class="toolbar" style="margin-top:12px"><button class="abtn" id="quoteSave">Save quotes</button></div>
     </section>
 
     <section class="card pad-lg" id="teamCard" style="margin-top:16px" aria-label="Team">
@@ -1156,6 +1258,42 @@ function fmtMonthRange(a,b){
    STATE
 ========================================================= */
 let datasets=[],activeIdx=0,tracking={},ME=null,es=null;
+let SETTINGS={},CLAIMS=[],ASSIGN={};
+const DEFAULT_TPL="Hi {name}! 👋 It's {agent} from MTN {store}. Good news — you're due for an UPGRADE on your {plan} plan. 🎉 Reply here and I'll check your best deal — new phone options included. No obligation!";
+const QUOTES=["Amateurs wait for motivation. Professionals pick up the phone.",
+"Every upgrade you don't chase, someone else sells.",
+"The best time to call was yesterday. The second best is now.",
+"Ten names. One legend. Go.",
+"Sales is a contact sport — make contact.",
+"You miss 100% of the WhatsApps you don't send.",
+"Champions do daily what others do occasionally.",
+"The book doesn't work itself.",
+"One more call. Then one more.",
+"Speed is a superpower — first to reach, first to sell.",
+"Small taps, big commissions.",
+"Your future self is watching this list.",
+"Be so good they answer on the first ring.",
+"Green buttons don't press themselves.",
+"Today's effort is next month's target smashed.",
+"Nobody ever regretted finishing the list.",
+"Talk to ten. Win a few. Repeat.",
+"The quiet ones buy too — reach them.",
+"Done beats perfect. Send it.",
+"Every \u201Cno answer\u201D is one tap from a \u201Cyes\u201D.",
+"Your commission is hiding in this list.",
+"First hour, first five — set the tone.",
+"Great days are built before lunch.",
+"Someone's waiting for exactly this call.",
+"Consistency is the real closer.",
+"Finish the ten — then brag."];
+function assignedTo(c){return c.csr||ASSIGN[c.acct]||'';}
+function quoteOfDay(){
+  let extra=[];
+  try{extra=String(SETTINGS.quotes||'').split('\n').map(x=>x.trim()).filter(Boolean);}catch(e){}
+  const bank=extra.length?QUOTES.concat(extra):QUOTES;
+  const d=new Date();
+  return bank[(d.getFullYear()*372+(d.getMonth()+1)*31+d.getDate())%bank.length];
+}
 async function api(url,opt={}){
   const r=await fetch(url,{headers:{'Content-Type':'application/json'},...opt});
   if(r.status===401){showLogin();throw new Error('auth');}
@@ -1404,8 +1542,11 @@ function renderChips(){
 }
 function filteredCustomers(){
   const q=filters.q.toLowerCase();
+  let missIds=null;
+  if(missionOnly){missIds=new Set(missionList().map(x=>x.c.acct));}
   return DS().customers.filter(c=>{
-    if(filters.agent&&c.csr!==filters.agent)return false;
+    if(missIds&&!missIds.has(c.acct))return false;
+    if(filters.agent&&assignedTo(c)!==filters.agent)return false;
     if(filters.deal&&c.deal!==filters.deal)return false;
     if(filters.cat&&c.cat!==filters.cat)return false;
     if(filters.inv&&!c.stats.includes(filters.inv))return false;
@@ -1425,7 +1566,7 @@ function sortCustomers(list){
     let x,y;
     switch(sortK){
       case 'name':x=a.name.toLowerCase();y=b.name.toLowerCase();break;
-      case 'csr':x=a.csr;y=b.csr;break;
+      case 'csr':x=assignedTo(a);y=assignedTo(b);break;
       case 'deal':x=a.deal;y=b.deal;break;
       case 'prod':x=a.prod.toLowerCase();y=b.prod.toLowerCase();break;
       case 'n':x=a.n;y=b.n;break;
@@ -1436,6 +1577,19 @@ function sortCustomers(list){
     }
     return x<y?-sortDir:x>y?sortDir:0;
   });
+}
+function claimStatus(acct){
+  for(const c of CLAIMS){if(c.acct===acct&&c.status!=='rejected')return c;}
+  return null;
+}
+function agentCell(c){
+  const who=assignedTo(c);
+  if(who)return agentBadge(who);
+  const cl=claimStatus(c.acct);
+  if(cl&&cl.status==='pending')return `<span class="pendchip">⏳ ${esc(cl.by)}</span>`;
+  if(ME&&ME.role!=='manager'&&ME.agent)
+    return `<button class="claimbtn" data-claim="${esc(c.acct)}">＋ Claim</button>`;
+  return '<span class="csr-cell" style="opacity:.5">—</span>';
 }
 function agentBadge(name){
   if(!name)return '<span class="csr-cell" style="opacity:.5">—</span>';
@@ -1465,7 +1619,7 @@ function renderExplorer(){
     let html=`<tr class="main ${open?'open':''}${t.st?' tinted':''}" ${t.st?`style="--tint:${TRACK_COL[t.st]}"`:''} data-acct="${esc(c.acct)}">
       <td><button class="qzap" data-zap="${esc(c.acct)}" title="Quick log" aria-label="Quick log"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.2 2 4.8 13.2h5.5L10.8 22l8.4-11.2h-5.5Z"/></svg></button></td>
       <td class="cust">${esc(titleCase(c.name))}${miniContact(c)}<small>${esc(c.msisdn||c.acct)}</small></td>
-      <td>${agentBadge(c.csr)}</td>
+      <td>${agentCell(c)}</td>
       <td>${dealTag(c.deal)}</td>
       <td class="prod" title="${esc(c.prod)}">${esc(c.prod)}</td>
       <td class="num">${c.n}</td>
@@ -1583,9 +1737,15 @@ const digits=s=>String(s||'').replace(/[^0-9]/g,'');
 const TODAY=()=>new Date().toISOString().slice(0,10);
 function waMsg(c){
   const first=titleCase((c.name||'').split(/\s+/)[0]||'there');
-  const who=(ME&&ME.name)?ME.name:'the store';
+  const who=(ME&&ME.name)?ME.name:'the team';
   const store=($('#storeSub')&&$('#storeSub').textContent)||'MTN';
-  return `Hi ${first}, it's ${who} from MTN ${store} 🙂 You're due for an upgrade — can I show you this month's deals?`;
+  const tpl=(SETTINGS.wa_tpl&&SETTINGS.wa_tpl.trim())||DEFAULT_TPL;
+  return tpl.replace(/\{name\}/g,first)
+    .replace(/\{fullname\}/g,titleCase(c.name||''))
+    .replace(/\{plan\}/g,(c.pkgs&&c.pkgs[0])||'current')
+    .replace(/\{device\}/g,(c.prod&&c.prod!=='—')?c.prod:'a new phone')
+    .replace(/\{store\}/g,store)
+    .replace(/\{agent\}/g,who);
 }
 function contactHTML(c){
   const d=digits(c.msisdn);
@@ -1606,7 +1766,7 @@ function daysBetween(a,b){return Math.round((Date.parse(a)-Date.parse(b))/864e5)
 function myDayList(){
   const mine=dayMine&&ME&&ME.agent, today=TODAY(), out=[];
   DS().customers.forEach(c=>{
-    if(mine&&c.csr!==ME.agent)return;
+    if(mine&&assignedTo(c)!==ME.agent)return;
     const t=tracking[c.acct]; if(!t)return;
     if(t.st==='won'||t.st==='lost'||t.st==='wrong')return;
     if(t.next){
@@ -1636,7 +1796,7 @@ function urgLabel(e,today){
 function dayCard(e,today){
   const col=URG[e.kind];
   return `<div class="bcard" data-acct="${esc(e.c.acct)}">
-    <span class="av" style="background:${agentColor((e.c.csr||'?').toUpperCase())}">${esc((e.c.name||'?')[0])}</span>
+    <span class="av" style="background:${agentColor((assignedTo(e.c)||'?').toUpperCase())}">${esc((e.c.name||'?')[0])}</span>
     <div class="bmain"><div class="bnm">${esc(titleCase(e.c.name))}</div>
       <div class="bsub"><span class="mono">${esc(e.c.msisdn||e.c.acct)}</span>${e.note?' · '+esc(e.note):''}</div></div>
     <span class="rpill" style="color:${col.fg};background:${col.bg}">${esc(urgLabel(e,today))}</span>
@@ -1673,7 +1833,7 @@ function hotScore(c){
 }
 function renderHotList(){
   const mine=hotMine&&ME&&ME.agent;
-  let rows=DS().customers.filter(c=>!mine||c.csr===ME.agent)
+  let rows=DS().customers.filter(c=>!mine||assignedTo(c)===ME.agent)
     .map(c=>({c,...hotScore(c)})).filter(x=>x.score>=0)
     .sort((a,b)=>b.score-a.score).slice(0,50);
   if(!rows.length){$('#hotBoard').innerHTML=`<div class="board-empty"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.6 2c.5 2.4-.9 3.7-2.2 5C10 8.4 8.6 9.8 8.6 12.2a5.4 5.4 0 0 0 10.8 0c0-1.7-.8-3.2-1.7-4.4-.2 1-.9 1.6-1.7 1.6-.9 0-1.5-.7-1.5-1.8 0-2 1-3.5-1.3-5.6Z"/></svg><div style="height:8px"></div>No leads to rank yet.</div>`;return;}
@@ -1683,7 +1843,7 @@ function renderHotList(){
       :warm?['⭐ WARM','#c98500','color-mix(in srgb,#c98500 16%,transparent)']
       :['· cool','var(--ink-3)','var(--surface-3)'];
     return `<div class="bcard" data-acct="${esc(c.acct)}">
-      <span class="av" style="background:${agentColor((c.csr||'?').toUpperCase())}">${esc((c.name||'?')[0])}</span>
+      <span class="av" style="background:${agentColor((assignedTo(c)||'?').toUpperCase())}">${esc((c.name||'?')[0])}</span>
       <div class="bmain"><div class="bnm">${esc(titleCase(c.name))}</div>
         <div class="factors">${x.factors.map(f=>`<span class="fc">${esc(f)}</span>`).join('')}</div></div>
       <span class="rpill" style="color:${badge[1]};background:${badge[2]}">${badge[0]}</span>
@@ -1712,7 +1872,7 @@ function renderQsActs(){
     `<div class="qa"><i style="background:${ACT_COL[a.t]||'var(--ink-3)'}"></i>${esc(ACT_LBL[a.t]||a.t)}
      <small>${esc(a.by||'')} · ${esc((a.at||'').slice(5))}</small></div>`).join('');
 }
-function qsRefresh(){renderExplorer();renderPipe();renderSubCount();if(subView!=='book')renderSubView(subView);}
+function qsRefresh(){renderExplorer();renderPipe();renderSubCount();renderMission();if(subView!=='book')renderSubView(subView);}
 function openQuick(acct){
   const c=findCust(acct);if(!c)return;
   qsAcct=acct;
@@ -1786,15 +1946,173 @@ async function addCustomer(){
   $('#ncAdd').disabled=false;
 }
 
+/* ---- Daily Mission ---- */
+let missionOnly=false;
+function touchedToday(acct){
+  const t=tracking[acct];if(!t)return false;
+  const td=TODAY();
+  if(t.at===td)return true;
+  return (t.acts||[]).some(a=>String(a.at||'').slice(0,10)===td);
+}
+function missionRank(c){
+  const t=tracking[c.acct]||{};
+  if(t.next&&t.next<=TODAY())return 0;
+  if(hotScore(c).score>=72)return 1;
+  if(!t.st&&!(t.acts||[]).length)return 2;
+  return 3;
+}
+const MISSION_WHY=['Callback due','Hot lead','Never contacted','On your list'];
+function missionList(){
+  if(!ME||!ME.agent)return [];
+  const td=TODAY();
+  return DS().customers
+    .filter(c=>assignedTo(c)===ME.agent)
+    .filter(c=>{const t=tracking[c.acct]||{};
+      if(['won','lost','wrong'].includes(t.st))return false;
+      if(t.next&&t.next>td)return false;
+      return true;})
+    .map(c=>({c,r:missionRank(c)}))
+    .sort((a,b)=>a.r-b.r||b.c.rsp-a.c.rsp)
+    .slice(0,10);
+}
+function renderMission(){
+  const wrap=$('#missionWrap');if(!wrap)return;
+  if(!ME||!ME.agent||ME.role==='manager'||subView!=='book'){wrap.innerHTML='';return;}
+  const list=missionList();
+  if(!list.length){wrap.innerHTML='';return;}
+  const done=list.filter(x=>touchedToday(x.c.acct)).length;
+  const pct=Math.round(done/list.length*100);
+  wrap.innerHTML=`<div class="mission">
+    <div class="mtop"><span style="font-size:19px">🔥</span>
+      <h3>Your mission today</h3>
+      <span class="mcnt">${done} of ${list.length} done</span></div>
+    <div class="mquote">“${esc(quoteOfDay())}”</div>
+    <div class="mprog"><i data-w="${pct}"></i></div>
+    <div class="mbtns">
+      <button class="fbtn" id="missBtn" aria-pressed="${missionOnly}">${missionOnly?'📒 Whole book':'🎯 Show my '+list.length}</button>
+    </div>
+    ${done>=list.length?'<div class="mdone">🏆 Mission complete — legend!</div>':''}
+  </div>`;
+  requestAnimationFrame(()=>{const i=$('.mprog i');if(i)i.style.width=i.dataset.w+'%';});
+  $('#missBtn').onclick=()=>{missionOnly=!missionOnly;shown=40;renderExplorer();renderMission();};
+}
+
+/* ---- Claims ---- */
+function claimCust(acct){
+  const c=findCust(acct);
+  api('/api/claims',{method:'POST',body:JSON.stringify({acct,customer:c?c.name:''})})
+    .then(()=>{toast('Claim sent — waiting for the manager');return refreshState();})
+    .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
+}
+function decideClaim(acct,verdict){
+  api('/api/claims/'+encodeURIComponent(acct)+'/decide',{method:'POST',body:JSON.stringify({verdict})})
+    .then(()=>{toast(verdict==='approved'?'Approved — customer assigned':'Claim rejected');return refreshState();})
+    .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
+}
+function renderClaims(){
+  const pend=CLAIMS.filter(c=>c.status==='pending');
+  const n=pend.length;
+  const lbl=$('#claimCntLbl');if(lbl)lbl.textContent=n?'— '+n:'';
+  const sn=$('#snClaimCnt');if(sn)sn.textContent=n?n:'';
+  const box=$('#claimsList');if(!box)return;
+  box.innerHTML=n?pend.map(c=>`<div class="bcard" style="cursor:default">
+    <span class="av" style="background:${agentColor((c.agent||c.by||'?').toUpperCase())}">${esc((c.by||'?')[0])}</span>
+    <div class="bmain"><div class="bnm">${esc(titleCase(c.customer||c.acct))}</div>
+      <div class="bsub">wanted by <b>${esc(c.by)}</b> · ${esc(c.at||'')}</div></div>
+    <div style="display:flex;gap:7px;flex:0 0 auto">
+      <button class="okbtn" data-ok="${esc(c.acct)}">✓ Approve</button>
+      <button class="nobtn" data-no="${esc(c.acct)}">✕ Reject</button></div>
+  </div>`).join(''):`<div class="board-empty" style="padding:26px">No claims waiting.</div>`;
+  $$('#claimsList [data-ok]').forEach(b=>b.onclick=()=>decideClaim(b.dataset.ok,'approved'));
+  $$('#claimsList [data-no]').forEach(b=>b.onclick=()=>decideClaim(b.dataset.no,'rejected'));
+}
+
+/* ---- Weekly report ---- */
+function buildReport(){
+  const td=new Date(),since=new Date(td.getTime()-7*864e5).toISOString().slice(0,10);
+  const per={},wins={};
+  const bump=(who,acct)=>{if(!who)return;(per[who]=per[who]||new Set()).add(acct);};
+  DS().customers.forEach(c=>{
+    const t=tracking[c.acct];if(!t)return;
+    (t.acts||[]).forEach(a=>{if(String(a.at||'').slice(0,10)>=since)bump(a.by,c.acct);});
+    if(t.at&&t.at>=since){bump(t.by,c.acct);
+      if(t.st==='won')wins[t.by]=(wins[t.by]||0)+1;}
+  });
+  const roster=new Map();
+  DS().csr.forEach(x=>roster.set(x.name.toUpperCase(),x.name));
+  Object.keys(per).forEach(x=>{if(!roster.has(x.toUpperCase()))roster.set(x.toUpperCase(),x);});
+  Object.keys(wins).forEach(x=>{if(!roster.has(x.toUpperCase()))roster.set(x.toUpperCase(),x);});
+  const users=[...roster.entries()].map(([up,disp])=>{
+    let c=0,w=0;
+    Object.keys(per).forEach(k=>{if(k.toUpperCase()===up)c+=per[k].size;});
+    Object.keys(wins).forEach(k=>{if(k.toUpperCase()===up)w+=wins[k];});
+    return {n:titleCase(disp),c,w};
+  }).sort((a,b)=>b.c-a.c||b.w-a.w);
+  const total=users.reduce((a,u)=>a+u.c,0),won=users.reduce((a,u)=>a+u.w,0);
+  const untouched=DS().customers.filter(c=>{const t=tracking[c.acct];return !t||(!t.st&&!(t.acts||[]).length);}).length;
+  const overdue=DS().customers.filter(c=>{const t=tracking[c.acct];
+    return t&&t.next&&t.next<TODAY()&&!['won','lost','wrong'].includes(t.st);}).length;
+  const pending=CLAIMS.filter(c=>c.status==='pending').length;
+  return {users,total,won,untouched,overdue,pending,
+    store:($('#storeSub')&&$('#storeSub').textContent)||'Store',end:TODAY()};
+}
+function renderReport(){
+  const box=$('#reportBody');if(!box)return;
+  const r=buildReport();
+  const medals=['🥇','🥈','🥉'];
+  box.innerHTML=`<div class="rep-head">
+      <div class="t">📊 Your week, boss</div>
+      <div class="s">${esc(r.store)} — <b>${r.total}</b> contacts, <b>${r.won}</b> won</div></div>
+    <div class="rep-body">
+      <div class="rep-store">${esc(r.store)} — ${r.total} contacts this week</div>
+      <table class="rept"><tbody>${r.users.map((u,i)=>`
+        <tr class="${u.c===0?'lazy':''}"><td>${u.c===0?'😴 ':(i<3&&u.c>0?medals[i]+' ':'')}${esc(u.n)}</td>
+        <td class="r">${u.c===0?'0 contacts all week':'<b>'+u.c+'</b> contacts · '+u.w+' won'}</td></tr>`).join('')||'<tr><td>No consultants yet</td><td class="r"></td></tr>'}</tbody></table>
+      <div class="rep-eyes"><div class="h">⚠️ Needs your eyes</div>
+        <div style="margin-top:5px">Untouched customers: <b>${r.untouched}</b><br>
+        Overdue callbacks (date passed, still open): <b>${r.overdue}</b><br>
+        Claims waiting for you: <b>${r.pending}</b></div></div>
+    </div>`;
+}
+function reportText(){
+  const r=buildReport();
+  const medals=['🥇','🥈','🥉'];
+  return `📊 Weekly report — ${r.store} — week ending ${r.end}\n`+
+    `Total: ${r.total} contacts · ${r.won} won\n\n`+
+    r.users.map((u,i)=>`${u.c===0?'😴':(i<3?medals[i]:'•')} ${u.n}: ${u.c===0?'0 all week':u.c+' contacts, '+u.w+' won'}`).join('\n')+
+    `\n\n⚠️ Untouched: ${r.untouched} · Overdue callbacks: ${r.overdue} · Claims waiting: ${r.pending}`;
+}
+
+/* ---- Settings panel ---- */
+function tplPreview(){
+  const sample=DS().customers[0]||{name:'Cornelia Botha',prod:'Honor X9b 5G',pkgs:['MTN Mega Gigs XS'],acct:''};
+  const saved=SETTINGS.wa_tpl;
+  SETTINGS.wa_tpl=$('#tplBox').value;
+  $('#tplPrev').textContent=waMsg(sample);
+  SETTINGS.wa_tpl=saved;
+}
+function loadSettingsPanel(){
+  const tb=$('#tplBox');if(!tb)return;
+  if(document.activeElement!==tb)tb.value=SETTINGS.wa_tpl||DEFAULT_TPL;
+  const qb=$('#quoteBox');if(qb&&document.activeElement!==qb)qb.value=SETTINGS.quotes||'';
+  const rt=$('#repTo');if(rt&&document.activeElement!==rt)rt.value=SETTINGS.report_to||'';
+  tplPreview();
+}
+function saveSetting(key,value,msg){
+  return api('/api/settings',{method:'PUT',body:JSON.stringify({key,value})})
+    .then(()=>{SETTINGS[key]=value;toast(msg);})
+    .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
+}
+
 /* ---- view switching ---- */
 function renderHero(){
   if(!ME)return;
   $('#heroName').textContent=titleCase((ME.name||'').split(/\s+/)[0]||'there');
   const st=$('#storeSub'); if(st)$('#heroStore').textContent=st.textContent;
-  const mineC=(ME.agent)?DS().customers.filter(c=>c.csr===ME.agent):DS().customers;
+  const mineC=(ME.agent)?DS().customers.filter(c=>assignedTo(c)===ME.agent):DS().customers;
   $('#hsAccounts').textContent=mineC.length.toLocaleString('en-ZA');
   $('#hsDue').textContent=dayCounts().due;
-  const hs=(hotMine&&ME.agent)?DS().customers.filter(c=>c.csr===ME.agent):DS().customers;
+  const hs=(hotMine&&ME.agent)?DS().customers.filter(c=>assignedTo(c)===ME.agent):DS().customers;
   $('#hsHot').textContent=hs.filter(c=>hotScore(c).score>=72).length;
 }
 function renderSubView(v){
@@ -1807,6 +2125,8 @@ function renderSubView(v){
   $$('#bottomNav [data-nav]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.nav===v)));
   if(v==='day')renderMyDay();
   if(v==='hot')renderHotList();
+  if(v!=='book')missionOnly=false;
+  renderMission();
 }
 function navTo(k){
   if(k==='book'||k==='day'||k==='hot'){
@@ -1818,6 +2138,9 @@ function navTo(k){
   $$('#sidenav .sn-item').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.nav===k)));
   if(k==='centre'){const el=$('#kpis');if(el)el.scrollIntoView({behavior:'smooth'});}
   if(k==='team'){const el=$('#teamCard');if(el)el.scrollIntoView({behavior:'smooth'});}
+  if(k==='claims'){const el=$('#claimsCard');if(el)el.scrollIntoView({behavior:'smooth'});}
+  if(k==='report'){renderReport();const el=$('#reportCard');if(el)el.scrollIntoView({behavior:'smooth'});}
+  if(k==='settings'){loadSettingsPanel();const el=$('#settingsCard');if(el)el.scrollIntoView({behavior:'smooth'});}
   if(k==='upload'){const el=$('#upPanel');if(el)el.scrollIntoView({behavior:'smooth'});setTimeout(()=>$('#fileInp').click(),350);}
 }
 
@@ -1830,6 +2153,7 @@ function renderAll(){
   renderBars('#brands',DS().brands,'brand');
   renderStatus();syncFilterControls();renderExplorer();
   renderSubCount();renderHero();renderSubView(subView);
+  renderClaims();renderReport();loadSettingsPanel();
 }
 /* ---------- auth, roles & live sync ---------- */
 function applyView(v){
@@ -1838,7 +2162,7 @@ function applyView(v){
 }
 function showLogin(){
   if(es){es.close();es=null;}
-  document.body.classList.remove('authed');
+  document.body.classList.remove('authed');document.body.classList.remove('is-mgr');
   {const m=$('#pmenu');if(m)m.hidden=true;}
   $('#login').classList.add('show');
   setTimeout(()=>$('#liU').focus(),80);
@@ -1861,6 +2185,7 @@ async function doLogin(){
 async function refreshState(){
   const st=await api('/api/state');
   ME=st.me;tracking=st.tracking||{};
+  SETTINGS=st.settings||{};CLAIMS=st.claims||[];ASSIGN=st.assign||{};
   $('#storeSub').textContent=st.storeName||'MTN Dealer';
   datasets=st.bases.map(b=>Object.assign(buildDataset(b.rows,b.label),{id:b.id}));
   if(!datasets.length)datasets=[Object.assign(buildDataset([],'No base loaded yet'),{id:null})];
@@ -1882,6 +2207,7 @@ async function boot(){
   $('#hotMineBtn').setAttribute('aria-pressed',String(hotMine));
   renderSubCount();renderHero();
   document.body.classList.add('authed');
+  document.body.classList.toggle('is-mgr',mgr);
   $('#snName').textContent=ME.name;
   $('#snRole').textContent=mgr?'manager':'consultant';
   $('#snAv').textContent=(ME.name||'?')[0].toUpperCase();
@@ -1902,9 +2228,11 @@ function connectSSE(){
     tracking[acct]=rec;
     const f=document.activeElement;
     if(f&&f.classList&&(f.classList.contains('note-ta')||f.classList.contains('note-in'))&&f.dataset.acct===acct)return;
-    renderExplorer();renderSubCount();if(subView!=='book')renderSubView(subView);
+    renderExplorer();renderSubCount();renderMission();if(subView!=='book')renderSubView(subView);
   });
   es.addEventListener('bases',()=>refreshState().catch(()=>{}));
+  es.addEventListener('claims',()=>refreshState().catch(()=>{}));
+  es.addEventListener('settings',()=>refreshState().catch(()=>{}));
   es.addEventListener('team',()=>{if(ME&&ME.role==='manager')renderTeam();});
 }
 async function renderTeam(){
@@ -1993,6 +2321,20 @@ function init(){
   $('#ncAdd').onclick=addCustomer;
   $('#custModal').addEventListener('click',e=>{if(e.target.id==='custModal')$('#custModal').classList.remove('show');});
   $('#bottomNav').addEventListener('click',e=>{const b=e.target.closest('[data-nav]');if(b)navTo(b.dataset.nav);});
+  $('#tplBox').addEventListener('input',tplPreview);
+  $('#tplSave').onclick=()=>saveSetting('wa_tpl',$('#tplBox').value,'Message saved for this store');
+  $('#quoteSave').onclick=()=>{saveSetting('quotes',$('#quoteBox').value,'Quotes saved').then(renderMission);};
+  $('#repToSave').onclick=()=>saveSetting('report_to',$('#repTo').value.trim(),'Number saved');
+  $('#repWa').onclick=()=>{
+    const n=digits(SETTINGS.report_to||$('#repTo').value);
+    if(!n){toast('Add your WhatsApp number below first');$('#repTo').focus();return;}
+    window.open('https://wa.me/'+(n.length===10&&n[0]==='0'?'27'+n.slice(1):n)+'?text='+encodeURIComponent(reportText()),'_blank');
+  };
+  $('#repMail').onclick=()=>{
+    const r=buildReport();
+    window.location.href='mailto:?subject='+encodeURIComponent('📊 Weekly report — '+r.store+' — week ending '+r.end)+
+      '&body='+encodeURIComponent(reportText());
+  };
   $('#profBtn').onclick=e=>{e.stopPropagation();const m=$('#pmenu');m.hidden=!m.hidden;
     $('#profBtn').setAttribute('aria-expanded',String(!m.hidden));};
   document.addEventListener('click',e=>{
@@ -2038,6 +2380,8 @@ function init(){
     renderExplorer();});
   const tbody=$('#tbody');
   tbody.addEventListener('click',e=>{
+    const cb=e.target.closest('[data-claim]');
+    if(cb){e.stopPropagation();claimCust(cb.dataset.claim);return;}
     const z=e.target.closest('.qzap');
     if(z){e.stopPropagation();openQuick(z.dataset.zap);return;}
     if(e.target.closest('select,input,textarea,button,a'))return;
@@ -2049,7 +2393,7 @@ function init(){
   tbody.addEventListener('change',e=>{
     const el=e.target,a=el.dataset.acct;if(!a)return;
     const t=tracking[a]=tracking[a]||{};
-    if(el.classList.contains('track-sel')){t.st=el.value;pushTrack(a);renderExplorer();renderSubCount();
+    if(el.classList.contains('track-sel')){t.st=el.value;pushTrack(a);renderExplorer();renderSubCount();renderMission();
       if(subView!=='book')renderSubView(subView);
       if(el.value)toast(`${TRACK_LBL[el.value]} · saved for the team`);}
     if(el.classList.contains('next-inp')){t.next=el.value;pushTrack(a);renderPipe();renderSubCount();
