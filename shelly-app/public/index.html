@@ -250,6 +250,11 @@
   .tag.new{color:var(--s2);background:color-mix(in srgb,var(--s2) 12%,transparent);border-color:color-mix(in srgb,var(--s2) 30%,transparent)}
   .tag.oo{color:var(--neg);background:color-mix(in srgb,var(--neg) 11%,transparent);border-color:color-mix(in srgb,var(--neg) 30%,transparent)}
   .tag.due{color:#a06a00;background:color-mix(in srgb,#c98500 13%,transparent);border-color:color-mix(in srgb,#c98500 32%,transparent)}
+  .noev{color:var(--warn);font-size:13px;margin-left:4px;cursor:help}
+  body:not(.is-mgr) .noev{display:none}
+  .hline{font-size:12px;color:var(--ink-2);padding:3px 0;border-bottom:1px dashed var(--line)}
+  .hline:last-child{border-bottom:0}
+  .hline small{color:var(--ink-3);margin-left:7px}
   .csr-cell{white-space:nowrap;color:var(--ink-2);font-weight:560;font-size:12.5px}
   .caret{display:inline-block;transition:transform .2s;color:var(--ink-3);font-size:10px;width:14px}
   tr.open .caret{transform:rotate(90deg)}
@@ -840,6 +845,12 @@
       </div>
     </section>
 
+    <section class="card pad-lg" id="trustCard" style="margin-top:16px" aria-label="Trust check">
+      <div class="card-hd"><div><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 4.5 5.5v6c0 4.6 3.2 8 7.5 10 4.3-2 7.5-5.4 7.5-10v-6Z"/><path d="m9 12 2 2 4-4.5"/></svg> Trust check</h3>
+        <div class="h-desc">Do the outcomes hold up? Only you see this.</div></div></div>
+      <div id="trustBody"></div>
+    </section>
+
     <section class="card pad-lg" id="settingsCard" style="margin-top:16px" aria-label="Message and quotes">
       <div class="card-hd"><div><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2.4-1.4L13.7 2h-3.4l-.4 2.6A7 7 0 0 0 7.5 6L5.1 5 3.1 8.4l2 1.6a7 7 0 0 0 0 2.8l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2.4 1.4l.4 2.6h3.4l.4-2.6a7 7 0 0 0 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4Z"/></svg> WhatsApp message</h3>
         <div class="h-desc">What consultants send when they tap the green button · this store only</div></div></div>
@@ -1319,6 +1330,17 @@ async function api(url,opt={}){
   return r.json();
 }
 const noteTimers={};
+function logHist(acct,from,to){
+  if((from||'')===(to||''))return;
+  const t=tracking[acct]=tracking[acct]||{};
+  t.hist=t.hist||[];
+  t.hist.unshift({from:from||'',to:to||'',by:(ME&&ME.name)||'',at:new Date().toISOString().slice(0,16).replace('T',' ')});
+  t.hist=t.hist.slice(0,25);
+}
+function setSt(acct,v){
+  const t=tracking[acct]=tracking[acct]||{};
+  logHist(acct,t.st,v);t.st=v;
+}
 function pushTrack(acct,debounce){
   clearTimeout(noteTimers[acct]);
   const send=()=>{const t=tracking[acct]||{};
@@ -1623,10 +1645,12 @@ function statusTag(c){
   if(st)return `<span class="tag">${esc(st)}</span>`;
   return dealTag(c.deal);
 }
+function noEvidence(t){return !!(t&&t.st&&!(t.acts&&t.acts.length));}
 function trackCell(acct){
   const t=tracking[acct]||{};
+  const warn=noEvidence(t)?`<span class="noev" title="Outcome set with no logged call / WhatsApp / email behind it">⚠</span>`:'';
   return `<span class="tdot" style="background:${TRACK_COL[t.st||'']}"></span><select class="track-sel" data-acct="${esc(acct)}">
-    ${TRACK_OPTS.map(([v,l])=>`<option value="${v}" ${(t.st||'')===v?'selected':''}>${esc(l)}</option>`).join('')}</select>`;
+    ${TRACK_OPTS.map(([v,l])=>`<option value="${v}" ${(t.st||'')===v?'selected':''}>${esc(l)}</option>`).join('')}</select>${warn}`;
 }
 function renderExplorer(){
   const all=sortCustomers(filteredCustomers());
@@ -1664,6 +1688,8 @@ function renderExplorer(){
           <textarea class="note-ta" data-acct="${esc(c.acct)}" placeholder="What was said, what they want, objections…">${esc(t.note||'')}</textarea>
           ${(t.acts&&t.acts.length)?`<div class="qs-acts" style="margin-top:10px">${t.acts.slice(0,4).map(a=>`<div class="qa"><i style="background:${ACT_COL[a.t]||'var(--ink-3)'}"></i>${esc(ACT_LBL[a.t]||a.t)}<small>${esc(a.by||'')} · ${esc((a.at||'').slice(5))}</small></div>`).join('')}</div>`:''}
           ${t.by?`<div class="hint">Last update by <b>&nbsp;${esc(t.by)}</b>&nbsp;· ${esc(t.at||'')}</div>`:''}
+          ${(t.hist&&t.hist.length)?`<div class="histbox"><div class="xh" style="font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);margin:10px 0 5px">Outcome history</div>
+            ${t.hist.slice(0,6).map(h=>`<div class="hline"><b>${esc(h.from?TRACK_LBL[h.from]:'No outcome')}</b> → <b>${esc(h.to?TRACK_LBL[h.to]:'No outcome')}</b><small>${esc(h.by||'')} · ${esc(h.at||'')}</small></div>`).join('')}</div>`:''}
         </div></div></td></tr>`;
     }
     return html;
@@ -1961,13 +1987,13 @@ function quickAction(k){
   const c=findCust(qsAcct);
   if(k==='wa'){
     postActivity(qsAcct,'wa');
-    if(!t.st){t.st='fu';pushTrack(qsAcct);}
+    if(!t.st){setSt(qsAcct,'fu');pushTrack(qsAcct);}
     const d=digits(c&&c.msisdn);
     if(d)window.open('https://wa.me/'+d+'?text='+encodeURIComponent(waMsg(c)),'_blank');
     toast('Logged: WhatsApped — waiting for feedback');return;
   }
   if(k==='call'){postActivity(qsAcct,'call');$('#qsNote').focus();toast('Logged: phoned — add your note');return;}
-  if(k==='na'){t.st='na';pushTrack(qsAcct);postActivity(qsAcct,'na');toast('Logged: no answer');qsRefresh();return;}
+  if(k==='na'){setSt(qsAcct,'na');pushTrack(qsAcct);postActivity(qsAcct,'na');toast('Logged: no answer');qsRefresh();return;}
   if(k==='cb'){
     const chips=$('#qsChips');chips.hidden=false;
     const mk=(off,lbl)=>{const d=new Date();d.setDate(d.getDate()+off);return `<button class="fbtn" data-cb="${d.toISOString().slice(0,10)}">${lbl}</button>`;};
@@ -1978,19 +2004,19 @@ function quickAction(k){
   if(k==='em'){
     if(!(c&&c.email)){toast('No email address on file for this customer');return;}
     postActivity(qsAcct,'em');
-    if(!t.st){t.st='fu';pushTrack(qsAcct);}
+    if(!t.st){setSt(qsAcct,'fu');pushTrack(qsAcct);}
     location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Your MTN upgrade')+'&body='+encodeURIComponent(waMsg(c));
     toast('Logged: emailed — waiting for reply');return;
   }
-  if(k==='nowa'){t.st='nowa';pushTrack(qsAcct);toast('Marked NOT on WhatsApp — phone them instead');qsRefresh();return;}
-  if(k==='upg'){t.st='upg';pushTrack(qsAcct);toast('Marked already upgraded');closeQuick();return;}
-  if(k==='won'){t.st='won';pushTrack(qsAcct);toast('WON — saved for the team 🎉');closeQuick();return;}
-  if(k==='lost'){t.st='lost';pushTrack(qsAcct);toast('Marked not interested');closeQuick();return;}
+  if(k==='nowa'){setSt(qsAcct,'nowa');pushTrack(qsAcct);toast('Marked NOT on WhatsApp — phone them instead');qsRefresh();return;}
+  if(k==='upg'){setSt(qsAcct,'upg');pushTrack(qsAcct);toast('Marked already upgraded');closeQuick();return;}
+  if(k==='won'){setSt(qsAcct,'won');pushTrack(qsAcct);toast('WON — saved for the team 🎉');closeQuick();return;}
+  if(k==='lost'){setSt(qsAcct,'lost');pushTrack(qsAcct);toast('Marked not interested');closeQuick();return;}
 }
 function setCallback(date){
   if(!qsAcct||!date)return;
   const t=tracking[qsAcct]=tracking[qsAcct]||{};
-  t.st='cb';t.next=date;pushTrack(qsAcct);
+  setSt(qsAcct,'cb');t.next=date;pushTrack(qsAcct);
   toast('Callback booked · '+date);
   closeQuick();
 }
@@ -2137,6 +2163,7 @@ function renderReport(){
         Overdue callbacks (date passed, still open): <b>${r.overdue}</b><br>
         Claims waiting for you: <b>${r.pending}</b></div></div>
     </div>`;
+  renderTrust();
 }
 function reportText(){
   const r=buildReport();
@@ -2144,7 +2171,55 @@ function reportText(){
   return `📊 Weekly report — ${r.store} — week ending ${r.end}\n`+
     `Total: ${r.total} contacts · ${r.won} won\n\n`+
     r.users.map((u,i)=>`${u.c===0?'😴':(i<3?medals[i]:'•')} ${u.n}: ${u.c===0?'0 all week':u.c+' contacts, '+u.w+' won'}`).join('\n')+
-    `\n\n⚠️ Untouched: ${r.untouched} · Overdue callbacks: ${r.overdue} · Claims waiting: ${r.pending}`;
+    `\n\n⚠️ Untouched: ${r.untouched} · Overdue callbacks: ${r.overdue} · Claims waiting: ${r.pending}`+
+    (()=>{const s=trustStats();const bad=s.per.reduce((a,u)=>a+u.noev,0);
+      return bad?`\n🔍 Trust check: ${bad} outcome${bad===1?'':'s'} with no logged call/WhatsApp behind ${bad===1?'it':'them'}`:'';})();
+}
+
+/* ---- Trust check ---- */
+function trustStats(){
+  const per={}, wonBad=[], events=[];
+  DS().customers.forEach(c=>{
+    const t=tracking[c.acct]; if(!t||!t.st)return;
+    const who=titleCase(t.by||'?');
+    const p=per[who]=per[who]||{n:who,tot:0,noev:0,ex:[]};
+    p.tot++;
+    if(noEvidence(t)){p.noev++;if(p.ex.length<3)p.ex.push(titleCase(c.name));}
+    if(t.st==='won'&&(c.stats||[]).some(s=>/out of contract/i.test(s)))wonBad.push(c);
+    (t.hist||[]).forEach(h=>{if(h.at&&h.by)events.push(h);});
+  });
+  const byWho={};
+  events.forEach(e=>{(byWho[e.by]=byWho[e.by]||[]).push(e.at);});
+  const bursts=[];
+  Object.entries(byWho).forEach(([who,ats])=>{
+    ats=ats.slice().sort();
+    let best=0,span=0;
+    for(let i=0;i<ats.length;i++){
+      let j=i;
+      while(j+1<ats.length&&Date.parse(ats[j+1].replace(' ','T'))-Date.parse(ats[i].replace(' ','T'))<=10*60000)j++;
+      if(j-i+1>best){best=j-i+1;span=Math.max(1,Math.round((Date.parse(ats[j].replace(' ','T'))-Date.parse(ats[i].replace(' ','T')))/60000));}
+    }
+    if(best>=6)bursts.push({who:titleCase(who),n:best,span});
+  });
+  return {per:Object.values(per).sort((a,b)=>b.noev-a.noev),wonBad,bursts};
+}
+function renderTrust(){
+  const box=$('#trustBody');if(!box)return;
+  const s=trustStats();
+  const pctBad=u=>u.tot?Math.round(u.noev/u.tot*100):0;
+  box.innerHTML=`
+    <table class="rept"><tbody>
+      <tr><td style="font-weight:700">Consultant</td><td class="r" style="font-weight:700">Outcomes without a logged contact</td></tr>
+      ${s.per.map(u=>`<tr class="${pctBad(u)>=50&&u.noev>=5?'lazy':''}">
+        <td>${pctBad(u)>=50&&u.noev>=5?'🚩 ':''}${esc(u.n)}</td>
+        <td class="r"><b>${u.noev}</b> of ${u.tot} (${pctBad(u)}%)${u.ex.length?'<br><small style="color:var(--ink-3)">'+u.ex.map(esc).join(' · ')+'</small>':''}</td>
+      </tr>`).join('')||'<tr><td>No outcomes recorded yet</td><td class="r"></td></tr>'}
+    </tbody></table>
+    <div class="rep-eyes" style="margin-top:12px"><div class="h">⚡ Speed check</div>
+      <div style="margin-top:5px">${s.bursts.length?s.bursts.map(b=>`<b>${esc(b.who)}</b> set ${b.n} outcomes in ${b.span} min — quicker than real calls allow`).join('<br>'):'No suspicious bursts — nobody is changing outcomes faster than they could actually be calling.'}</div></div>
+    <div class="rep-eyes" style="margin-top:10px"><div class="h">🔎 Wons vs the base</div>
+      <div style="margin-top:5px">${s.wonBad.length?`<b>${s.wonBad.length}</b> marked Won but the loaded base still shows them out of contract: ${s.wonBad.slice(0,6).map(c=>esc(titleCase(c.name))).join(' · ')}${s.wonBad.length>6?' …':''}<br><small style="color:var(--ink-3)">Meaningful after you load next month's base — a real Won should drop off the out-of-contract list. Cross-check these against MTN activations.</small>`:'Every Won lines up with the loaded base so far. Re-check after you upload next month’s file — real Wons must disappear from the out-of-contract list.'}</div></div>
+    <div class="hint" style="margin-top:10px">Every outcome change is stamped to the minute and kept — open a customer row to see their full history. Consultants see their own history too; they know it&#39;s recorded.</div>`;
 }
 
 /* ---- Settings panel ---- */
@@ -2459,7 +2534,7 @@ function init(){
   tbody.addEventListener('change',e=>{
     const el=e.target,a=el.dataset.acct;if(!a)return;
     const t=tracking[a]=tracking[a]||{};
-    if(el.classList.contains('track-sel')){t.st=el.value;pushTrack(a);renderExplorer();renderSubCount();renderMission();
+    if(el.classList.contains('track-sel')){setSt(a,el.value);pushTrack(a);renderExplorer();renderSubCount();renderMission();
       if(subView!=='book')renderSubView(subView);
       if(el.value)toast(`${TRACK_LBL[el.value]} · saved for the team`);}
     if(el.classList.contains('next-inp')){t.next=el.value;pushTrack(a);renderPipe();renderSubCount();

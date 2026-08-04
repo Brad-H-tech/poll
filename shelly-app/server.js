@@ -266,7 +266,13 @@ const server = http.createServer(async (req, res) => {
         note: cleanStr(body.note, 5000),
         by: me.name, at: today(),
         acts: Array.isArray(prev.acts) ? prev.acts : [],
+        hist: Array.isArray(prev.hist) ? prev.hist : [],
       };
+      if ((prev.st || '') !== rec.st) {
+        rec.hist.unshift({ from: prev.st || '', to: rec.st, by: me.name,
+          at: new Date().toISOString().slice(0, 16).replace('T', ' ') });
+        rec.hist = rec.hist.slice(0, 25);
+      }
       scope.tracking[acct] = rec; persist();
       broadcast(sid, 'tracking', { acct, rec });
       return json(res, 200, { ok: true });
