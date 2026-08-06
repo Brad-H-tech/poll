@@ -253,6 +253,14 @@
   .noev{color:var(--warn);font-size:13px;margin-left:4px;cursor:help}
   .asgn{cursor:pointer;border-radius:8px}
   .asgn:hover{background:var(--surface-2);outline:1px dashed var(--line-strong)}
+  #moveBar{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:70;display:flex;gap:9px;align-items:center;
+    background:var(--surface-1);border:1px solid var(--line-strong);border-radius:16px;padding:10px 14px;
+    box-shadow:0 14px 38px rgba(0,0,0,.28);font-size:13px}
+  #moveBar[hidden]{display:none}
+  .mvchk{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line-strong);display:grid;place-items:center;cursor:pointer;font-size:12px;color:#fff;background:transparent}
+  .mvchk.on{background:var(--brand-deep);border-color:var(--brand-deep)}
+  tr.main.selrow td{background:color-mix(in srgb,var(--brand) 10%,transparent)}
+  body.movemode #tbody tr.main{cursor:pointer}
   body:not(.is-mgr) .noev{display:none}
   .hline{font-size:12px;color:var(--ink-2);padding:3px 0;border-bottom:1px dashed var(--line)}
   .hline:last-child{border-bottom:0}
@@ -761,6 +769,7 @@
       <button class="abtn" id="csvBtn" title="Export the filtered view">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>CSV</button>
       <button class="abtn" id="addCustBtn" title="Add a walk-in or new lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Add customer</button>
+      <button class="abtn" id="moveBtn" hidden aria-pressed="false" title="Select several customers, then move them to a consultant"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h11M11 3l4 4-4 4M20 17H9M13 13l-4 4 4 4"/></svg>Move accounts</button>
       <button class="abtn" id="clearBtn">Clear</button>
     </div>
     <div class="chips" id="chips"></div>
@@ -997,6 +1006,13 @@
   </div>
 </div>
 
+<div id="moveBar" hidden>
+  <b id="mvCount">0 selected</b>
+  <button class="abtn" id="mvAll">Select all shown</button>
+  <button class="abtn" id="mvGo" style="background:var(--brand);border-color:var(--brand)">Move to →</button>
+  <button class="abtn" id="mvCancel" aria-label="Cancel move mode">✕</button>
+</div>
+
 <div class="modal" id="assignModal"><div class="m-card">
   <h3 style="margin:0 0 2px">Move customer</h3>
   <div class="m-sub" id="asSub"></div>
@@ -1139,9 +1155,9 @@
     }
     if(url==='/api/assign/split'&&m==='POST'){
       if(!isMgr)return J({error:'Manager only'},403);
-      const mode=body.mode==='value'?'value':'even';
+      const mode=['value','give'].includes(body.mode)?body.mode:'even';
       const agents=Array.isArray(body.agents)?body.agents.slice(0,40).map(a=>String(a||'').toUpperCase().trim()).filter(Boolean):[];
-      if(!agents.length)return J({error:'No consultants to split between'},400);
+      if(mode!=='give'&&!agents.length)return J({error:'No consultants to split between'},400);
       const base=b.bases.find(x=>x.id===b.active);
       if(!base)return J({error:'Load a base first'},400);
       const accts=new Map();
@@ -1152,6 +1168,15 @@
       const pool=[...accts.entries()].filter(([acct,v])=>!(b.assign[acct]||v.csr)).sort((x,y)=>y[1].rsp-x[1].rsp);
       if(!pool.length)return J({ok:true,assigned:0});
       const per={};
+      if(mode==='give'){
+        const agent=String(body.agent||'').toUpperCase().trim().slice(0,40);
+        if(!agent)return J({error:'No consultant given'},400);
+        const n=Math.max(1,Math.min(5000,Math.round(+body.n)||0));
+        const take=pool.slice(0,n);
+        take.forEach(([acct])=>{b.assign[acct]=agent;});
+        save();emit(sid,'bases',{});
+        return J({ok:true,assigned:take.length,per:{[agent]:take.length}});
+      }
       if(mode==='value'){
         let i=0,dir=1;
         pool.forEach(([acct])=>{b.assign[acct]=agents[i];per[agents[i]]=(per[agents[i]]||0)+1;
@@ -1870,8 +1895,11 @@ function renderExplorer(){
   $('#tbody').innerHTML=list.map(c=>{
     const t=tracking[c.acct]||{};
     const open=expanded.has(c.acct);
-    let html=`<tr class="main ${open?'open':''}${t.st?' tinted':''}" ${t.st?`style="--tint:${TRACK_COL[t.st]}"`:''} data-acct="${esc(c.acct)}">
-      <td><button class="qzap" data-zap="${esc(c.acct)}" title="Quick log" aria-label="Quick log"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.2 2 4.8 13.2h5.5L10.8 22l8.4-11.2h-5.5Z"/></svg></button></td>
+    const sel=moveMode&&moveSel.has(c.acct);
+    let html=`<tr class="main ${open?'open':''}${t.st?' tinted':''}${sel?' selrow':''}" ${t.st?`style="--tint:${TRACK_COL[t.st]}"`:''} data-acct="${esc(c.acct)}">
+      <td>${moveMode
+        ?`<span class="mvchk ${sel?'on':''}" role="checkbox" aria-checked="${sel}">${sel?'✓':''}</span>`
+        :`<button class="qzap" data-zap="${esc(c.acct)}" title="Quick log" aria-label="Quick log"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.2 2 4.8 13.2h5.5L10.8 22l8.4-11.2h-5.5Z"/></svg></button>`}</td>
       <td class="cust">${esc(titleCase(c.name))}${miniContact(c)}<small>${esc(c.msisdn||c.acct)}</small></td>
       <td>${agentCell(c)}</td>
       <td>${statusTag(c)}</td>
@@ -2068,7 +2096,11 @@ function urgLabel(e,today){
 }
 function dayCard(e,today){
   const col=URG[e.kind];
-  return `<div class="bcard" data-acct="${esc(e.c.acct)}">
+  let dlbl='—';
+  if(e.kind==='today')dlbl='Today';
+  else if(e.next){const d=new Date(e.next);if(!isNaN(d))dlbl=d.toLocaleDateString('en-ZA',{weekday:'short'});}
+  return `<div class="bcard" data-acct="${esc(e.c.acct)}" style="border-left:3px solid ${col.fg};border-radius:0 13px 13px 0">
+    <div style="width:34px;flex:0 0 auto;text-align:center;font-size:10.5px;font-weight:800;color:var(--ink-3);line-height:1.25">${esc(dlbl)}${e.next?`<div style="font-weight:600;font-size:9.5px">${esc(e.next.slice(5))}</div>`:''}</div>
     <span class="av" style="background:${agentColor((assignedTo(e.c)||'?').toUpperCase())}">${esc((e.c.name||'?')[0])}</span>
     <div class="bmain"><div class="bnm">${esc(titleCase(e.c.name))}</div>
       <div class="bsub"><span class="mono">${esc(e.c.msisdn||e.c.acct)}</span>${e.note?' · '+esc(e.note):''}</div></div>
@@ -2378,6 +2410,10 @@ function baseStats(){
 function renderBase(){
   const box=$('#baseBody');if(!box||!ME||ME.role!=='manager')return;
   const {per,un,unRsp,tot}=baseStats();
+  if(un.length){
+    if(AGENTS_CACHE)AGENTS_CACHE.forEach(a=>{if(!per.some(p=>p.agent===a.agent))per.push({agent:a.agent,n:0,rsp:0,hot:0});});
+    else storeAgents().then(()=>renderBase());
+  }
   const assigned=tot-un.length;
   const max=Math.max(1,...per.map(p=>p.n),un.length);
   box.innerHTML=`
@@ -2394,6 +2430,10 @@ function renderBase(){
         <span class="nm">${esc(titleCase(p.agent))} <small style="color:var(--ink-3);font-weight:500">· ${p.hot} hot · ${zark(p.rsp)}/m</small></span>
         <span class="track"><i style="background:${agentColor(p.agent)}" data-w="${p.n/max*100}"></i></span>
         <span class="ct">${p.n}</span>
+        ${un.length?`<span style="display:flex;gap:4px;align-items:center" onclick="event.stopPropagation()">
+          <input type="number" class="ti" min="1" max="${un.length}" value="${Math.min(20,un.length)}" data-gvn="${esc(p.agent)}" style="width:58px;padding:4px 7px;font-size:12px" aria-label="How many to give ${esc(titleCase(p.agent))}">
+          <button class="abtn" data-gv="${esc(p.agent)}" title="Give the highest-value unassigned customers to ${esc(titleCase(p.agent))}">Give</button>
+        </span>`:''}
       </div>`).join('')||'<div class="hint">Nobody holds any accounts yet.</div>'}
       ${un.length?`<div class="stat-line" data-bagent="" title="Show the unassigned pool" style="cursor:pointer;border:1px dashed color-mix(in srgb,var(--warn) 45%,transparent);border-radius:10px;padding:6px 8px">
         <span class="av" style="background:var(--warn);margin:0;width:26px;height:26px;font-size:13px">·</span>
@@ -2415,6 +2455,15 @@ function renderBase(){
   });
   const se=$('#splitEven');if(se)se.onclick=()=>doSplit('even');
   const sv=$('#splitValue');if(sv)sv.onclick=()=>doSplit('value');
+  $$('#baseBody [data-gv]').forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const agent=b.dataset.gv;
+    const inp=$(`#baseBody [data-gvn="${agent}"]`);
+    const n=Math.max(1,Math.round(+(inp&&inp.value)||0));
+    api('/api/assign/split',{method:'POST',body:JSON.stringify({mode:'give',agent,n})})
+      .then(r=>{toast(`Gave <b>${r.assigned}</b> customers (highest offer value first) to <b>${esc(titleCase(agent))}</b>`);return refreshState();})
+      .catch(err=>{if(err.message!=='auth')toast('⚠️ '+esc(err.message));});
+  });
 }
 async function doSplit(mode){
   const agents=await storeAgents();
@@ -2427,25 +2476,51 @@ async function doSplit(mode){
     await refreshState();
   }catch(e){if(e.message!=='auth')toast('⚠️ '+esc(e.message));}
 }
-async function openAssign(acct){
-  const c=findCust(acct);if(!c)return;
+async function openAssign(accts){
+  if(typeof accts==='string')accts=[accts];
+  accts=accts.filter(Boolean);if(!accts.length)return;
+  const many=accts.length>1;
+  const c0=findCust(accts[0]);
   const agents=await storeAgents();
-  const cur=assignedTo(c);
-  $('#asSub').textContent=titleCase(c.name)+' · now with '+(cur?titleCase(cur):'nobody (unassigned)')+'. Notes and outcomes travel along.';
-  $('#asList').innerHTML=agents.map(a=>`
-    <button class="abtn" data-as="${esc(a.agent)}" style="width:100%;justify-content:flex-start;gap:10px;${a.agent===cur?'opacity:.45;pointer-events:none':''}">
-      <span class="av" style="background:${agentColor(a.agent)};width:24px;height:24px;font-size:10px;margin:0">${esc(a.name[0])}</span>${esc(a.name)}${a.agent===cur?' · current':''}
-    </button>`).join('')+
-    `<button class="abtn" data-as="" style="width:100%;justify-content:flex-start;gap:10px;${!cur?'opacity:.45;pointer-events:none':''}">
-      <span class="av" style="background:var(--ink-3);width:24px;height:24px;font-size:13px;margin:0">·</span>Unassigned — back to the pool</button>`;
+  const cnt={};baseStats().per.forEach(p=>cnt[p.agent]=p.n);
+  const cur=many?null:assignedTo(c0);
+  $('#asSub').textContent=many
+    ?accts.length+' customers selected. Notes and outcomes travel with each account.'
+    :titleCase((c0&&c0.name)||accts[0])+' · now with '+(cur?titleCase(cur):'nobody (unassigned)')+'. Notes and outcomes travel along.';
+  $('#asList').innerHTML=agents.map(a=>{
+    const now=cnt[a.agent]||0;
+    return `<button class="abtn" data-as="${esc(a.agent)}" style="width:100%;justify-content:flex-start;gap:10px;${(!many&&a.agent===cur)?'opacity:.45;pointer-events:none':''}">
+      <span class="av" style="background:${agentColor(a.agent)};width:24px;height:24px;font-size:10px;margin:0">${esc(a.name[0])}</span>
+      <span style="flex:1;text-align:left">${esc(a.name)}${(!many&&a.agent===cur)?' · current':''}</span>
+      <small style="color:var(--ink-3)">${now} → ${now+accts.length}</small>
+    </button>`;}).join('')+
+    `<button class="abtn" data-as="" style="width:100%;justify-content:flex-start;gap:10px;${(!many&&!cur)?'opacity:.45;pointer-events:none':''}">
+      <span class="av" style="background:var(--ink-3);width:24px;height:24px;font-size:13px;margin:0">·</span>
+      <span style="flex:1;text-align:left">Unassigned — back to the pool</span></button>`;
   $$('#asList [data-as]').forEach(b=>b.onclick=()=>{
-    api('/api/assign',{method:'POST',body:JSON.stringify({accts:[acct],agent:b.dataset.as})})
-      .then(()=>{$('#assignModal').classList.remove('show');
-        toast(b.dataset.as?`Moved to <b>${esc(titleCase(b.dataset.as))}</b>`:'Back in the unassigned pool');
+    api('/api/assign',{method:'POST',body:JSON.stringify({accts,agent:b.dataset.as})})
+      .then(r=>{$('#assignModal').classList.remove('show');
+        if(moveMode)setMoveMode(false);
+        toast(b.dataset.as
+          ?`Moved <b>${r.moved||accts.length}</b> customer${accts.length===1?'':'s'} to <b>${esc(titleCase(b.dataset.as))}</b>`
+          :`<b>${r.moved||accts.length}</b> customer${accts.length===1?'':'s'} back in the unassigned pool`);
         return refreshState();})
       .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
   });
   $('#assignModal').classList.add('show');
+}
+/* multi-select move mode */
+let moveMode=false;const moveSel=new Set();
+function setMoveMode(on){
+  moveMode=!!on;if(!moveMode)moveSel.clear();
+  document.body.classList.toggle('movemode',moveMode);
+  $('#moveBar').hidden=!moveMode;
+  const mb=$('#moveBtn');if(mb)mb.setAttribute('aria-pressed',String(moveMode));
+  updateMoveBar();renderExplorer();
+}
+function updateMoveBar(){
+  $('#mvCount').textContent=moveSel.size+' selected';
+  $('#mvGo').disabled=!moveSel.size;
 }
 
 /* ---- Weekly report ---- */
@@ -2673,6 +2748,8 @@ async function boot(){
   applyView('book');
   const hasAgent=!!ME.agent&&(DS().csr.some(c=>c.name===ME.agent)||Object.values(ASSIGN).includes(ME.agent));
   $('#myBookBtn').hidden=!hasAgent;
+  $('#moveBtn').hidden=!mgr;
+  if(!mgr)setMoveMode(false);
   dayMine=hotMine=hasAgent;
   $('#dayMineBtn').hidden=!hasAgent;$('#hotMineBtn').hidden=!hasAgent;
   $('#dayMineBtn').setAttribute('aria-pressed',String(dayMine));
@@ -2794,6 +2871,10 @@ function init(){
   $('#ncCancel').onclick=()=>$('#custModal').classList.remove('show');
   $('#asCancel').onclick=()=>$('#assignModal').classList.remove('show');
   $('#assignModal').addEventListener('click',e=>{if(e.target.id==='assignModal')$('#assignModal').classList.remove('show');});
+  $('#moveBtn').onclick=()=>setMoveMode(!moveMode);
+  $('#mvCancel').onclick=()=>setMoveMode(false);
+  $('#mvAll').onclick=()=>{sortCustomers(filteredCustomers()).forEach(c=>moveSel.add(c.acct));updateMoveBar();renderExplorer();};
+  $('#mvGo').onclick=()=>{if(moveSel.size)openAssign([...moveSel]);};
   $('#ncAdd').onclick=addCustomer;
   $('#custModal').addEventListener('click',e=>{if(e.target.id==='custModal')$('#custModal').classList.remove('show');});
   $('#bottomNav').addEventListener('click',e=>{const b=e.target.closest('[data-nav]');if(b)navTo(b.dataset.nav);});
@@ -2857,6 +2938,12 @@ function init(){
   const tbody=$('#tbody');
   tbody.addEventListener('click',e=>{
     const cb=e.target.closest('[data-claim]');
+    if(moveMode){
+      const tr=e.target.closest('tr.main');if(!tr)return;
+      const a=tr.dataset.acct;
+      moveSel.has(a)?moveSel.delete(a):moveSel.add(a);
+      updateMoveBar();renderExplorer();return;
+    }
     if(cb){e.stopPropagation();claimCust(cb.dataset.claim);return;}
     const asg=e.target.closest('[data-assign]');
     if(asg){e.stopPropagation();openAssign(asg.dataset.assign);return;}

@@ -354,9 +354,9 @@ const server = http.createServer(async (req, res) => {
     if (p === '/api/assign/split' && req.method === 'POST') {
       if (!isMgr) return json(res, 403, { error: 'Manager only' });
       const b = await readBody(req);
-      const mode = b.mode === 'value' ? 'value' : 'even';
+      const mode = ['value', 'give'].includes(b.mode) ? b.mode : 'even';
       const agents = Array.isArray(b.agents) ? b.agents.slice(0, 40).map(a => cleanStr(a, 40).toUpperCase().trim()).filter(Boolean) : [];
-      if (!agents.length) return json(res, 400, { error: 'No consultants to split between' });
+      if (mode !== 'give' && !agents.length) return json(res, 400, { error: 'No consultants to split between' });
       const base = scope.bases.find(x => x.id === scope.active);
       if (!base) return json(res, 400, { error: 'Load a base first' });
       // account -> {csr, rsp} from the active base
@@ -373,6 +373,15 @@ const server = http.createServer(async (req, res) => {
         .sort((a, b2) => b2[1].rsp - a[1].rsp);
       if (!pool.length) return json(res, 200, { ok: true, assigned: 0 });
       const per = {};
+      if (mode === 'give') {
+        const agent = cleanStr(b.agent, 40).toUpperCase().trim();
+        if (!agent) return json(res, 400, { error: 'No consultant given' });
+        const n = Math.max(1, Math.min(5000, Math.round(+b.n) || 0));
+        const take = pool.slice(0, n);  // highest offer value first
+        take.forEach(([acct]) => { scope.assign[acct] = agent; });
+        persist(); broadcast(sid, 'bases', {});
+        return json(res, 200, { ok: true, assigned: take.length, per: { [agent]: take.length } });
+      }
       if (mode === 'value') {
         // snake draft over value-sorted accounts so total offer value balances out
         let i = 0, dir = 1;
