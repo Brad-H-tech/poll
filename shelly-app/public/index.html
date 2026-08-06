@@ -251,6 +251,8 @@
   .tag.oo{color:var(--neg);background:color-mix(in srgb,var(--neg) 11%,transparent);border-color:color-mix(in srgb,var(--neg) 30%,transparent)}
   .tag.due{color:#a06a00;background:color-mix(in srgb,#c98500 13%,transparent);border-color:color-mix(in srgb,#c98500 32%,transparent)}
   .noev{color:var(--warn);font-size:13px;margin-left:4px;cursor:help}
+  .asgn{cursor:pointer;border-radius:8px}
+  .asgn:hover{background:var(--surface-2);outline:1px dashed var(--line-strong)}
   body:not(.is-mgr) .noev{display:none}
   .hline{font-size:12px;color:var(--ink-2);padding:3px 0;border-bottom:1px dashed var(--line)}
   .hline:last-child{border-bottom:0}
@@ -685,6 +687,7 @@
   <div class="sn-sec mgr-only" style="display:none">Manager</div>
   <button class="sn-item mgr-only" data-nav="centre" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg> Command centre</button>
   <button class="sn-item mgr-only" data-nav="upload" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 20h14"/></svg> Load base</button>
+  <button class="sn-item mgr-only" data-nav="base" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.2 13.5v7.5M13.5 17.2H21"/></svg> Base &amp; splits</button>
   <button class="sn-item mgr-only" data-nav="claims" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V4.6a1.6 1.6 0 1 1 3.2 0V11m0-1.4a1.6 1.6 0 1 1 3.2 0V12m0-1a1.6 1.6 0 1 1 3.2 0v4.5a5.5 5.5 0 0 1-5.5 5.5h-1.4a5.5 5.5 0 0 1-4.4-2.2L5 15.5a1.6 1.6 0 0 1 2.4-2.1L9 15"/></svg> Claims <span class="cnt" id="snClaimCnt"></span></button>
   <button class="sn-item mgr-only" data-nav="report" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg> Weekly report</button>
   <button class="sn-item mgr-only" data-nav="settings" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2.4-1.4L13.7 2h-3.4l-.4 2.6A7 7 0 0 0 7.5 6L5.1 5 3.1 8.4l2 1.6a7 7 0 0 0 0 2.8l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2.4 1.4l.4 2.6h3.4l.4-2.6a7 7 0 0 0 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4Z"/></svg> Message &amp; quotes</button>
@@ -821,6 +824,12 @@
         outcomes are updated automatically, so you can round-trip the book through Excel.</p>
       </div>
       <button class="upbtn" type="button" tabindex="-1">Choose file</button>
+    </section>
+
+    <section class="card pad-lg" id="baseCard" style="margin-top:16px" aria-label="Base allocation">
+      <div class="card-hd"><div><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.2 13.5v7.5M13.5 17.2H21"/></svg> Base &amp; splits</h3>
+        <div class="h-desc">Who holds what — split the unassigned pool, or tap an agent in the Book to move a customer</div></div></div>
+      <div id="baseBody"></div>
     </section>
 
     <section class="card pad-lg" id="claimsCard" style="margin-top:16px" aria-label="Claims">
@@ -972,6 +981,7 @@
     <div><b id="qsName">—</b><small id="qsSub"></small></div>
     <div class="contact" id="qsContact"></div>
   </div>
+  <div id="qsInfo"></div>
   <div class="qs-grid" id="qsGrid"></div>
   <div class="qs-chips" id="qsChips" hidden></div>
   <textarea class="qs-note" id="qsNote" placeholder="Quick note — what was said…"></textarea>
@@ -981,6 +991,13 @@
     <button class="btn2 solid" id="qsSave">Save note</button>
   </div>
 </div>
+
+<div class="modal" id="assignModal"><div class="m-card">
+  <h3 style="margin:0 0 2px">Move customer</h3>
+  <div class="m-sub" id="asSub"></div>
+  <div id="asList" style="display:flex;flex-direction:column;gap:7px;max-height:300px;overflow:auto;margin-top:10px"></div>
+  <div class="m-actions"><button class="btn2 ghost" id="asCancel">Cancel</button></div>
+</div></div>
 
 <div class="modal" id="custModal"><div class="m-card">
   <h3>Add a customer</h3>
@@ -1315,7 +1332,7 @@ const QUOTES=["Amateurs wait for motivation. Professionals pick up the phone.",
 "Someone's waiting for exactly this call.",
 "Consistency is the real closer.",
 "Finish the ten — then brag."];
-function assignedTo(c){return c.csr||ASSIGN[c.acct]||'';}
+function assignedTo(c){return (c.acct in ASSIGN)?(ASSIGN[c.acct]||''):(c.csr||'');}
 function quoteOfDay(){
   let extra=[];
   try{extra=String(SETTINGS.quotes||'').split('\n').map(x=>x.trim()).filter(Boolean);}catch(e){}
@@ -1567,7 +1584,7 @@ function renderChips(){
   const c=[];
   const add=(k,lbl)=>c.push(`<span class="chip">${esc(lbl)}<button data-k="${k}" aria-label="Remove filter">×</button></span>`);
   if(filters.q)add('q','“'+filters.q+'”');
-  if(filters.agent)add('agent',titleCase(filters.agent));
+  if(filters.agent)add('agent',filters.agent==='__none'?'Unassigned pool':titleCase(filters.agent));
   if(filters.deal)add('deal',filters.deal);
   if(filters.cat)add('cat',filters.cat);
   if(filters.inv)add('inv',filters.inv);
@@ -1585,7 +1602,8 @@ function filteredCustomers(){
   if(missionOnly){missIds=new Set(missionList().map(x=>x.c.acct));}
   return DS().customers.filter(c=>{
     if(missIds&&!missIds.has(c.acct))return false;
-    if(filters.agent&&assignedTo(c)!==filters.agent)return false;
+    if(filters.agent==='__none'){if(assignedTo(c))return false;}
+    else if(filters.agent&&assignedTo(c)!==filters.agent)return false;
     if(filters.deal&&c.deal!==filters.deal)return false;
     if(filters.cat&&c.cat!==filters.cat)return false;
     if(filters.inv&&!c.stats.includes(filters.inv))return false;
@@ -1623,10 +1641,12 @@ function claimStatus(acct){
 }
 function agentCell(c){
   const who=assignedTo(c);
-  if(who)return agentBadge(who);
+  const mgr=ME&&ME.role==='manager';
+  if(who)return mgr?`<span class="asgn" data-assign="${esc(c.acct)}" title="Tap to move this customer to another consultant">${agentBadge(who)}</span>`:agentBadge(who);
   const cl=claimStatus(c.acct);
   if(cl&&cl.status==='pending')return `<span class="pendchip">⏳ ${esc(cl.by)}</span>`;
-  if(ME&&ME.role!=='manager'&&ME.agent)
+  if(mgr)return `<button class="claimbtn" data-assign="${esc(c.acct)}">＋ Assign</button>`;
+  if(ME&&ME.agent)
     return `<button class="claimbtn" data-claim="${esc(c.acct)}">＋ Claim</button>`;
   return '<span class="csr-cell" style="opacity:.5">—</span>';
 }
@@ -1881,8 +1901,24 @@ function renderMyDay(){
     html+=`<div class="board-h">${label} <span class="n" style="background:${clr}">${items.length}</span></div>`+
       items.map(e=>dayCard(e,today)).join('');
   });
-  $('#dayBoard').innerHTML=html||`<div class="board-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><div style="height:8px"></div>
-    No callbacks booked${dayMine&&ME&&ME.agent?' for you':''} yet.<br>Set a <b>Next action</b> date on a customer in the Book and it lands here.</div>`;
+  const strip=(()=>{
+    const cells=[];
+    for(let o=0;o<5;o++){
+      const d=new Date();d.setDate(d.getDate()+o);
+      const ds=d.toISOString().slice(0,10);
+      let n=list.filter(e=>e.next===ds).length;
+      if(o===0)n+=list.filter(e=>e.kind==='overdue').length;
+      const lbl=o===0?'TODAY':d.toLocaleDateString('en-ZA',{weekday:'short'}).toUpperCase();
+      cells.push(`<div style="flex:1;text-align:center;padding:9px 0;border-radius:12px;${o===0
+        ?'background:linear-gradient(135deg,var(--hero-b),var(--hero-c));color:#fff'
+        :'background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)'}">
+        <div style="font-size:9.5px;font-weight:800;letter-spacing:.07em;opacity:.75">${lbl}</div>
+        <div style="font-weight:800;font-size:15px;margin-top:2px">${n}</div></div>`);
+    }
+    return `<div style="display:flex;gap:8px;margin-bottom:14px" title="Callbacks booked over the next days">${cells.join('')}</div>`;
+  })();
+  $('#dayBoard').innerHTML=strip+(html||`<div class="board-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg><div style="height:8px"></div>
+    No callbacks booked${dayMine&&ME&&ME.agent?' for you':''} yet.<br>Set a <b>Next action</b> date on a customer in the Book and it lands here.</div>`);
 }
 
 /* ---- Hot List ---- */
@@ -1956,8 +1992,24 @@ function openQuick(acct){
   qsAcct=acct;
   const t=tracking[acct]||{};
   $('#qsName').textContent=titleCase(c.name);
-  $('#qsSub').textContent=(c.msisdn||c.acct)+' · '+zar(c.rsp)+(c.prod&&c.prod!=='—'?' · '+c.prod.slice(0,26):'');
+  $('#qsSub').textContent=(c.msisdn||c.acct)+(c.prod&&c.prod!=='—'?' · '+c.prod.slice(0,26):'');
   $('#qsContact').innerHTML=contactHTML(c);
+  const sc=hotScore(c);
+  $('#qsInfo').innerHTML=`
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:2px 0 4px">
+      ${statusTag(c)}
+      <span class="tag">${c.n} line${c.n===1?'':'s'}</span>
+      ${c.rsp?`<span class="tag">${zar(c.rsp)}/m offer</span>`:''}
+      ${assignedTo(c)?`<span class="tag">${esc(titleCase(assignedTo(c)))}</span>`:'<span class="tag">unassigned</span>'}
+      ${sc.score>=0?`<span class="tag" style="margin-left:auto;font-weight:800;color:${sc.score>=72?'#e2542f':sc.score>=52?'#c98500':'var(--ink-3)'}">${sc.score>=72?'🔥 ':''}score ${sc.score}</span>`:''}
+    </div>
+    ${c.items&&c.items.length?`<div style="display:flex;flex-direction:column;gap:4px;padding:8px 10px;border-radius:11px;background:var(--surface-2);margin-bottom:2px">
+      ${c.items.slice(0,4).map(i=>`<div style="display:flex;gap:8px;font-size:11.5px;color:var(--ink-2);align-items:baseline">
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(i.product||i.package||'—')}</span>
+        <span style="color:${/out of contract/i.test(i.status||'')?'var(--neg)':'var(--ink-3)'};font-weight:${/out of contract/i.test(i.status||'')?'700':'400'};white-space:nowrap">${esc(i.status||'')}</span>
+        <span style="white-space:nowrap">${i.rsp?zar(i.rsp)+'/m':''}</span></div>`).join('')}
+      ${c.items.length>4?`<div style="font-size:10.5px;color:var(--ink-3)">+${c.items.length-4} more line${c.items.length-4===1?'':'s'}</div>`:''}
+    </div>`:''}`;
   $('#qsNote').value=t.note||'';
   $('#qsChips').hidden=true;
   const B=(k,label,color,icon)=>`<button class="qs-btn" data-q="${k}"><span class="qi" style="background:${color}">${icon}</span>${label}</button>`;
@@ -2115,6 +2167,99 @@ function renderClaims(){
   </div>`).join(''):`<div class="board-empty" style="padding:26px">No claims waiting.</div>`;
   $$('#claimsList [data-ok]').forEach(b=>b.onclick=()=>decideClaim(b.dataset.ok,'approved'));
   $$('#claimsList [data-no]').forEach(b=>b.onclick=()=>decideClaim(b.dataset.no,'rejected'));
+}
+
+/* ---- Base allocation & moves ---- */
+let AGENTS_CACHE=null;
+async function storeAgents(){
+  if(AGENTS_CACHE)return AGENTS_CACHE;
+  let list=[];
+  try{const users=await api('/api/users');
+    list=users.filter(u=>u.role!=='manager'&&u.agent).map(u=>({agent:String(u.agent).toUpperCase(),name:titleCase(u.name)}));}catch(e){}
+  if(!list.length)list=DS().csr.map(s=>({agent:s.name,name:titleCase(s.name)}));
+  const seen=new Set();
+  list=list.filter(a=>!seen.has(a.agent)&&seen.add(a.agent));
+  AGENTS_CACHE=list;return list;
+}
+function baseStats(){
+  const per={},un=[];let tot=0,unRsp=0;
+  DS().customers.forEach(c=>{tot++;
+    const who=assignedTo(c);
+    if(who){const p=per[who]=per[who]||{agent:who,n:0,rsp:0,hot:0};p.n++;p.rsp+=c.rsp||0;if(hotScore(c).score>=72)p.hot++;}
+    else{un.push(c);unRsp+=c.rsp||0;}});
+  return {per:Object.values(per).sort((a,b)=>b.n-a.n),un,unRsp,tot};
+}
+function renderBase(){
+  const box=$('#baseBody');if(!box||!ME||ME.role!=='manager')return;
+  const {per,un,unRsp,tot}=baseStats();
+  const assigned=tot-un.length;
+  const max=Math.max(1,...per.map(p=>p.n),un.length);
+  box.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+      <div style="font-size:13px;color:var(--ink-2)"><b style="font-size:19px;color:var(--ink)">${tot.toLocaleString('en-ZA')}</b> accounts in this base</div>
+      <div style="font-size:12px;color:var(--ink-3)"><b style="color:var(--pos)">${assigned}</b> assigned · <b style="color:${un.length?'var(--warn)':'var(--ink-3)'}">${un.length}</b> unassigned</div>
+    </div>
+    <div style="display:flex;height:9px;border-radius:99px;overflow:hidden;margin:10px 0 16px;background:var(--surface-3)">
+      <div style="width:${tot?assigned/tot*100:0}%;background:color-mix(in srgb,var(--brand-deep) 75%,var(--pos))"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      ${per.map(p=>`<div class="stat-line" data-bagent="${esc(p.agent)}" title="Open ${esc(titleCase(p.agent))}'s book" style="cursor:pointer">
+        <span class="av" style="background:${agentColor(p.agent)};margin:0;width:26px;height:26px;font-size:11px">${esc(p.agent[0])}</span>
+        <span class="nm">${esc(titleCase(p.agent))} <small style="color:var(--ink-3);font-weight:500">· ${p.hot} hot · ${zark(p.rsp)}/m</small></span>
+        <span class="track"><i style="background:${agentColor(p.agent)}" data-w="${p.n/max*100}"></i></span>
+        <span class="ct">${p.n}</span>
+      </div>`).join('')||'<div class="hint">Nobody holds any accounts yet.</div>'}
+      ${un.length?`<div class="stat-line" data-bagent="" title="Show the unassigned pool" style="cursor:pointer;border:1px dashed color-mix(in srgb,var(--warn) 45%,transparent);border-radius:10px;padding:6px 8px">
+        <span class="av" style="background:var(--warn);margin:0;width:26px;height:26px;font-size:13px">·</span>
+        <span class="nm">Unassigned pool <small style="color:var(--ink-3);font-weight:500">· ${zark(unRsp)}/m sitting idle</small></span>
+        <span class="track"><i style="background:var(--warn)" data-w="${un.length/max*100}"></i></span>
+        <span class="ct">${un.length}</span>
+      </div>`:''}
+    </div>
+    ${un.length?`<div class="toolbar" style="margin-top:14px">
+      <button class="abtn" id="splitEven" title="Same number of customers each">⚖️ Even split (${un.length})</button>
+      <button class="abtn" id="splitValue" title="Balances total offer value per consultant">💰 Split by value</button>
+      <span class="hint" style="margin-left:auto">Splits only touch the unassigned pool — nobody loses customers.</span>
+    </div>`:`<div class="hint" style="margin-top:12px">Whole base allocated. Tap an agent badge in the Book to move a single customer.</div>`}`;
+  requestAnimationFrame(()=>$$('#baseBody .track i').forEach(f=>f.style.width=f.dataset.w+'%'));
+  $$('#baseBody [data-bagent]').forEach(el=>el.onclick=()=>{
+    const a=el.dataset.bagent;
+    if(a)crossFilter({agent:a});
+    else{filters={...F0(),agent:'__none'};shown=40;syncFilterControls();renderExplorer();$('#explorer').scrollIntoView({behavior:'smooth'});}
+  });
+  const se=$('#splitEven');if(se)se.onclick=()=>doSplit('even');
+  const sv=$('#splitValue');if(sv)sv.onclick=()=>doSplit('value');
+}
+async function doSplit(mode){
+  const agents=await storeAgents();
+  if(!agents.length){toast('Add consultants in Manager → Team first');return;}
+  const label=mode==='value'?'balanced by offer value':'an even number each';
+  if(!confirm('Split the unassigned pool between '+agents.length+' consultants — '+label+'?'))return;
+  try{
+    const r=await api('/api/assign/split',{method:'POST',body:JSON.stringify({mode,agents:agents.map(a=>a.agent)})});
+    toast(r.assigned?`Split done — <b>${r.assigned}</b> customers assigned`:'Nothing left to split');
+    await refreshState();
+  }catch(e){if(e.message!=='auth')toast('⚠️ '+esc(e.message));}
+}
+async function openAssign(acct){
+  const c=findCust(acct);if(!c)return;
+  const agents=await storeAgents();
+  const cur=assignedTo(c);
+  $('#asSub').textContent=titleCase(c.name)+' · now with '+(cur?titleCase(cur):'nobody (unassigned)')+'. Notes and outcomes travel along.';
+  $('#asList').innerHTML=agents.map(a=>`
+    <button class="abtn" data-as="${esc(a.agent)}" style="width:100%;justify-content:flex-start;gap:10px;${a.agent===cur?'opacity:.45;pointer-events:none':''}">
+      <span class="av" style="background:${agentColor(a.agent)};width:24px;height:24px;font-size:10px;margin:0">${esc(a.name[0])}</span>${esc(a.name)}${a.agent===cur?' · current':''}
+    </button>`).join('')+
+    `<button class="abtn" data-as="" style="width:100%;justify-content:flex-start;gap:10px;${!cur?'opacity:.45;pointer-events:none':''}">
+      <span class="av" style="background:var(--ink-3);width:24px;height:24px;font-size:13px;margin:0">·</span>Unassigned — back to the pool</button>`;
+  $$('#asList [data-as]').forEach(b=>b.onclick=()=>{
+    api('/api/assign',{method:'POST',body:JSON.stringify({accts:[acct],agent:b.dataset.as})})
+      .then(()=>{$('#assignModal').classList.remove('show');
+        toast(b.dataset.as?`Moved to <b>${esc(titleCase(b.dataset.as))}</b>`:'Back in the unassigned pool');
+        return refreshState();})
+      .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
+  });
+  $('#assignModal').classList.add('show');
 }
 
 /* ---- Weekly report ---- */
@@ -2276,6 +2421,7 @@ function navTo(k){
   applyView('mgr');
   $$('#sidenav .sn-item').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.nav===k)));
   if(k==='centre'){const el=$('#kpis');if(el)el.scrollIntoView({behavior:'smooth'});}
+  if(k==='base'){renderBase();const el=$('#baseCard');if(el)el.scrollIntoView({behavior:'smooth'});}
   if(k==='team'){const el=$('#teamCard');if(el)el.scrollIntoView({behavior:'smooth'});}
   if(k==='claims'){const el=$('#claimsCard');if(el)el.scrollIntoView({behavior:'smooth'});}
   if(k==='report'){renderReport();const el=$('#reportCard');if(el)el.scrollIntoView({behavior:'smooth'});}
@@ -2292,7 +2438,7 @@ function renderAll(){
   renderBars('#brands',DS().brands,'brand');
   renderStatus();syncFilterControls();renderExplorer();
   renderSubCount();renderHero();renderSubView(subView);
-  renderClaims();renderReport();loadSettingsPanel();
+  renderClaims();renderReport();loadSettingsPanel();renderBase();
 }
 /* ---------- auth, roles & live sync ---------- */
 function applyView(v){
@@ -2301,6 +2447,7 @@ function applyView(v){
 }
 function showLogin(){
   if(es){es.close();es=null;}
+  AGENTS_CACHE=null;
   document.body.classList.remove('authed');document.body.classList.remove('is-mgr');
   {const m=$('#pmenu');if(m)m.hidden=true;}
   $('#login').classList.add('show');
@@ -2338,7 +2485,7 @@ async function boot(){
   $('#viewSeg').style.display=mgr?'':'none';
   $('#whoami').innerHTML=`${esc(ME.name)} <small>· ${mgr?'manager':'consultant'}</small>`;
   applyView('book');
-  const hasAgent=!!ME.agent&&DS().csr.some(c=>c.name===ME.agent);
+  const hasAgent=!!ME.agent&&(DS().csr.some(c=>c.name===ME.agent)||Object.values(ASSIGN).includes(ME.agent));
   $('#myBookBtn').hidden=!hasAgent;
   dayMine=hotMine=hasAgent;
   $('#dayMineBtn').hidden=!hasAgent;$('#hotMineBtn').hidden=!hasAgent;
@@ -2372,7 +2519,7 @@ function connectSSE(){
   es.addEventListener('bases',()=>refreshState().catch(()=>{}));
   es.addEventListener('claims',()=>refreshState().catch(()=>{}));
   es.addEventListener('settings',()=>refreshState().catch(()=>{}));
-  es.addEventListener('team',()=>{if(ME&&ME.role==='manager')renderTeam();});
+  es.addEventListener('team',()=>{AGENTS_CACHE=null;if(ME&&ME.role==='manager')renderTeam();});
 }
 async function renderTeam(){
   try{
@@ -2459,6 +2606,8 @@ function init(){
   $('#addCustBtn').onclick=()=>$('#custModal').classList.add('show');
   $('#bnAdd').onclick=()=>$('#custModal').classList.add('show');
   $('#ncCancel').onclick=()=>$('#custModal').classList.remove('show');
+  $('#asCancel').onclick=()=>$('#assignModal').classList.remove('show');
+  $('#assignModal').addEventListener('click',e=>{if(e.target.id==='assignModal')$('#assignModal').classList.remove('show');});
   $('#ncAdd').onclick=addCustomer;
   $('#custModal').addEventListener('click',e=>{if(e.target.id==='custModal')$('#custModal').classList.remove('show');});
   $('#bottomNav').addEventListener('click',e=>{const b=e.target.closest('[data-nav]');if(b)navTo(b.dataset.nav);});
@@ -2523,6 +2672,8 @@ function init(){
   tbody.addEventListener('click',e=>{
     const cb=e.target.closest('[data-claim]');
     if(cb){e.stopPropagation();claimCust(cb.dataset.claim);return;}
+    const asg=e.target.closest('[data-assign]');
+    if(asg){e.stopPropagation();openAssign(asg.dataset.assign);return;}
     const z=e.target.closest('.qzap');
     if(z){e.stopPropagation();openQuick(z.dataset.zap);return;}
     if(e.target.closest('select,input,textarea,button,a'))return;

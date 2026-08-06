@@ -337,6 +337,61 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true });
     }
 
+    /* ---- base allocation: manager only ---- */
+    if (p === '/api/assign' && req.method === 'POST') {
+      if (!isMgr) return json(res, 403, { error: 'Manager only' });
+      const b = await readBody(req);
+      const accts = Array.isArray(b.accts) ? b.accts.slice(0, 5000).map(a => cleanStr(a, 40)).filter(Boolean) : [];
+      if (!accts.length) return json(res, 400, { error: 'No accounts given' });
+      const agent = cleanStr(b.agent, 40).toUpperCase().trim();
+      accts.forEach(a => {
+        if (agent) scope.assign[a] = agent;
+        else scope.assign[a] = '';  // explicit unassign overrides the base's consultant column
+      });
+      persist(); broadcast(sid, 'bases', {});
+      return json(res, 200, { ok: true, moved: accts.length, agent });
+    }
+    if (p === '/api/assign/split' && req.method === 'POST') {
+      if (!isMgr) return json(res, 403, { error: 'Manager only' });
+      const b = await readBody(req);
+      const mode = b.mode === 'value' ? 'value' : 'even';
+      const agents = Array.isArray(b.agents) ? b.agents.slice(0, 40).map(a => cleanStr(a, 40).toUpperCase().trim()).filter(Boolean) : [];
+      if (!agents.length) return json(res, 400, { error: 'No consultants to split between' });
+      const base = scope.bases.find(x => x.id === scope.active);
+      if (!base) return json(res, 400, { error: 'Load a base first' });
+      // account -> {csr, rsp} from the active base
+      const accts = new Map();
+      base.rows.forEach(r => {
+        const acct = r[3]; if (!acct) return;
+        const cur = accts.get(acct) || { csr: '', rsp: 0 };
+        if (!cur.csr && r[0]) cur.csr = String(r[0]).toUpperCase();
+        cur.rsp += (+r[8] || 0);
+        accts.set(acct, cur);
+      });
+      const pool = [...accts.entries()]
+        .filter(([acct, v]) => !(scope.assign[acct] || v.csr))
+        .sort((a, b2) => b2[1].rsp - a[1].rsp);
+      if (!pool.length) return json(res, 200, { ok: true, assigned: 0 });
+      const per = {};
+      if (mode === 'value') {
+        // snake draft over value-sorted accounts so total offer value balances out
+        let i = 0, dir = 1;
+        pool.forEach(([acct]) => {
+          scope.assign[acct] = agents[i]; per[agents[i]] = (per[agents[i]] || 0) + 1;
+          i += dir;
+          if (i === agents.length) { i = agents.length - 1; dir = -1; }
+          else if (i < 0) { i = 0; dir = 1; }
+        });
+      } else {
+        pool.forEach(([acct], idx) => {
+          const a = agents[idx % agents.length];
+          scope.assign[acct] = a; per[a] = (per[a] || 0) + 1;
+        });
+      }
+      persist(); broadcast(sid, 'bases', {});
+      return json(res, 200, { ok: true, assigned: pool.length, per });
+    }
+
     /* ---- bases: manager only ---- */
     if (p === '/api/bases' && req.method === 'POST') {
       if (!isMgr) return json(res, 403, { error: 'Manager only' });
