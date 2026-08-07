@@ -147,13 +147,19 @@ function readBody(req) {
   });
 }
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css',
-  '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json' };
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json',
+  '.webmanifest': 'application/manifest+json' };
 function serveStatic(req, res, urlPath) {
   let p = path.normalize(path.join(PUB, urlPath === '/' ? 'index.html' : urlPath));
   if (!p.startsWith(PUB)) { res.writeHead(403); res.end(); return; }
   fs.readFile(p, (err, buf) => {
     if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not found'); return; }
-    res.writeHead(200, { 'Content-Type': MIME[path.extname(p)] || 'application/octet-stream' });
+    const ext = path.extname(p);
+    // the page and the service worker must never be served stale; icons can cache hard
+    const cache = (ext === '.png' || ext === '.ico' || ext === '.svg')
+      ? 'public, max-age=604800'
+      : 'no-cache';
+    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream', 'Cache-Control': cache });
     res.end(buf);
   });
 }
