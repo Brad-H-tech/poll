@@ -1056,7 +1056,7 @@ const PALETTE=['#2a78d6','#008300','#e87ba4','#eda100','#eb6834','#4a3aa7','#1ba
 const AGENT_COLORS={SIMONE:'#2a78d6',JOASH:'#008300',NONTU:'#e87ba4',ROXANNE:'#eda100',CAREY:'#eb6834'};
 const BRANDS=['SAMSUNG','OPPO','HONOR','HUAWEI','ZTE','TOZED','APPLE','IPHONE','NOKIA','XIAOMI','VIVO','HISENSE','MOBICEL'];
 const STORES=[['s1','Montrose'],['s2','Kokstad'],['s3','Scottburgh'],['s4','Shelly Beach'],['s5','Howick'],['s6','Vryheid'],['s7','Admin']];
-const TRACK_OPTS=[['','—'],['fu','Follow-up'],['cb','Callback booked'],['quote','Quote sent'],['visit','Coming to store'],['won','Won'],['lost','Not interested'],['na','No answer'],['nowa','NOT on WhatsApp'],['upg','Already upgraded'],['wrong','Wrong number']];
+const TRACK_OPTS=[['','—'],['fu','Contacted — follow up'],['cb','Callback booked'],['quote','Quote sent'],['visit','Coming to store'],['won','Successful — WON'],['lost','Not interested'],['na','Called — missed'],['nowa','NOT on WhatsApp'],['upg','Already upgraded'],['wrong','Wrong number']];
 const TRACK_LBL=Object.fromEntries(TRACK_OPTS);
 const TRACK_COL={'':'var(--ink-3)',fu:'var(--s1)',cb:'#c98500',quote:'#7c68d8',visit:'#0f8a63',won:'var(--pos)',lost:'var(--neg)',na:'var(--warn)',nowa:'#b5651d',upg:'#2e8b8b',wrong:'#8a897e'};
 const CLOSED_ST=['won','lost','wrong','upg'];
@@ -1210,7 +1210,8 @@ function normOutcome(v){
   if(/wrong/.test(s))return 'wrong';
   if(/follow/.test(s))return 'fu';
   if(/not\s*interest|declin|lost|refus|reject/.test(s))return 'lost';
-  if(/no\s*answer|voicemail|unreach|no\s*reply/.test(s))return 'na';
+  if(/no\s*answer|voicemail|unreach|no\s*reply|missed|cold/.test(s))return 'na';
+  if(/contact/.test(s))return 'fu';
   return '';
 }
 function gridToRows(grid){
@@ -1685,8 +1686,9 @@ function noEvidence(t){return !!(t&&t.st&&!(t.acts&&t.acts.length));}
 function trackCell(acct){
   const t=tracking[acct]||{};
   const warn=noEvidence(t)?`<span class="noev" title="Outcome set with no logged call / WhatsApp / email behind it">⚠</span>`:'';
+  const vtick=(t.st==='won'&&t.ver)?`<span title="Confirmed by MTN activations · ${esc(t.ver)}" style="margin-left:4px;cursor:help">✅</span>`:'';
   return `<span class="tdot" style="background:${TRACK_COL[t.st||'']}"></span><select class="track-sel" data-acct="${esc(acct)}">
-    ${TRACK_OPTS.map(([v,l])=>`<option value="${v}" ${(t.st||'')===v?'selected':''}>${esc(l)}</option>`).join('')}</select>${warn}`;
+    ${TRACK_OPTS.map(([v,l])=>`<option value="${v}" ${(t.st||'')===v?'selected':''}>${esc(l)}</option>`).join('')}</select>${warn}${vtick}`;
 }
 function renderExplorer(){
   const all=sortCustomers(filteredCustomers());
@@ -1874,7 +1876,11 @@ function myDayList(){
   DS().customers.forEach(c=>{
     if(mine&&assignedTo(c)!==ME.agent)return;
     const t=tracking[c.acct]; if(!t)return;
-    if(CLOSED_ST.includes(t.st))return;
+    if(CLOSED_ST.includes(t.st)){
+      if(t.next&&t.next<=today)
+        out.push({c,kind:t.next<today?'overdue':'today',next:t.next,note:'🔁 Upgrade cycle — time to re-contact'});
+      return;
+    }
     if(t.next){
       const kind=t.next<today?'overdue':t.next===today?'today':'upcoming';
       out.push({c,kind,next:t.next,note:t.note||TRACK_LBL[t.st]||''});
@@ -2038,7 +2044,7 @@ function openQuick(acct){
   const B=(k,label,color,icon)=>`<button class="qs-btn" data-q="${k}"><span class="qi" style="background:${color}">${icon}</span>${label}</button>`;
   $('#qsGrid').innerHTML=
     B('wa','WhatsApped','#25d366',SVG_WA)+
-    B('na','No answer','#d95926',SVG_TEL)+
+    B('na','Called — missed','#d95926',SVG_TEL)+
     B('call','Spoke — note it','#2a6cc4',SVG_TEL)+
     B('cb','Book callback','#c98500','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4.5" width="18" height="16" rx="3.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>')+
     B('em',(c.email?'Emailed':'No email on file'),c.email?'#7c68d8':'var(--ink-3)',SVG_MAIL)+
@@ -2084,9 +2090,17 @@ function quickAction(k){
     toast('Logged: emailed — waiting for reply');return;
   }
   if(k==='nowa'){setSt(qsAcct,'nowa');pushTrack(qsAcct);toast('Marked NOT on WhatsApp — phone them instead');qsRefresh();return;}
-  if(k==='upg'){setSt(qsAcct,'upg');pushTrack(qsAcct);toast('Marked already upgraded');closeQuick();return;}
-  if(k==='won'){setSt(qsAcct,'won');pushTrack(qsAcct);toast('WON — saved for the team 🎉');closeQuick();return;}
+  if(k==='upg'){setSt(qsAcct,'upg');pushTrack(qsAcct);showSnooze('Already upgraded — re-contact when their new contract ends?');return;}
+  if(k==='won'){setSt(qsAcct,'won');pushTrack(qsAcct);showSnooze('WON 🎉 saved for the team. Book the next upgrade chase?');return;}
   if(k==='lost'){setSt(qsAcct,'lost');pushTrack(qsAcct);toast('Marked not interested');closeQuick();return;}
+}
+function showSnooze(msg){
+  toast(msg);
+  const chips=$('#qsChips');chips.hidden=false;
+  const mk=(months,lbl)=>{const d=new Date();d.setMonth(d.getMonth()+months);
+    return `<button class="fbtn" data-snz="${d.toISOString().slice(0,10)}">${lbl}</button>`;};
+  chips.innerHTML=mk(24,'🔁 Re-contact in 24 months')+mk(36,'🔁 In 36 months')+
+    `<button class="fbtn" data-snz="">Done — no re-contact</button>`;
 }
 function setCallback(date){
   if(!qsAcct||!date)return;
@@ -2133,7 +2147,7 @@ function missionList(){
   return DS().customers
     .filter(c=>assignedTo(c)===ME.agent)
     .filter(c=>{const t=tracking[c.acct]||{};
-      if(CLOSED_ST.includes(t.st))return false;
+      if(CLOSED_ST.includes(t.st)&&!(t.next&&t.next<=td))return false;
       if(t.next&&t.next>td)return false;
       return true;})
     .map(c=>({c,r:missionRank(c)}))
@@ -2428,9 +2442,60 @@ function renderTrust(){
     </tbody></table>
     <div class="rep-eyes" style="margin-top:12px"><div class="h">⚡ Speed check</div>
       <div style="margin-top:5px">${s.bursts.length?s.bursts.map(b=>`<b>${esc(b.who)}</b> set ${b.n} outcomes in ${b.span} min — quicker than real calls allow`).join('<br>'):'No suspicious bursts — nobody is changing outcomes faster than they could actually be calling.'}</div></div>
+    <div class="rep-eyes" style="margin-top:10px"><div class="h">✅ MTN activations check</div>
+      <div style="margin-top:5px" id="verSummary">${(()=>{
+        const wons=DS().customers.filter(c=>{const t=tracking[c.acct];return t&&t.st==='won';});
+        const okW=wons.filter(c=>tracking[c.acct].ver);
+        const noW=wons.filter(c=>!tracking[c.acct].ver);
+        let h=SETTINGS.verify_at
+          ?`Last checked <b>${esc(SETTINGS.verify_at)}</b> · <b style="color:var(--pos)">${okW.length}</b> of ${wons.length} Wons confirmed by MTN.`
+          :`Upload your MTN activations / upgrades report and every Won gets confirmed ✅ or exposed ❌ automatically.`;
+        if(SETTINGS.verify_at&&noW.length)h+=`<br>❌ Not confirmed yet: ${noW.slice(0,6).map(c=>esc(titleCase(c.name))+' <small style="color:var(--ink-3)">('+esc(titleCase((tracking[c.acct]||{}).by||'?'))+')</small>').join(' · ')}${noW.length>6?' …':''}`;
+        return h;})()}
+      <div id="verLast"></div></div>
+      <div class="toolbar" style="margin-top:9px">
+        <button class="abtn" id="verBtn">📄 Upload activations report</button>
+        <input type="file" id="verInp" hidden accept=".csv,.xlsx">
+        <span class="hint">Matches by account number or cell number — any MTN export works.</span>
+      </div>
+    </div>
     <div class="rep-eyes" style="margin-top:10px"><div class="h">🔎 Wons vs the base</div>
       <div style="margin-top:5px">${s.wonBad.length?`<b>${s.wonBad.length}</b> marked Won but the loaded base still shows them out of contract: ${s.wonBad.slice(0,6).map(c=>esc(titleCase(c.name))).join(' · ')}${s.wonBad.length>6?' …':''}<br><small style="color:var(--ink-3)">Meaningful after you load next month's base — a real Won should drop off the out-of-contract list. Cross-check these against MTN activations.</small>`:'Every Won lines up with the loaded base so far. Re-check after you upload next month’s file — real Wons must disappear from the out-of-contract list.'}</div></div>
     <div class="hint" style="margin-top:10px">Every outcome change is stamped to the minute and kept — open a customer row to see their full history. Consultants see their own history too; they know it&#39;s recorded.</div>`;
+  if(VER_LAST){
+    const v=VER_LAST;
+    $('#verLast').innerHTML=`<div style="margin-top:6px;padding:8px 10px;border-radius:10px;background:var(--surface-2)">
+      This file matched <b>${v.matched}</b> customers in the base.
+      ${v.notWon.length?`<br>📌 Activated by MTN but never marked Won here: ${v.notWon.slice(0,6).map(n=>esc(n)).join(' · ')}${v.notWon.length>6?' … ('+v.notWon.length+' total)':''} — sales nobody logged.`:''}
+    </div>`;
+  }
+  const vb=$('#verBtn');if(vb)vb.onclick=()=>$('#verInp').click();
+  const vi=$('#verInp');if(vi)vi.onchange=e=>{if(e.target.files[0])handleVerifyFile(e.target.files[0]);e.target.value='';};
+}
+let VER_LAST=null;
+async function handleVerifyFile(file){
+  let text='';
+  try{
+    if(/\.csv$/i.test(file.name))text=await file.text();
+    else{const grid=await parseXLSX(await file.arrayBuffer());text=grid.map(r=>r.join(',')).join('\n');}
+  }catch(e){toast('⚠️ Could not read that file');return;}
+  const accSet=new Set((text.toUpperCase().match(/[A-Z]{1,3}\d{7,}/g)||[]));
+  const msSet=new Set((String(text).match(/(?:27|0)\d{9}/g)||[]).map(m=>m.replace(/^0/,'27')));
+  const matched=[],notWon=[];
+  DS().customers.forEach(c=>{
+    const hit=accSet.has(String(c.acct).toUpperCase())||(digits(c.msisdn)&&msSet.has(digits(c.msisdn)));
+    if(!hit)return;
+    matched.push(c.acct);
+    const t=tracking[c.acct];
+    if(!(t&&t.st==='won'))notWon.push(titleCase(c.name));
+  });
+  if(!matched.length){toast('⚠️ No accounts or numbers in that file match this base');return;}
+  try{
+    const r=await api('/api/verify',{method:'POST',body:JSON.stringify({accts:matched})});
+    VER_LAST={matched:r.verified||matched.length,notWon};
+    toast(`✅ Checked against MTN — <b>${matched.length}</b> activations matched`);
+    await refreshState();
+  }catch(e){if(e.message!=='auth')toast('⚠️ '+esc(e.message));}
 }
 
 /* ---- Settings panel ---- */
@@ -2666,7 +2731,18 @@ function init(){
     if(card&&card.dataset.acct)openQuick(card.dataset.acct);
   }));
   $('#qsGrid').addEventListener('click',e=>{const b=e.target.closest('.qs-btn');if(b)quickAction(b.dataset.q);});
-  $('#qsChips').addEventListener('click',e=>{const b=e.target.closest('[data-cb]');if(b)setCallback(b.dataset.cb);});
+  $('#qsChips').addEventListener('click',e=>{
+    const b2=e.target.closest('[data-snz]');
+    if(b2){
+      if(qsAcct&&b2.dataset.snz){
+        const t=tracking[qsAcct]=tracking[qsAcct]||{};
+        t.next=b2.dataset.snz;pushTrack(qsAcct);
+        toast('🔁 In the diary — they pop back up on <b>'+esc(b2.dataset.snz)+'</b>');
+      }
+      closeQuick();return;
+    }
+    const b=e.target.closest('[data-cb]');if(b)setCallback(b.dataset.cb);
+  });
   $('#qsChips').addEventListener('change',e=>{if(e.target.id==='qsCbDate'&&e.target.value)setCallback(e.target.value);});
   $('#qsClose').onclick=closeQuick;
   $('#qsSave').onclick=()=>{closeQuick();toast('Note saved');};

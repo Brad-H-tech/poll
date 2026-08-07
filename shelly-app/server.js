@@ -268,6 +268,7 @@ const server = http.createServer(async (req, res) => {
         acts: Array.isArray(prev.acts) ? prev.acts : [],
         hist: Array.isArray(prev.hist) ? prev.hist : [],
       };
+      if (prev.ver) rec.ver = prev.ver;
       if ((prev.st || '') !== rec.st) {
         rec.hist.unshift({ from: prev.st || '', to: rec.st, by: me.name,
           at: new Date().toISOString().slice(0, 16).replace('T', ' ') });
@@ -335,6 +336,19 @@ const server = http.createServer(async (req, res) => {
       if (verdict === 'approved') scope.assign[acct] = cl.agent || cl.by;
       persist(); broadcast(sid, 'claims', {}); broadcast(sid, 'bases', {});
       return json(res, 200, { ok: true });
+    }
+
+    /* ---- verify Wons against an MTN activations report: manager only ---- */
+    if (p === '/api/verify' && req.method === 'POST') {
+      if (!isMgr) return json(res, 403, { error: 'Manager only' });
+      const b = await readBody(req);
+      const accts = Array.isArray(b.accts) ? b.accts.slice(0, 10000).map(a => cleanStr(a, 40)).filter(Boolean) : [];
+      if (!accts.length) return json(res, 400, { error: 'No matched accounts' });
+      const d = today();
+      accts.forEach(a => { const t = scope.tracking[a] = scope.tracking[a] || {}; t.ver = d; });
+      scope.settings.verify_at = d;
+      persist(); broadcast(sid, 'bases', {});
+      return json(res, 200, { ok: true, verified: accts.length });
     }
 
     /* ---- base allocation: manager only ---- */
