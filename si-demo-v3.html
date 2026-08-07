@@ -946,16 +946,15 @@
   </div>
 
   <div class="note">
-    <b>Team edition.</b> Everyone signs in to the same live book — outcomes, callbacks and notes
-    sync instantly between consultants and the manager. Bases are stored on your team server;
-    file parsing still happens in the browser. Seeded from <b>leslist_of_contacted.xlsx</b>
-    (528 line items · 287 accounts).
+    <b>Chase.</b> Everyone signs in to the same live book — outcomes, callbacks and notes
+    sync instantly between consultants and the manager. Six stores plus the Admin view,
+    each with its own base; upload next month's file and the whole book updates.
   </div>
 </main>
 
 <footer><div class="wrap">
   <div>Chase · MTN dealer console</div>
-  <div>Team edition · shared live book · manager-gated uploads &amp; analytics</div>
+  <div>Shared live book · trust check · base splits &amp; moves · manager-gated uploads</div>
 </div></footer>
 
 <div class="dropzone" id="dropzone"><div class="dz-card">
@@ -1961,7 +1960,7 @@ function exportCSV(){
   const csv=head.join(',')+'\n'+rows.join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='shelly-book-export.csv';document.body.appendChild(a);a.click();a.remove();
+  a.download='chase-book-export.csv';document.body.appendChild(a);a.click();a.remove();
   toast(`Exported <b>${all.length}</b> accounts to CSV`);
 }
 
