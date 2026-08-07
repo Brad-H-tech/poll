@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Sales Intelligence — team server. Zero dependencies: Node 18+ only.
+/* Chase — team server. Zero dependencies: Node 18+ only.
    Storage: data/store.json (atomic writes). Auth: scrypt + httpOnly cookie sessions.
    Live sync: server-sent events on /api/events. */
 'use strict';
@@ -83,7 +83,7 @@ if (!store.users.length) {
   const pw = process.env.SHELLY_ADMIN_PASSWORD || 'shelly-' + crypto.randomBytes(3).toString('hex');
   store.users.push({ u: 'admin', name: 'Manager', role: 'manager', ...hashPw(pw) });
   persistNow();
-  console.log('\n  ┌─ Sales Intelligence first run ─────────────┐');
+  console.log('\n  ┌─ Chase first run ─────────────┐');
   console.log('  │  Manager account created                   │');
   console.log('  │  username: admin                           │');
   console.log(`  │  password: ${pw.padEnd(32)}│`);
@@ -499,4 +499,4 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => console.log(`Sales Intelligence running → http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Chase running → http://localhost:${PORT}`));
