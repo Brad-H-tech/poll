@@ -290,6 +290,7 @@ select.chip{appearance:none;padding-right:26px;background-image:url("data:image/
         <img id="prevImg" alt="Slip preview">
         <button type="button" class="photo-x" id="btnPhotoX">✕ Remove</button>
       </div>
+      <div class="calc-hint" id="scanHint" style="margin:6px 0 0"></div>
     </div>
 
     <div class="grid2">
@@ -298,8 +299,8 @@ select.chip{appearance:none;padding-right:26px;background-image:url("data:image/
         <input type="date" id="inDate">
       </div>
       <div class="field">
-        <label>Odometer (km)</label>
-        <input type="number" inputmode="numeric" id="inOdo" placeholder="optional">
+        <label>Station</label>
+        <input id="inStation" placeholder="e.g. Engen N2 (optional)">
       </div>
     </div>
 
@@ -317,18 +318,13 @@ select.chip{appearance:none;padding-right:26px;background-image:url("data:image/
 
     <div class="grid2">
       <div class="field">
-        <label>Station</label>
-        <input id="inStation" placeholder="e.g. Engen N2 (optional)">
-      </div>
-      <div class="field">
         <label>Vehicle / reg</label>
         <input id="inVehicle" placeholder="optional">
       </div>
-    </div>
-
-    <div class="field">
-      <label>Notes</label>
-      <input id="inNotes" placeholder="optional">
+      <div class="field">
+        <label>Notes</label>
+        <input id="inNotes" placeholder="optional">
+      </div>
     </div>
 
     <div class="err" id="addErr"></div>
@@ -670,10 +666,10 @@ $("btnCancel").onclick=closeSheets;
 $("btnDetailClose").onclick=closeSheets;
 
 function resetForm(){
-  photoBlob=null;
+  photoBlob=null; scanToken++;
   $("photoPrev").classList.add("hide"); $("photoBtns").classList.remove("hide");
-  ["inOdo","inTotal","inLitres","inStation","inVehicle","inNotes"].forEach(i=>$(i).value="");
-  $("inDate").value=todayISO(); $("addErr").textContent=""; $("calcHint").textContent="";
+  ["inTotal","inLitres","inStation","inVehicle","inNotes"].forEach(i=>$(i).value="");
+  $("inDate").value=todayISO(); $("addErr").textContent=""; $("calcHint").textContent=""; $("scanHint").textContent="";
 }
 // The big button goes straight to the camera: snap the slip and the
 // form opens with the photo already attached — just hit Save.
@@ -689,9 +685,89 @@ $("fileSnap").onchange = $("filePick").onchange = async e => {
     $("prevImg").src = URL.createObjectURL(photoBlob);
     $("photoPrev").classList.remove("hide"); $("photoBtns").classList.add("hide");
     if(!$("addSheet").classList.contains("open")) openSheet("addSheet");
+    scanSlip(photoBlob);
   }catch(err){ toast("Couldn’t read that photo",true); }
 };
-$("btnPhotoX").onclick=()=>{ photoBlob=null; $("photoPrev").classList.add("hide"); $("photoBtns").classList.remove("hide"); };
+$("btnPhotoX").onclick=()=>{ photoBlob=null; scanToken++; $("scanHint").textContent=""; $("photoPrev").classList.add("hide"); $("photoBtns").classList.remove("hide"); };
+
+/* ================= slip auto-scan (OCR) =================
+   Reads the photo right on the phone with tesseract.js and
+   pre-fills total / litres / date. Purely best-effort: if the
+   library can't load (offline) or the slip is unreadable, the
+   form simply stays manual. */
+let scanToken=0;
+function loadTesseract(){
+  if(window.Tesseract) return Promise.resolve(true);
+  if(loadTesseract._p) return loadTesseract._p;
+  loadTesseract._p = new Promise(res=>{
+    const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+    s.onload=()=>res(true); s.onerror=()=>res(false);
+    document.head.appendChild(s);
+    setTimeout(()=>res(!!window.Tesseract), 20000);
+  });
+  return loadTesseract._p;
+}
+async function scanSlip(blob){
+  const tok=++scanToken;
+  $("scanHint").textContent="⏳ Reading the slip…";
+  try{
+    if(!await loadTesseract()){ if(tok===scanToken) $("scanHint").textContent=""; return; }
+    const {data} = await window.Tesseract.recognize(blob,"eng");
+    if(tok!==scanToken) return; // photo removed / form reset meanwhile
+    const r=parseSlip(data.text||"");
+    const used=[];
+    if(r.total && !$("inTotal").value){ $("inTotal").value=r.total.toFixed(2); used.push("total"); }
+    if(r.litres && !$("inLitres").value){ $("inLitres").value=r.litres.toFixed(2); used.push("litres"); }
+    if(r.date && $("inDate").value===todayISO() && r.date!==todayISO()){ $("inDate").value=r.date; used.push("date"); }
+    calcHint();
+    $("scanHint").textContent = used.length
+      ? "✨ Read the "+used.join(", ")+" off the slip — double-check, then Save."
+      : "Couldn’t read this slip clearly — type the amount if you want it tracked.";
+  }catch(e){ if(tok===scanToken) $("scanHint").textContent=""; }
+}
+function parseSlip(text){
+  const T=text.toUpperCase();
+  const lines=T.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+  const money=s=>{ s=s.replace(/\s/g,"");
+    if(/,\d{2}$/.test(s)) s=s.replace(/\./g,"").replace(",",".");
+    else s=s.replace(/,/g,"");
+    return parseFloat(s); };
+  const MONEY_RE=/R?\s*(\d{1,3}(?:[ ,]\d{3})*[.,]\d{2})/g;
+  let total=null, litres=null, ppl=null, date=null, m;
+
+  m = T.match(/@\s*R?\s*(\d{1,2}[.,]\d{2})/) || T.match(/(\d{1,2}[.,]\d{2})\s*\/\s*L\b/);
+  if(m) ppl=money(m[1]);
+
+  m = T.match(/(\d{1,3}[.,]\d{1,3})\s*(?:L|LT|LTR|LITRE|LITER)S?\b/) || T.match(/(?:LITRES?|LITERS?|VOLUME)\s*:?\s*(\d{1,3}[.,]\d{1,3})/);
+  if(m){ const v=money(m[1]); if(v>1&&v<200) litres=v; }
+
+  for(const l of lines){
+    if(/TOTAL|AMOUNT|DUE|PAID/.test(l) && !/SUB/.test(l)){
+      const ms=[...l.matchAll(MONEY_RE)].map(x=>money(x[1])).filter(v=>v>10&&v<10000);
+      if(ms.length){ total=Math.max(...ms); break; }
+    }
+  }
+  if(total==null){
+    const ms=[...T.matchAll(MONEY_RE)].map(x=>money(x[1])).filter(v=>v>20&&v<10000);
+    if(ms.length) total=Math.max(...ms);
+  }
+  if(total && !litres && ppl){ const v=total/ppl; if(v>1&&v<200) litres=+v.toFixed(2); }
+  if(total && litres){ const p=total/litres;
+    if(p<8||p>60) litres = ppl ? +(total/ppl).toFixed(2) : null; } // implausible R/L for SA — OCR misread
+
+  const iso=(y,mo,d)=>{ mo=+mo; d=+d;
+    if(mo<1||mo>12||d<1||d>31) return null;
+    const dt=new Date(+y,mo-1,d), now=new Date();
+    if(dt>now || now-dt>400*24*3600*1000) return null;
+    return y+"-"+String(mo).padStart(2,"0")+"-"+String(d).padStart(2,"0"); };
+  m = T.match(/\b(20\d{2})[\/\-.](\d{1,2})[\/\-.](\d{1,2})\b/);
+  if(m) date=iso(m[1],m[2],m[3]);
+  else { m=T.match(/\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](20\d{2}|\d{2})\b/); // SA slips: day/month/year
+    if(m) date=iso(m[3].length===2?"20"+m[3]:m[3], m[2], m[1]); }
+  return {total,litres,date};
+}
+window._parseSlip = parseSlip; // console debugging: paste OCR text, see what gets extracted
 
 async function compress(file){
   const url=URL.createObjectURL(file);
@@ -721,7 +797,6 @@ $("btnSave").onclick = async () => {
       fill_date:$("inDate").value,
       rand_total: total>0?total:0,
       litres: litres>0?litres:0,
-      odometer: $("inOdo").value?parseInt($("inOdo").value,10):null,
       station: $("inStation").value.trim()||null,
       vehicle: $("inVehicle").value.trim()||null,
       notes: $("inNotes").value.trim()||null,
@@ -742,7 +817,6 @@ async function openDetail(f){
     ["Total paid", f.rand_total>0?CUR+" "+fmtR(+f.rand_total):"— (on the slip)"],
     ["Litres", f.litres>0?(+f.litres).toFixed(2)+" L":"— (on the slip)"],
     ["Price per litre", f.litres>0?CUR+" "+(f.rand_total/f.litres).toFixed(2):"—"],
-    ["Odometer", f.odometer?f.odometer.toLocaleString("en-ZA")+" km":"—"],
     ["Station", f.station||"—"],
     ["Vehicle", f.vehicle||"—"],
     ["Notes", f.notes||"—"],
@@ -766,16 +840,16 @@ $("btnDelete").onclick=async()=>{
 $("btnExport").onclick=()=>{
   const v=visible();
   if(!v.length){ toast("Nothing to export for this view",true); return; }
-  const head=["Date","Name","Station","Vehicle","Litres","Price per litre (R)","Total (R)","Odometer (km)","Notes"];
+  const head=["Date","Name","Station","Vehicle","Litres","Price per litre (R)","Total (R)","Notes"];
   const lines=[head.join(",")];
   v.slice().reverse().forEach(f=>{
     const ppl=f.litres>0?(f.rand_total/f.litres).toFixed(2):"";
     lines.push([f.fill_date, q(f.display_name), q(f.station), q(f.vehicle),
-      (+f.litres||0).toFixed(2), ppl, (+f.rand_total||0).toFixed(2), f.odometer||"", q(f.notes)].join(","));
+      (+f.litres||0).toFixed(2), ppl, (+f.rand_total||0).toFixed(2), q(f.notes)].join(","));
   });
   const totalR=v.reduce((s,f)=>s+(+f.rand_total||0),0);
   const totalL=v.reduce((s,f)=>s+(+f.litres||0),0);
-  lines.push(["","TOTAL","","",totalL.toFixed(2),"",totalR.toFixed(2),"",""].join(","));
+  lines.push(["","TOTAL","","",totalL.toFixed(2),"",totalR.toFixed(2),""].join(","));
   const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a");
   a.href=URL.createObjectURL(blob);

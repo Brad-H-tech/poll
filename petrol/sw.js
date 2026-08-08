@@ -1,6 +1,6 @@
 // SlipStream service worker — caches the app shell so the app opens
 // instantly (and offline). Bump VERSION when you change app files.
-const VERSION = "slipstream-v1";
+const VERSION = "slipstream-v2";
 const SHELL = ["./", "./index.html", "./config.js", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {
