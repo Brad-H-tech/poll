@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SlipStream — Petrol slip tracker</title>
+<meta name="description" content="Snap your petrol slip, log the fill-up, track the team's fuel spend.">
+<meta name="theme-color" content="#101214">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
+<script src="config.js"></script>
+<style>
+:root{
+  --bg:#101214; --panel:#1a1d21; --panel2:#22262b; --line:#2e3339;
+  --ink:#f2efe8; --mut:#9aa3ad; --amber:#ffb300; --amber-dk:#c98a00;
+  --paper:#f4f1e6; --paper-ink:#23211c; --paper-mut:#6f6a5c;
+  --ok:#4cc38a; --bad:#ff6b5e;
+  --hazard:repeating-linear-gradient(-45deg,var(--amber) 0 12px,#141618 12px 24px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:'IBM Plex Mono',monospace;font-size:14px;line-height:1.5;
+  min-height:100dvh;
+  background-image:
+    radial-gradient(1200px 500px at 50% -220px,rgba(255,179,0,.07),transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+}
+.cond{font-family:'Barlow Condensed',sans-serif}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:16px}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px calc(96px + env(safe-area-inset-bottom))}
+.hazard{height:8px;background:var(--hazard)}
+
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:20;background:rgba(16,18,20,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.hd{max-width:560px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.mark{width:34px;height:34px;flex:0 0 34px}
+.wordmark{font-family:'Barlow Condensed';font-weight:800;font-size:24px;letter-spacing:.04em;text-transform:uppercase;line-height:1}
+.wordmark em{font-style:normal;color:var(--amber)}
+.hd .tag{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut)}
+.userchip{margin-left:auto;display:flex;align-items:center;gap:8px}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--amber);color:#141414;display:grid;place-items:center;font-weight:700;font-size:13px}
+.linkbtn{background:none;border:none;color:var(--mut);font-size:11px;text-decoration:underline;text-underline-offset:3px}
+.linkbtn:hover{color:var(--ink)}
+
+/* ---------- pump readout ---------- */
+.readout{margin:18px 0 14px;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;animation:rise .45s .05s both}
+.readout-top{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px dashed var(--line)}
+.readout-top .lbl{font-family:'Barlow Condensed';font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:13px;color:var(--mut)}
+.readout-big{padding:14px 14px 4px;font-size:44px;font-weight:700;letter-spacing:-.02em;color:var(--amber);text-shadow:0 0 22px rgba(255,179,0,.35);font-variant-numeric:tabular-nums;line-height:1}
+.readout-big .cur{font-size:22px;color:var(--amber-dk);margin-right:2px}
+.readout-sub{display:flex;gap:0;border-top:1px dashed var(--line);margin-top:12px}
+.readout-sub div{flex:1;padding:10px 14px;border-right:1px dashed var(--line)}
+.readout-sub div:last-child{border-right:none}
+.readout-sub b{display:block;font-size:17px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.readout-sub span{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+
+/* ---------- filters ---------- */
+.filters{display:flex;gap:8px;margin:0 0 16px;animation:rise .45s .12s both}
+.chip{border:1px solid var(--line);background:var(--panel);color:var(--mut);border-radius:999px;padding:7px 14px;font-size:12px;font-weight:500;transition:.15s}
+.chip.on{background:var(--amber);border-color:var(--amber);color:#141414;font-weight:700}
+select.chip{appearance:none;padding-right:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239aa3ad' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;color:var(--ink);margin-left:auto;font-size:12px}
+
+/* ---------- slip cards ---------- */
+.feed{display:flex;flex-direction:column;gap:14px}
+.slip{
+  background:var(--paper);color:var(--paper-ink);border-radius:3px;position:relative;
+  padding:14px 16px 12px;box-shadow:0 3px 14px rgba(0,0,0,.45),0 1px 0 rgba(255,255,255,.06) inset;
+  animation:rise .4s both;
+  --notch:radial-gradient(circle at 8px -4px,transparent 7px,var(--paper) 7.5px);
+}
+.slip::before{content:"";position:absolute;left:0;right:0;top:-6px;height:8px;
+  background:radial-gradient(circle,transparent 0 3px,var(--paper) 3.5px);
+  background-size:14px 8px;background-position:0 6px}
+.slip-head{display:flex;align-items:baseline;gap:10px;border-bottom:1px dashed #c9c3b0;padding-bottom:8px;margin-bottom:8px}
+.slip-name{font-family:'Barlow Condensed';font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:16px}
+.slip-date{margin-left:auto;font-size:11px;color:var(--paper-mut)}
+.slip-body{display:flex;gap:12px;align-items:center}
+.thumb{width:56px;height:56px;flex:0 0 56px;border-radius:2px;object-fit:cover;background:#dcd7c6;border:1px solid #c9c3b0}
+.thumb.none{display:grid;place-items:center;font-size:9px;text-align:center;color:var(--paper-mut);line-height:1.3;padding:4px}
+.slip-lines{flex:1;min-width:0}
+.slip-row{display:flex;justify-content:space-between;font-size:12.5px;gap:8px}
+.slip-row .k{color:var(--paper-mut)}
+.slip-row .v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.slip-total{font-size:16px;font-weight:700}
+.slip-station{font-size:11px;color:var(--paper-mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slip:active{transform:scale(.985)}
+.empty{padding:60px 20px;text-align:center;color:var(--mut);animation:rise .4s both}
+.empty .cond{font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink)}
+
+/* ---------- FAB / actions ---------- */
+.fabbar{position:fixed;bottom:0;left:0;right:0;z-index:25;padding:10px 16px calc(12px + env(safe-area-inset-bottom));
+  background:linear-gradient(transparent,rgba(16,18,20,.9) 40%);display:flex;gap:10px;max-width:560px;margin:0 auto}
+.btn{border:none;border-radius:12px;padding:15px 18px;font-size:15px;font-weight:700;transition:.15s}
+.btn-amber{flex:1;background:var(--amber);color:#141414;font-family:'Barlow Condensed';font-size:20px;text-transform:uppercase;letter-spacing:.08em;box-shadow:0 4px 24px rgba(255,179,0,.35)}
+.btn-amber:active{transform:translateY(1px)}
+.btn-ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line);font-size:13px}
+
+/* ---------- sheets & modals ---------- */
+.sheet-veil{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;opacity:0;pointer-events:none;transition:.25s}
+.sheet-veil.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-width:560px;margin:0 auto;
+  background:var(--panel);border:1px solid var(--line);border-bottom:none;border-radius:18px 18px 0 0;
+  max-height:92dvh;overflow-y:auto;transform:translateY(105%);transition:transform .3s cubic-bezier(.32,.72,.34,1)}
+.sheet.open{transform:translateY(0)}
+.sheet-in{padding:8px 18px calc(20px + env(safe-area-inset-bottom))}
+.grab{width:44px;height:4px;border-radius:2px;background:var(--line);margin:8px auto 14px}
+.sheet h2{font-family:'Barlow Condensed';font-weight:800;font-size:26px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.sheet .sub{color:var(--mut);font-size:12px;margin-bottom:16px}
+.field{margin-bottom:13px}
+.field label{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);margin-bottom:5px}
+.field input,.field textarea,.field select{
+  width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--ink);
+  padding:12px 13px;outline:none;transition:border-color .15s}
+.field input:focus,.field textarea:focus{border-color:var(--amber)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.photo-btns{display:flex;gap:10px}
+.photo-btn{flex:1;border:1.5px dashed var(--line);background:var(--bg);color:var(--mut);border-radius:12px;padding:16px 10px;font-size:13px;transition:.15s}
+.photo-btn:hover{border-color:var(--amber);color:var(--ink)}
+.photo-prev{position:relative;margin-top:10px}
+.photo-prev img{width:100%;max-height:220px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.photo-x{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);border:none;color:#fff;border-radius:8px;padding:6px 10px;font-size:12px}
+.calc-hint{font-size:11px;color:var(--amber);min-height:16px;margin:-6px 0 10px;font-variant-numeric:tabular-nums}
+.err{color:var(--bad);font-size:12px;min-height:16px;margin-top:4px}
+
+/* ---------- auth ---------- */
+#authScreen{min-height:100dvh;display:flex;flex-direction:column;justify-content:center;padding:24px}
+.auth-card{max-width:400px;width:100%;margin:0 auto}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:6px;animation:rise .5s both}
+.auth-logo .mark{width:52px;height:52px;flex:0 0 52px}
+.auth-logo .wordmark{font-size:clamp(28px,9.5vw,44px)}
+.auth-tag{color:var(--mut);font-size:12px;letter-spacing:.24em;text-transform:uppercase;margin-bottom:26px;animation:rise .5s .08s both}
+.auth-hz{height:6px;background:var(--hazard);border-radius:3px;margin:0 0 26px;animation:rise .5s .12s both}
+.auth-form{animation:rise .5s .18s both}
+.mode-note{margin-top:18px;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;color:var(--mut);font-size:11.5px;animation:rise .5s .25s both}
+.mode-note b{color:var(--amber)}
+
+/* ---------- detail modal ---------- */
+.detail-img{width:100%;border-radius:12px;border:1px solid var(--line);margin-bottom:14px;max-height:56dvh;object-fit:contain;background:#000}
+.kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.kv .k{color:var(--mut)} .kv .v{font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+.danger{background:none;border:1px solid var(--bad);color:var(--bad);border-radius:10px;padding:10px 14px;font-size:12px;margin-top:16px;width:100%}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translate(-50%,20px);z-index:60;
+  background:var(--ink);color:#141414;font-weight:600;font-size:13px;padding:11px 18px;border-radius:10px;
+  opacity:0;pointer-events:none;transition:.25s;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.bad{background:var(--bad);color:#fff}
+
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.25);border-top-color:#141414;border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="pump" viewBox="0 0 24 24">
+  <path fill="currentColor" d="M4 3h9a1 1 0 0 1 1 1v16h1.5v-8.2c-.9-.3-1.5-1.1-1.5-2.1V7.5L16.8 5l1 1-1.3 1.3v2.4c0 .5.4.8.8.8h.2c.4 0 .8-.3.8-.8V6.9L20.6 5l.9 1-1.7 1.7v2c0 1-.6 1.8-1.5 2.1V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm1.5 2v5h6V5h-6Z"/>
+</symbol>
+</defs></svg>
+
+<!-- ============ AUTH ============ -->
+<div id="authScreen" class="hide">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg class="mark" style="color:var(--amber)"><use href="#pump"/></svg>
+      <div class="wordmark cond">Slip<em>Stream</em></div>
+    </div>
+    <div class="auth-tag" id="authTag">Petrol slip tracker</div>
+    <div class="auth-hz"></div>
+
+    <form class="auth-form" id="authForm">
+      <div class="field" id="fName">
+        <label>Your name</label>
+        <input id="inName" autocomplete="name" placeholder="e.g. Bradley">
+      </div>
+      <div class="field" id="fEmail">
+        <label>Email</label>
+        <input id="inEmail" type="email" autocomplete="email" placeholder="you@company.co.za">
+      </div>
+      <div class="field">
+        <label id="passLabel">Password</label>
+        <input id="inPass" type="password" autocomplete="current-password" inputmode="text" placeholder="••••••••">
+      </div>
+      <div class="err" id="authErr"></div>
+      <button class="btn btn-amber" style="width:100%" id="authGo">Sign in</button>
+      <button type="button" class="linkbtn" style="margin-top:14px;font-size:12px" id="authFlip">New here? Create your account</button>
+    </form>
+
+    <div class="mode-note" id="modeNote"></div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="appScreen" class="hide">
+  <header>
+    <div class="hazard"></div>
+    <div class="hd">
+      <svg class="mark" style="color:var(--amber)"><use href="#pump"/></svg>
+      <div>
+        <div class="wordmark cond" id="hdName">Slip<em>Stream</em></div>
+        <div class="tag" id="hdTag">Petrol slip tracker</div>
+      </div>
+      <div class="userchip">
+        <div class="avatar" id="avatar">?</div>
+        <button class="linkbtn" id="btnLogout">sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="readout">
+      <div class="readout-top">
+        <span class="lbl" id="statScope">This month · Everyone</span>
+        <span class="lbl" style="color:var(--amber)">● live</span>
+      </div>
+      <div class="readout-big"><span class="cur" id="curSym">R</span><span id="statTotal">0.00</span></div>
+      <div class="readout-sub">
+        <div><b id="statLitres">0.0</b><span>litres</span></div>
+        <div><b id="statFills">0</b><span>fill-ups</span></div>
+        <div><b id="statAvg">—</b><span>avg /L</span></div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <button class="chip on" id="chipAll">Everyone</button>
+      <button class="chip" id="chipMine">Just me</button>
+      <select class="chip" id="selMonth"></select>
+    </div>
+
+    <div class="feed" id="feed"></div>
+    <div class="empty hide" id="emptyState">
+      <div class="cond">No fill-ups yet</div>
+      <p style="margin-top:8px;font-size:12px">Tap “Log a fill-up”, snap your till slip,<br>and it lands here for the whole team.</p>
+    </div>
+  </div>
+
+  <div class="fabbar">
+    <button class="btn btn-ghost" id="btnExport">⬇ Excel</button>
+    <button class="btn btn-amber" id="btnAdd">＋ Log a fill-up</button>
+  </div>
+</div>
+
+<!-- ============ ADD SHEET ============ -->
+<div class="sheet-veil" id="veil"></div>
+<div class="sheet" id="addSheet">
+  <div class="sheet-in">
+    <div class="grab"></div>
+    <h2>Log a fill-up</h2>
+    <div class="sub">Snap the slip — we’ll keep the original safe.</div>
+
+    <div class="field">
+      <label>Petrol slip photo</label>
+      <div class="photo-btns" id="photoBtns">
+        <button type="button" class="photo-btn" id="btnSnap">📷 Snap slip<br><small style="color:var(--mut)">opens camera</small></button>
+        <button type="button" class="photo-btn" id="btnPick">🖼 From gallery</button>
+      </div>
+      <input type="file" accept="image/*" capture="environment" id="fileSnap" class="hide">
+      <input type="file" accept="image/*" id="filePick" class="hide">
+      <div class="photo-prev hide" id="photoPrev">
+        <img id="prevImg" alt="Slip preview">
+        <button type="button" class="photo-x" id="btnPhotoX">✕ Remove</button>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="inDate">
+      </div>
+      <div class="field">
+        <label>Odometer (km)</label>
+        <input type="number" inputmode="numeric" id="inOdo" placeholder="optional">
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Total paid (R)</label>
+        <input type="number" inputmode="decimal" step="0.01" id="inTotal" placeholder="0.00">
+      </div>
+      <div class="field">
+        <label>Litres</label>
+        <input type="number" inputmode="decimal" step="0.01" id="inLitres" placeholder="0.00">
+      </div>
+    </div>
+    <div class="calc-hint" id="calcHint"></div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Station</label>
+        <input id="inStation" placeholder="e.g. Engen N2 (optional)">
+      </div>
+      <div class="field">
+        <label>Vehicle / reg</label>
+        <input id="inVehicle" placeholder="optional">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Notes</label>
+      <input id="inNotes" placeholder="optional">
+    </div>
+
+    <div class="err" id="addErr"></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-ghost" id="btnCancel">Cancel</button>
+      <button class="btn btn-amber" style="flex:1" id="btnSave">Save fill-up</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DETAIL SHEET ============ -->
+<div class="sheet" id="detailSheet">
+  <div class="sheet-in">
+    <div class="grab"></div>
+    <h2 id="dName">—</h2>
+    <div class="sub" id="dDate">—</div>
+    <img class="detail-img hide" id="dImg" alt="Petrol slip">
+    <div id="dKv"></div>
+    <button class="danger hide" id="btnDelete">Delete this entry</button>
+    <button class="btn btn-ghost" style="width:100%;margin-top:10px" id="btnDetailClose">Close</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(() => {
+"use strict";
+const CFG = window.SLIPSTREAM_CONFIG || {};
+const CUR = CFG.CURRENCY || "R";
+const TEAM = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY);
+const $ = id => document.getElementById(id);
+const fmtR = n => (Math.round(n*100)/100).toLocaleString("en-ZA",{minimumFractionDigits:2,maximumFractionDigits:2});
+const todayISO = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const monthKey = iso => iso.slice(0,7);
+const monthLabel = k => new Date(k+"-15").toLocaleDateString("en-ZA",{month:"long",year:"numeric"});
+let sb=null, me=null, fills=[], filterMine=false, filterMonth="", detailFill=null, photoBlob=null;
+
+document.title = (CFG.APP_NAME||"SlipStream")+" — "+(CFG.TAGLINE||"Petrol slip tracker");
+$("authTag").textContent = $("hdTag").textContent = CFG.TAGLINE||"Petrol slip tracker";
+$("curSym").textContent = CUR;
+
+function toast(msg,bad){ const t=$("toast"); t.textContent=msg; t.className=bad?"show bad":"show"; clearTimeout(t._h); t._h=setTimeout(()=>t.className="",2600); }
+
+/* ================= local (demo) storage ================= */
+const LS_FILLS="ss_fills", LS_USERS="ss_users", LS_SESSION="ss_session";
+let idb=null;
+function idbOpen(){ return new Promise((res,rej)=>{ const r=indexedDB.open("slipstream",1);
+  r.onupgradeneeded=()=>r.result.createObjectStore("photos");
+  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function idbPut(k,blob){ idb=idb||await idbOpen(); return new Promise((res,rej)=>{ const t=idb.transaction("photos","readwrite"); t.objectStore("photos").put(blob,k); t.oncomplete=res; t.onerror=()=>rej(t.error); }); }
+async function idbGet(k){ idb=idb||await idbOpen(); return new Promise((res,rej)=>{ const r=idb.transaction("photos").objectStore("photos").get(k); r.onsuccess=()=>res(r.result||null); r.onerror=()=>rej(r.error); }); }
+async function idbDel(k){ idb=idb||await idbOpen(); return new Promise(res=>{ const t=idb.transaction("photos","readwrite"); t.objectStore("photos").delete(k); t.oncomplete=res; t.onerror=res; }); }
+
+/* ================= data layer ================= */
+const DB = {
+  async init(){
+    if(TEAM){
+      sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+      const {data:{session}} = await sb.auth.getSession();
+      if(session) me = { id:session.user.id, name:session.user.user_metadata?.display_name || session.user.email.split("@")[0], email:session.user.email };
+    } else {
+      const s = localStorage.getItem(LS_SESSION);
+      if(s) me = JSON.parse(s);
+    }
+  },
+  async signUp(name,email,pass){
+    if(TEAM){
+      const {data,error} = await sb.auth.signUp({email,password:pass,options:{data:{display_name:name}}});
+      if(error) throw error;
+      if(!data.session) throw new Error("Account created — check your email to confirm, then sign in. (Tip: turn off email confirmation in Supabase for instant logins.)");
+      me = { id:data.session.user.id, name, email };
+    } else {
+      const users = JSON.parse(localStorage.getItem(LS_USERS)||"{}");
+      const key = name.trim().toLowerCase();
+      if(!key) throw new Error("Enter your name.");
+      if(users[key]) throw new Error("That name already exists on this phone — sign in instead.");
+      users[key] = { name:name.trim(), pin:pass, id:"local-"+key };
+      localStorage.setItem(LS_USERS, JSON.stringify(users));
+      me = { id:users[key].id, name:users[key].name };
+      localStorage.setItem(LS_SESSION, JSON.stringify(me));
+    }
+  },
+  async signIn(name,email,pass){
+    if(TEAM){
+      const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
+      if(error) throw new Error("Sign-in failed: "+error.message);
+      me = { id:data.user.id, name:data.user.user_metadata?.display_name || email.split("@")[0], email };
+    } else {
+      const users = JSON.parse(localStorage.getItem(LS_USERS)||"{}");
+      const u = users[name.trim().toLowerCase()];
+      if(!u || u.pin!==pass) throw new Error("Wrong name or PIN (demo accounts live on this phone only).");
+      me = { id:u.id, name:u.name };
+      localStorage.setItem(LS_SESSION, JSON.stringify(me));
+    }
+  },
+  async signOut(){
+    if(TEAM) await sb.auth.signOut();
+    localStorage.removeItem(LS_SESSION);
+    me=null;
+  },
+  async list(){
+    if(TEAM){
+      const {data,error} = await sb.from("fillups").select("*").order("fill_date",{ascending:false}).order("created_at",{ascending:false});
+      if(error) throw error;
+      return data;
+    }
+    const rows = JSON.parse(localStorage.getItem(LS_FILLS)||"[]");
+    return rows.sort((a,b)=> b.fill_date.localeCompare(a.fill_date) || (b.created_at||"").localeCompare(a.created_at||""));
+  },
+  async add(f, blob){
+    const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random().toString(16).slice(2));
+    if(TEAM){
+      let slip_path = null;
+      if(blob){
+        slip_path = me.id+"/"+id+".jpg";
+        const {error:upErr} = await sb.storage.from("slips").upload(slip_path, blob, {contentType:"image/jpeg"});
+        if(upErr) throw new Error("Photo upload failed: "+upErr.message);
+      }
+      const row = {...f, id, user_id:me.id, display_name:me.name, slip_path};
+      const {error} = await sb.from("fillups").insert(row);
+      if(error) throw error;
+    } else {
+      const rows = JSON.parse(localStorage.getItem(LS_FILLS)||"[]");
+      rows.push({...f, id, user_id:me.id, display_name:me.name, slip_path: blob?id:null, created_at:new Date().toISOString()});
+      localStorage.setItem(LS_FILLS, JSON.stringify(rows));
+      if(blob) await idbPut(id, blob);
+    }
+  },
+  async remove(f){
+    if(TEAM){
+      const {error} = await sb.from("fillups").delete().eq("id",f.id);
+      if(error) throw error;
+      if(f.slip_path) await sb.storage.from("slips").remove([f.slip_path]);
+    } else {
+      const rows = JSON.parse(localStorage.getItem(LS_FILLS)||"[]").filter(r=>r.id!==f.id);
+      localStorage.setItem(LS_FILLS, JSON.stringify(rows));
+      if(f.slip_path) await idbDel(f.slip_path);
+    }
+  },
+  async photoUrl(f){
+    if(!f.slip_path) return null;
+    if(TEAM){
+      const {data,error} = await sb.storage.from("slips").createSignedUrl(f.slip_path, 60*60);
+      if(error) return null;
+      return data.signedUrl;
+    }
+    const blob = await idbGet(f.slip_path);
+    return blob ? URL.createObjectURL(blob) : null;
+  }
+};
+
+/* ================= auth UI ================= */
+let signupMode=false;
+function renderAuthMode(){
+  $("fName").classList.toggle("hide", TEAM ? !signupMode : false);
+  $("fEmail").classList.toggle("hide", !TEAM);
+  $("passLabel").textContent = TEAM ? "Password" : "PIN (make one up)";
+  $("inPass").placeholder = TEAM ? "••••••••" : "e.g. 4321";
+  $("authGo").textContent = signupMode ? "Create account" : "Sign in";
+  $("authFlip").textContent = signupMode ? "Already set up? Sign in" : "New here? Create your account";
+  $("modeNote").innerHTML = TEAM
+    ? "<b>Team mode.</b> Sign in with the email + password you registered. Every fill-up you log is saved to the shared cloud database and visible to the team."
+    : "<b>Demo mode.</b> Accounts and slips are stored on this phone only. To share one database across the whole team, follow <b>SETUP.md</b> (5-minute free Supabase setup) and this screen becomes a real login.";
+}
+$("authFlip").onclick = ()=>{ signupMode=!signupMode; renderAuthMode(); };
+$("authForm").onsubmit = async e => {
+  e.preventDefault();
+  $("authErr").textContent="";
+  const go=$("authGo"); go.disabled=true; go.innerHTML='<span class="spin"></span>';
+  try{
+    if(signupMode) await DB.signUp($("inName").value, $("inEmail").value.trim(), $("inPass").value);
+    else await DB.signIn($("inName").value || $("inEmail").value, $("inEmail").value.trim(), $("inPass").value);
+    await enterApp();
+  }catch(err){ $("authErr").textContent = err.message || String(err); }
+  go.disabled=false; go.textContent = signupMode?"Create account":"Sign in";
+};
+
+/* ================= app ================= */
+async function enterApp(){
+  $("authScreen").classList.add("hide");
+  $("appScreen").classList.remove("hide");
+  $("avatar").textContent = (me.name||"?").trim().slice(0,1).toUpperCase();
+  await refresh();
+}
+async function refresh(){
+  try{ fills = await DB.list(); }
+  catch(err){ toast("Couldn’t load entries: "+(err.message||err), true); fills=[]; }
+  const months=[...new Set(fills.map(f=>monthKey(f.fill_date)))];
+  const cur=monthKey(todayISO());
+  if(!months.includes(cur)) months.unshift(cur);
+  if(filterMonth!=="all" && !months.includes(filterMonth)) filterMonth=cur;
+  $("selMonth").innerHTML = months.map(m=>`<option value="${m}" ${m===filterMonth?"selected":""}>${monthLabel(m)}</option>`).join("")
+    + `<option value="all" ${filterMonth==="all"?"selected":""}>All time</option>`;
+  render();
+}
+function visible(){
+  return fills.filter(f => (!filterMine || f.user_id===me.id) && (filterMonth==="all" || monthKey(f.fill_date)===filterMonth));
+}
+function render(){
+  const v = visible();
+  const total = v.reduce((s,f)=>s+(+f.rand_total||0),0);
+  const litres = v.reduce((s,f)=>s+(+f.litres||0),0);
+  $("statTotal").textContent = fmtR(total);
+  $("statLitres").textContent = litres.toFixed(1);
+  $("statFills").textContent = v.length;
+  $("statAvg").textContent = litres>0 ? CUR+(total/litres).toFixed(2) : "—";
+  $("statScope").textContent = (filterMonth==="all"?"All time":monthLabel(filterMonth))+" · "+(filterMine?"Just me":"Everyone");
+
+  const feed=$("feed");
+  feed.innerHTML="";
+  $("emptyState").classList.toggle("hide", v.length>0);
+  v.forEach((f,i)=>{
+    const card=document.createElement("div");
+    card.className="slip";
+    card.style.animationDelay=(Math.min(i,8)*40)+"ms";
+    const ppl = f.litres>0 ? (f.rand_total/f.litres).toFixed(2) : null;
+    card.innerHTML = `
+      <div class="slip-head">
+        <span class="slip-name">${esc(f.display_name||"—")}</span>
+        <span class="slip-date">${fmtDate(f.fill_date)}</span>
+      </div>
+      <div class="slip-body">
+        ${f.slip_path?`<img class="thumb" data-id="${f.id}" alt="slip">`:`<div class="thumb none">no slip photo</div>`}
+        <div class="slip-lines">
+          <div class="slip-row"><span class="slip-station">${esc(f.station||"")}${f.vehicle?(f.station?" · ":"")+esc(f.vehicle):""}</span></div>
+          <div class="slip-row"><span class="k">${(+f.litres||0).toFixed(2)} L${ppl?` @ ${CUR}${ppl}`:""}</span>
+            <span class="v slip-total">${CUR} ${fmtR(+f.rand_total||0)}</span></div>
+        </div>
+      </div>`;
+    card.onclick=()=>openDetail(f);
+    feed.appendChild(card);
+    if(f.slip_path){
+      DB.photoUrl(f).then(u=>{ const img=card.querySelector(".thumb"); if(u&&img) img.src=u; });
+    }
+  });
+}
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmtDate = iso => new Date(iso+"T12:00").toLocaleDateString("en-ZA",{day:"numeric",month:"short",year:"numeric"});
+
+$("chipAll").onclick=()=>{ filterMine=false; $("chipAll").classList.add("on"); $("chipMine").classList.remove("on"); render(); };
+$("chipMine").onclick=()=>{ filterMine=true; $("chipMine").classList.add("on"); $("chipAll").classList.remove("on"); render(); };
+$("selMonth").onchange=e=>{ filterMonth=e.target.value; render(); };
+$("btnLogout").onclick=async()=>{ await DB.signOut(); location.reload(); };
+
+/* ================= add sheet ================= */
+function openSheet(id){ $("veil").classList.add("open"); $(id).classList.add("open"); }
+function closeSheets(){ $("veil").classList.remove("open"); $("addSheet").classList.remove("open"); $("detailSheet").classList.remove("open"); }
+$("veil").onclick=closeSheets;
+$("btnCancel").onclick=closeSheets;
+$("btnDetailClose").onclick=closeSheets;
+
+$("btnAdd").onclick=()=>{
+  photoBlob=null;
+  $("photoPrev").classList.add("hide"); $("photoBtns").classList.remove("hide");
+  ["inOdo","inTotal","inLitres","inStation","inVehicle","inNotes"].forEach(i=>$(i).value="");
+  $("inDate").value=todayISO(); $("addErr").textContent=""; $("calcHint").textContent="";
+  openSheet("addSheet");
+};
+$("btnSnap").onclick=()=>$("fileSnap").click();
+$("btnPick").onclick=()=>$("filePick").click();
+$("fileSnap").onchange = $("filePick").onchange = async e => {
+  const file=e.target.files[0]; e.target.value="";
+  if(!file) return;
+  try{
+    photoBlob = await compress(file);
+    $("prevImg").src = URL.createObjectURL(photoBlob);
+    $("photoPrev").classList.remove("hide"); $("photoBtns").classList.add("hide");
+  }catch(err){ toast("Couldn’t read that photo",true); }
+};
+$("btnPhotoX").onclick=()=>{ photoBlob=null; $("photoPrev").classList.add("hide"); $("photoBtns").classList.remove("hide"); };
+
+async function compress(file){
+  const url=URL.createObjectURL(file);
+  const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; });
+  const MAX=1400, sc=Math.min(1, MAX/Math.max(img.width,img.height));
+  const c=document.createElement("canvas");
+  c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc);
+  c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+  URL.revokeObjectURL(url);
+  return new Promise(res=>c.toBlob(b=>res(b),"image/jpeg",.82));
+}
+
+function calcHint(){
+  const t=parseFloat($("inTotal").value), l=parseFloat($("inLitres").value);
+  $("calcHint").textContent = (t>0&&l>0) ? `= ${CUR}${(t/l).toFixed(2)} per litre` : "";
+}
+$("inTotal").oninput = $("inLitres").oninput = calcHint;
+
+$("btnSave").onclick = async () => {
+  const total=parseFloat($("inTotal").value), litres=parseFloat($("inLitres").value);
+  $("addErr").textContent="";
+  if(!$("inDate").value){ $("addErr").textContent="Pick a date."; return; }
+  if(!(total>0)){ $("addErr").textContent="Enter the total amount paid."; return; }
+  const b=$("btnSave"); b.disabled=true; b.innerHTML='<span class="spin"></span> Saving…';
+  try{
+    await DB.add({
+      fill_date:$("inDate").value,
+      rand_total:total,
+      litres: litres>0?litres:0,
+      odometer: $("inOdo").value?parseInt($("inOdo").value,10):null,
+      station: $("inStation").value.trim()||null,
+      vehicle: $("inVehicle").value.trim()||null,
+      notes: $("inNotes").value.trim()||null,
+    }, photoBlob);
+    closeSheets();
+    toast("Fill-up saved ✓");
+    await refresh();
+  }catch(err){ $("addErr").textContent = err.message||String(err); }
+  b.disabled=false; b.textContent="Save fill-up";
+};
+
+/* ================= detail ================= */
+async function openDetail(f){
+  detailFill=f;
+  $("dName").textContent=f.display_name||"—";
+  $("dDate").textContent=fmtDate(f.fill_date);
+  const rows=[
+    ["Total paid", CUR+" "+fmtR(+f.rand_total||0)],
+    ["Litres", (+f.litres||0).toFixed(2)+" L"],
+    ["Price per litre", f.litres>0?CUR+" "+(f.rand_total/f.litres).toFixed(2):"—"],
+    ["Odometer", f.odometer?f.odometer.toLocaleString("en-ZA")+" km":"—"],
+    ["Station", f.station||"—"],
+    ["Vehicle", f.vehicle||"—"],
+    ["Notes", f.notes||"—"],
+  ];
+  $("dKv").innerHTML=rows.map(([k,v])=>`<div class="kv"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join("");
+  $("dImg").classList.add("hide");
+  $("btnDelete").classList.toggle("hide", f.user_id!==me.id);
+  openSheet("detailSheet");
+  if(f.slip_path){
+    const u=await DB.photoUrl(f);
+    if(u){ $("dImg").src=u; $("dImg").classList.remove("hide"); }
+  }
+}
+$("btnDelete").onclick=async()=>{
+  if(!detailFill || !confirm("Delete this fill-up? This can’t be undone.")) return;
+  try{ await DB.remove(detailFill); closeSheets(); toast("Entry deleted"); await refresh(); }
+  catch(err){ toast("Delete failed: "+(err.message||err),true); }
+};
+
+/* ================= Excel export ================= */
+$("btnExport").onclick=()=>{
+  const v=visible();
+  if(!v.length){ toast("Nothing to export for this view",true); return; }
+  const head=["Date","Name","Station","Vehicle","Litres","Price per litre (R)","Total (R)","Odometer (km)","Notes"];
+  const lines=[head.join(",")];
+  v.slice().reverse().forEach(f=>{
+    const ppl=f.litres>0?(f.rand_total/f.litres).toFixed(2):"";
+    lines.push([f.fill_date, q(f.display_name), q(f.station), q(f.vehicle),
+      (+f.litres||0).toFixed(2), ppl, (+f.rand_total||0).toFixed(2), f.odometer||"", q(f.notes)].join(","));
+  });
+  const totalR=v.reduce((s,f)=>s+(+f.rand_total||0),0);
+  const totalL=v.reduce((s,f)=>s+(+f.litres||0),0);
+  lines.push(["","TOTAL","","",totalL.toFixed(2),"",totalR.toFixed(2),"",""].join(","));
+  const blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="petrol-"+(filterMonth==="all"?"all-time":filterMonth)+".csv";
+  a.click();
+  toast("Downloaded — opens straight into Excel");
+};
+const q = s => s==null?"":'"'+String(s).replace(/"/g,'""')+'"';
+
+/* ================= boot ================= */
+window.addEventListener("DOMContentLoaded", async () => {
+  if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+  // wait for supabase lib if in team mode
+  if(TEAM && !window.supabase) await new Promise(res=>{
+    const t=setInterval(()=>{ if(window.supabase){clearInterval(t);res();} },50);
+    setTimeout(()=>{clearInterval(t);res();},5000);
+  });
+  filterMonth = monthKey(todayISO());
+  try{ await DB.init(); }catch(e){ console.error(e); }
+  renderAuthMode();
+  if(me) await enterApp();
+  else $("authScreen").classList.remove("hide");
+});
+})();
+</script>
+</body>
+</html>

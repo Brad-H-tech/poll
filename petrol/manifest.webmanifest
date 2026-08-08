@@ -1,0 +1,16 @@
+{
+  "name": "SlipStream — Petrol slip tracker",
+  "short_name": "SlipStream",
+  "description": "Snap your petrol slip, log the fill-up, track the team's fuel spend.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#101214",
+  "theme_color": "#101214",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
