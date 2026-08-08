@@ -1,7 +1,7 @@
 // Sawubona service worker — caches the app shell so it opens instantly (and
 // offline), and shows the daily notification when the browser wakes us up via
 // periodic background sync. Bump VERSION when app files change.
-const VERSION = "sawubona-v2";
+const VERSION = "sawubona-v3";
 const SHELL = ["./", "./index.html", "./data.js", "./manifest.webmanifest",
                "./icon-192.png", "./icon-512.png"];
 
@@ -43,9 +43,15 @@ async function showDailyBrief() {
   const zw = zuluWordOfTheDay();
   let headline = "Tap for today's MTN news";
   try {
+    // Daily web search: MTN first, phone world (Samsung/iPhone/Honor…) if quiet
     const items = await fetchMtnNews(1);
     if (items[0]) headline = items[0].title;
-  } catch (e) { /* offline — still show word + quiz nudge */ }
+  } catch (e) {
+    try {
+      const items = await fetchPhoneNews(1);
+      if (items[0]) headline = "📱 " + items[0].title;
+    } catch (e2) { headline = "📱 " + phoneFactOfTheDay().t; }
+  }
   return self.registration.showNotification("Sawubona! ☀️ Your daily brief", {
     body: "📰 " + headline +
           "\n🗣️ " + zw.w + " — " + zw.m +

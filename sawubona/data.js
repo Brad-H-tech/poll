@@ -161,6 +161,59 @@ const TECH_FACTS = [
 ];
 
 // ---------------------------------------------------------------------------
+// MTN 101 — daily knowledge about the yellow company (rotates daily)
+// ---------------------------------------------------------------------------
+const MTN_FACTS = [
+  { t: "What does MTN stand for?", f: "MTN is short for Mobile Telephone Networks. The company started in South Africa in 1994, making it one of the very first mobile networks on the African continent." },
+  { t: "Y'ello!", f: "MTN's famous greeting \"Y'ello!\" is a mash-up of \"yellow\" and \"hello\" — the brand's way of answering the phone. The bright yellow was chosen to feel bold, warm and optimistic." },
+  { t: "Africa's biggest network", f: "MTN is the largest mobile network in Africa, serving hundreds of millions of people across roughly 19 markets in Africa and the Middle East." },
+  { t: "Nigeria is number one", f: "South Africa is MTN's home, but Nigeria is its biggest market by far — more MTN subscribers live there than anywhere else." },
+  { t: "MTN MoMo", f: "MoMo is MTN's mobile money service: people can send money, save and pay bills straight from a basic phone, no bank account needed. Tens of millions of Africans use it — for many, it IS their bank." },
+  { t: "World Cup first", f: "In 2010, MTN became the first African company ever to be a global sponsor of the FIFA World Cup — fitting, since the tournament was hosted in South Africa that year." },
+  { t: "The MTN8", f: "The MTN8 is South Africa's oldest football cup competition, contested by the top eight PSL teams — and it's carried MTN's name and yellow branding for years." },
+  { t: "Tour de France history", f: "Team MTN-Qhubeka became the first African cycling team to ride the Tour de France in 2015 — a big yellow moment on the world's biggest cycling stage." },
+  { t: "Where is MTN's home?", f: "MTN's head office is in Fairland, Johannesburg — the campus is often just called \"14th Avenue\". The group is listed on the Johannesburg Stock Exchange." },
+  { t: "Everywhere you go", f: "MTN's classic slogan was \"Everywhere you go\" — the line most South Africans still associate with the brand today." },
+  { t: "The 2022 rebrand", f: "In recent years MTN flattened its logo into a simple minimalist design — easier to read on small screens and app icons. Same yellow, cleaner look, built for the digital era." },
+  { t: "Ayoba", f: "MTN built its own messaging app called Ayoba — chat, channels and music, designed for African users, and data-free for MTN customers in many markets." },
+  { t: "The prepaid revolution", f: "MTN helped popularise prepaid, pay-as-you-go airtime in Africa. Before prepaid, you needed a contract and a credit check — prepaid made mobile phones affordable for everyone." },
+  { t: "One of the first two", f: "When South Africa licensed GSM networks in 1993, only two licences were issued — one went to MTN, the other to Vodacom. The rivalry has been running ever since." },
+  { t: "Owning a piece of MTN", f: "Through BEE share schemes like MTN Zakhele, ordinary South Africans have been able to buy shares and own a slice of the yellow company." },
+  { t: "5G since 2020", f: "MTN switched on commercial 5G in South Africa in 2020 and has been rolling it out across cities since — 5G can be several times faster than 4G on a good day." },
+  { t: "The street network", f: "A huge part of MTN's business runs through informal traders — street vendors and spaza shops selling airtime and data vouchers. Millions of small businesses earn income this way." },
+  { t: "More than calls", f: "Modern MTN earns from far more than voice calls: data, fintech (MoMo), enterprise services and even renting space on its towers to other networks." },
+];
+function mtnFactOfTheDay(date) {
+  return MTN_FACTS[dayNumber(date) % MTN_FACTS.length];
+}
+
+// ---------------------------------------------------------------------------
+// Phone world — cellphone facts (Samsung, iPhone, Honor & friends).
+// Used when there's no fresh MTN news, so the brief always teaches something.
+// ---------------------------------------------------------------------------
+const PHONE_FACTS = [
+  { t: "Samsung is everywhere", f: "Samsung sells more phones than any other brand most years — and it also makes screens, memory chips and camera parts that its rivals use. There are Samsung parts inside many iPhones." },
+  { t: "The first iPhone had no App Store", f: "When the iPhone launched in 2007 there was no App Store at all — it only arrived a year later, in 2008. Today apps are the whole point of a smartphone." },
+  { t: "Where did Honor come from?", f: "Honor started life as Huawei's youth brand. In 2020 it was sold off and became an independent company — which is why Honor phones have full Google apps while Huawei's don't." },
+  { t: "Why Huawei lost Google", f: "US sanctions in 2019 cut Huawei off from Google's apps and services. Huawei responded by building its own operating system, HarmonyOS, now on millions of devices in China." },
+  { t: "Xiaomi started with software", f: "Xiaomi didn't start as a phone maker — it began by building MIUI, a slick version of Android, and only later made its own hardware. Today it's a top-three phone brand worldwide." },
+  { t: "Megapixels aren't everything", f: "A 200MP camera isn't automatically better than a 50MP one. Sensor size, lens quality and the phone's software processing matter far more than the megapixel number on the box." },
+  { t: "The first mobile call", f: "The first-ever mobile phone call was made in 1973 by Motorola engineer Martin Cooper — on a phone that weighed over a kilogram and took 10 hours to charge for 30 minutes of talking." },
+  { t: "The best-selling phone ever", f: "It's not an iPhone — it's the humble Nokia 1100, which sold around 250 million units in the 2000s. Simple, tough, with a torch. A legend, especially across Africa." },
+  { t: "What does IP68 mean?", f: "The IP rating on a phone tells you its dust and water resistance: the 6 means fully dust-tight, the 8 means it survives being underwater (usually 1.5m for 30 minutes). \"Resistant\" — not swim-proof forever." },
+  { t: "Why every phone charges with USB-C now", f: "The EU passed a law forcing a common charger — which is why even Apple finally dropped its Lightning port and gave the iPhone 15 a USB-C port in 2023. One cable for everything." },
+  { t: "What is an eSIM?", f: "An eSIM is a SIM card built into the phone itself. Instead of swapping a physical chip, you download your network profile — handy for travel, or for running two numbers on one phone." },
+  { t: "Gorilla Glass is older than you think", f: "The tough glass on your phone screen is made by Corning — based on a super-strong glass they invented back in the 1960s. It sat mostly unused until Apple came knocking for the first iPhone." },
+  { t: "60Hz vs 120Hz screens", f: "A 120Hz screen redraws itself 120 times a second — double the classic 60Hz — which is why scrolling looks silky-smooth on newer phones. The trade-off: it uses more battery." },
+  { t: "Android is built on Linux", f: "Android — the system running Samsung, Honor, Xiaomi and most other phones — is based on Linux and is open source. Each brand adds its own skin on top, which is why they all look a bit different." },
+  { t: "What does mAh actually mean?", f: "Battery size is measured in milliamp-hours (mAh) — roughly how much charge it holds. But screen, chip and software efficiency decide real battery life, which is why a 4,500mAh iPhone can outlast a 5,000mAh rival." },
+  { t: "Fast charging, explained", f: "Charging speed is measured in watts. Old chargers were 5W; modern phones take 45W, 67W, even 120W — a few minutes plugged in can add hours of use. The phone controls the speed to protect the battery." },
+];
+function phoneFactOfTheDay(date) {
+  return PHONE_FACTS[dayNumber(date) % PHONE_FACTS.length];
+}
+
+// ---------------------------------------------------------------------------
 // Daily motivation — Zulu proverbs (with translations) + classic quotes
 // ---------------------------------------------------------------------------
 const QUOTES = [
@@ -216,10 +269,19 @@ function techFactOfTheDay(date) {
 // so we go through free proxy services, trying each until one works.
 // Parsed with regex (not DOMParser) so it also works inside the service worker.
 // ---------------------------------------------------------------------------
-const NEWS_RSS_URL =
-  "https://news.google.com/rss/search?q=" +
-  encodeURIComponent('"MTN" telecom OR "MTN Group" OR "MTN South Africa"') +
-  "&hl=en-ZA&gl=ZA&ceid=ZA:en";
+// Topic searches — each is a fresh Google News web search, run daily.
+const NEWS_TOPICS = [
+  { id: "latest",  label: "Latest MTN",    q: '"MTN" telecom OR "MTN Group" OR "MTN South Africa"' },
+  { id: "deals",   label: "Deals & specials", q: '"MTN" deals OR "MTN" specials OR "MTN" contract OR "MTN" prepaid' },
+  { id: "network", label: "Network & 5G",  q: '"MTN" 5G OR "MTN" network OR "MTN" coverage OR "MTN" fibre' },
+  { id: "phones",  label: "Phone world",   q: "smartphone Samsung OR iPhone OR Honor OR Huawei OR Xiaomi South Africa" },
+];
+
+function rssUrlFor(query) {
+  return "https://news.google.com/rss/search?q=" + encodeURIComponent(query) +
+    "&hl=en-ZA&gl=ZA&ceid=ZA:en";
+}
+const NEWS_RSS_URL = rssUrlFor(NEWS_TOPICS[0].q);
 
 const NEWS_PROXIES = [
   (u) => "https://api.allorigins.win/raw?url=" + encodeURIComponent(u),
@@ -256,14 +318,15 @@ function parseRssItems(xml, max) {
   return items;
 }
 
-async function fetchMtnNews(max) {
+async function fetchNewsByQuery(query, max) {
   max = max || 6;
+  const url = rssUrlFor(query);
   let lastErr = null;
   for (const wrap of NEWS_PROXIES) {
     try {
       const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
       const timer = controller ? setTimeout(() => controller.abort(), 12000) : null;
-      const res = await fetch(wrap(NEWS_RSS_URL), controller ? { signal: controller.signal } : {});
+      const res = await fetch(wrap(url), controller ? { signal: controller.signal } : {});
       if (timer) clearTimeout(timer);
       if (!res.ok) throw new Error("HTTP " + res.status);
       const xml = await res.text();
@@ -276,6 +339,9 @@ async function fetchMtnNews(max) {
   }
   throw lastErr || new Error("all news sources failed");
 }
+
+function fetchMtnNews(max) { return fetchNewsByQuery(NEWS_TOPICS[0].q, max); }
+function fetchPhoneNews(max) { return fetchNewsByQuery(NEWS_TOPICS[3].q, max); }
 
 // ---------------------------------------------------------------------------
 // Optional AI mode — a real Claude agent that searches today's web for MTN
