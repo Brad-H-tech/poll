@@ -49,7 +49,7 @@ header{position:sticky;top:0;z-index:20;background:rgba(16,18,20,.92);backdrop-f
 .hd .tag{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut)}
 .userchip{margin-left:auto;display:flex;align-items:center;gap:8px}
 .avatar{width:30px;height:30px;border-radius:50%;background:var(--amber);color:#141414;display:grid;place-items:center;font-weight:700;font-size:13px}
-.linkbtn{background:none;border:none;color:var(--mut);font-size:11px;text-decoration:underline;text-underline-offset:3px}
+a.linkbtn,.linkbtn{background:none;border:none;color:var(--mut);font-size:11px;text-decoration:underline;text-underline-offset:3px}
 .linkbtn:hover{color:var(--ink)}
 
 /* ---------- pump readout ---------- */
@@ -207,6 +207,9 @@ select.chip{appearance:none;padding-right:26px;background-image:url("data:image/
     </form>
 
     <div class="mode-note" id="modeNote"></div>
+    <div style="text-align:center;margin-top:14px;animation:rise .5s .3s both">
+      <a href="check.html" class="linkbtn" style="font-size:11px;color:var(--mut)">Setup checker</a>
+    </div>
   </div>
 </div>
 
