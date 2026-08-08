@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sawubona — daily MTN, Zulu &amp; tech brief</title>
+<meta name="description" content="One friendly notification a day: MTN news, a Zulu word, and a tech fact explained in plain English.">
+<meta name="theme-color" content="#ffcb05">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --yellow:#ffcb05; --yellow-soft:#fff3c2; --ink:#141414; --paper:#faf7ef;
+    --card:#ffffff; --line:#eee5cc; --mut:#7a7263; --ok:#15803d; --bad:#b23b3b;
+  }
+  body{background:var(--paper);color:var(--ink);font-family:'Segoe UI',Helvetica,Arial,sans-serif;
+       padding-bottom:env(safe-area-inset-bottom)}
+  #app{max-width:640px;margin:0 auto;padding:0 16px 56px}
+
+  /* header */
+  .hero{background:var(--yellow);margin:0 -16px;padding:26px 20px 20px;
+        border-radius:0 0 26px 26px;box-shadow:0 6px 20px rgba(255,203,5,.35)}
+  .hero .hi{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.1}
+  .hero .sub{font-size:14px;font-weight:600;color:#5c4d00;margin-top:6px}
+  .hero .date{font-size:12px;color:#6b5b09;margin-top:2px}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;
+        padding:18px 18px 16px;margin-top:16px;box-shadow:0 3px 14px rgba(0,0,0,.05)}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);
+           display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .card h2 .em{font-size:18px}
+
+  /* news */
+  .news-item{padding:10px 0;border-bottom:1px dashed var(--line)}
+  .news-item:last-child{border-bottom:none}
+  .news-item a{color:var(--ink);text-decoration:none;font-weight:600;font-size:15px;line-height:1.35;display:block}
+  .news-item a:active{color:#8a7500}
+  .news-meta{font-size:11px;color:var(--mut);margin-top:3px}
+  .ai-brief{font-size:15px;line-height:1.55;white-space:pre-wrap}
+  .ai-tag{display:inline-block;background:var(--ink);color:var(--yellow);font-size:10px;font-weight:800;
+          letter-spacing:1px;border-radius:999px;padding:3px 10px;margin-bottom:10px}
+  .spin{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:14px;padding:8px 0}
+  .spin::before{content:"";width:16px;height:16px;border:3px solid var(--yellow);
+                border-top-color:transparent;border-radius:50%;animation:rot 1s linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+  .err{color:var(--bad);font-size:13px;line-height:1.5}
+
+  /* zulu word */
+  .zw{font-size:32px;font-weight:800;color:#8a6d00;letter-spacing:-.5px}
+  .zw-say{font-size:13px;color:var(--mut);margin-top:2px;font-style:italic}
+  .zw-mean{font-size:16px;margin-top:10px;line-height:1.45}
+  .zw-eg{margin-top:10px;background:var(--yellow-soft);border-radius:12px;padding:10px 14px;
+         font-size:14px;line-height:1.5}
+  .zw-eg b{color:#7a6000}
+
+  /* fact */
+  .fact-t{font-size:18px;font-weight:800;margin-bottom:8px}
+  .fact-f{font-size:15px;line-height:1.6;color:#333}
+
+  /* buttons + settings */
+  .btn{display:block;width:100%;border:none;border-radius:14px;padding:14px;font-size:16px;
+       font-weight:800;cursor:pointer;background:var(--ink);color:var(--yellow);margin-top:10px}
+  .btn:disabled{opacity:.45}
+  .btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+  .note{font-size:13px;color:var(--mut);line-height:1.55;margin-top:10px}
+  .note.ok{color:var(--ok);font-weight:700}
+  .txt{width:100%;padding:12px;font-size:15px;border:2px solid var(--line);border-radius:12px;margin-top:8px}
+  details summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--mut);list-style:none;padding:4px 0}
+  details summary::before{content:"▸ "}
+  details[open] summary::before{content:"▾ "}
+  .foot{text-align:center;font-size:12px;color:var(--mut);margin-top:26px;line-height:1.7}
+  .refresh{background:none;border:none;color:var(--mut);font-size:12px;text-decoration:underline;
+           cursor:pointer;float:right}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="hero">
+    <div class="hi" id="greet">Sawubona! 👋</div>
+    <div class="sub">Your daily MTN, Zulu &amp; tech brief</div>
+    <div class="date" id="today"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="em">📰</span> MTN today <button class="refresh" id="refreshBtn">refresh</button></h2>
+    <div id="news"><div class="spin">Fetching the latest MTN news…</div></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="em">🗣️</span> Zulu word of the day</h2>
+    <div class="zw" id="zw"></div>
+    <div class="zw-say" id="zwSay"></div>
+    <div class="zw-mean" id="zwMean"></div>
+    <div class="zw-eg" id="zwEg"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="em">💡</span> Did you know?</h2>
+    <div class="fact-t" id="factT"></div>
+    <div class="fact-f" id="factF"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="em">🔔</span> Daily notification</h2>
+    <div class="note" id="notifStatus">Get one friendly notification a day with the brief.</div>
+    <button class="btn" id="notifBtn">Turn on daily notifications</button>
+  </div>
+
+  <div class="card">
+    <details id="aiBox">
+      <summary>⚡ AI mode (optional)</summary>
+      <div class="note">
+        Paste an Anthropic API key and a real Claude AI agent will search the web each day and
+        write your MTN summary for you (instead of plain headlines). The key is stored only on
+        this device and calls are billed to your own Anthropic account.
+      </div>
+      <input class="txt" id="aiKey" type="password" placeholder="sk-ant-…" autocomplete="off">
+      <button class="btn" id="aiSave">Save key &amp; use AI mode</button>
+      <button class="btn ghost" id="aiClear" style="display:none">Turn off AI mode</button>
+      <div class="note" id="aiStatus"></div>
+    </details>
+  </div>
+
+  <div class="card" id="installCard" style="display:none">
+    <h2><span class="em">📲</span> Put it on your home screen</h2>
+    <div class="note" id="installHow"></div>
+    <button class="btn" id="installBtn" style="display:none">Install app</button>
+  </div>
+
+  <div class="foot">
+    Sawubona — “I see you.” ☀️<br>
+    News via Google News · Built with Claude Code
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+
+// ---------- greetings + date ----------
+const GREETINGS = ["Sawubona! 👋", "Yebo yes! ☀️", "Molo-molo! 🌅", "Heita! ✨", "Sanibonani! 🙌"];
+$("greet").textContent = GREETINGS[dayNumber() % GREETINGS.length];
+$("today").textContent = new Date().toLocaleDateString("en-ZA",
+  { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+// ---------- word + fact of the day ----------
+const zw = zuluWordOfTheDay();
+$("zw").textContent = zw.w;
+$("zwSay").textContent = "say it: " + zw.say;
+$("zwMean").textContent = zw.m;
+$("zwEg").innerHTML = "<b>Try it:</b> " + zw.eg;
+
+const fact = techFactOfTheDay();
+$("factT").textContent = fact.t;
+$("factF").textContent = fact.f;
+
+// ---------- news ----------
+async function loadNews() {
+  const box = $("news");
+  box.innerHTML = '<div class="spin">Fetching the latest MTN news…</div>';
+  const key = localStorage.getItem("sawubona-ai-key");
+
+  if (key) {
+    try {
+      box.innerHTML = '<div class="spin">Asking Claude to search the web…</div>';
+      const brief = await fetchAiBrief(key);
+      box.innerHTML = '<span class="ai-tag">✦ WRITTEN BY CLAUDE</span>' +
+        '<div class="ai-brief"></div>';
+      box.querySelector(".ai-brief").textContent = brief;
+      return;
+    } catch (e) {
+      box.innerHTML = '<div class="err">AI mode hit a snag (' + e.message +
+        '). Falling back to headlines…</div>';
+      await new Promise(r => setTimeout(r, 900));
+    }
+  }
+
+  try {
+    const items = await fetchMtnNews(6);
+    box.innerHTML = "";
+    for (const it of items) {
+      const div = document.createElement("div");
+      div.className = "news-item";
+      const a = document.createElement("a");
+      a.href = it.link; a.target = "_blank"; a.rel = "noopener";
+      a.textContent = it.title;
+      const meta = document.createElement("div");
+      meta.className = "news-meta";
+      meta.textContent = [it.source, it.pub ? it.pub.toLocaleDateString("en-ZA",
+        { day: "numeric", month: "short" }) : ""].filter(Boolean).join(" · ");
+      div.appendChild(a); div.appendChild(meta);
+      box.appendChild(div);
+    }
+  } catch (e) {
+    box.innerHTML = '<div class="err">Couldn\'t fetch the news right now — check your ' +
+      'connection and tap refresh. (' + e.message + ')</div>';
+  }
+}
+$("refreshBtn").onclick = loadNews;
+loadNews();
+
+// ---------- AI mode settings ----------
+function refreshAiUi() {
+  const key = localStorage.getItem("sawubona-ai-key");
+  $("aiClear").style.display = key ? "block" : "none";
+  $("aiSave").textContent = key ? "Update key" : "Save key & use AI mode";
+  $("aiStatus").textContent = key ? "AI mode is ON — Claude writes your daily summary." : "";
+  $("aiStatus").className = key ? "note ok" : "note";
+}
+$("aiSave").onclick = () => {
+  const v = $("aiKey").value.trim();
+  if (!v) { alert("Paste your API key first (it starts with sk-ant-)."); return; }
+  localStorage.setItem("sawubona-ai-key", v);
+  $("aiKey").value = "";
+  refreshAiUi(); loadNews();
+};
+$("aiClear").onclick = () => {
+  localStorage.removeItem("sawubona-ai-key");
+  refreshAiUi(); loadNews();
+};
+refreshAiUi();
+
+// ---------- service worker + daily notifications ----------
+let swReg = null;
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").then(r => { swReg = r; updateNotifUi(); });
+}
+
+function notifState() {
+  if (!("Notification" in window)) return "unsupported";
+  return Notification.permission; // default | granted | denied
+}
+
+async function updateNotifUi() {
+  const st = notifState();
+  const btn = $("notifBtn"), note = $("notifStatus");
+  if (st === "unsupported") {
+    btn.style.display = "none";
+    note.textContent = "This browser can't show notifications. On iPhone: add the app to your home screen first (Share → Add to Home Screen), then open it from there.";
+    return;
+  }
+  if (st === "denied") {
+    btn.style.display = "none";
+    note.textContent = "Notifications are blocked for this app. Enable them in your phone's Settings → Notifications, then reopen the app.";
+    return;
+  }
+  if (st === "granted" && localStorage.getItem("sawubona-notif") === "on") {
+    btn.style.display = "none";
+    const hasPeriodic = swReg && "periodicSync" in swReg;
+    note.className = "note ok";
+    note.textContent = hasPeriodic
+      ? "✓ Daily notifications are on. Your phone will pop up the brief once a day."
+      : "✓ Notifications are on. Your phone decides the exact timing — opening the app now and then keeps them coming reliably.";
+    return;
+  }
+  btn.style.display = "block";
+  note.className = "note";
+  note.textContent = "Get one friendly notification a day with MTN news, your Zulu word and a tech fact.";
+}
+
+$("notifBtn").onclick = async () => {
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") { updateNotifUi(); return; }
+  localStorage.setItem("sawubona-notif", "on");
+
+  // Ask the browser to wake our service worker roughly daily (Android/Chrome).
+  try {
+    if (swReg && "periodicSync" in swReg) {
+      await swReg.periodicSync.register("daily-brief", { minInterval: 20 * 60 * 60 * 1000 });
+    }
+  } catch (e) { /* not critical — fallback below still works */ }
+
+  // Give instant feedback with today's brief.
+  showTodayNotification();
+  updateNotifUi();
+};
+
+async function showTodayNotification() {
+  if (notifState() !== "granted" || !swReg) return;
+  const zwToday = zuluWordOfTheDay();
+  let headline = "Tap for today's MTN news";
+  try { const items = await fetchMtnNews(1); if (items[0]) headline = items[0].title; } catch (e) {}
+  swReg.showNotification("Sawubona! ☀️ Your daily brief", {
+    body: "📰 " + headline + "\n🗣️ " + zwToday.w + " — " + zwToday.m,
+    icon: "icon-192.png", badge: "icon-192.png", tag: "sawubona-daily",
+  });
+}
+
+// Fallback for phones without periodic background sync (e.g. iPhone):
+// when the app opens on a new day with notifications on, show the day's brief once.
+(function dailyFallback() {
+  if (localStorage.getItem("sawubona-notif") !== "on") return;
+  const today = String(dayNumber());
+  if (localStorage.getItem("sawubona-last-shown") === today) return;
+  localStorage.setItem("sawubona-last-shown", today);
+  // slight delay so the sw is registered
+  setTimeout(showTodayNotification, 2500);
+})();
+
+// ---------- install helper ----------
+let deferredPrompt = null;
+const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+  || navigator.standalone === true;
+if (!isStandalone) {
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  $("installCard").style.display = "block";
+  $("installHow").textContent = isIos
+    ? "On iPhone: tap the Share button (square with an arrow) at the bottom of Safari, scroll down and choose “Add to Home Screen”. It'll appear as an app with its own icon."
+    : "In Chrome: tap the ⋮ menu and choose “Add to Home screen” (or “Install app”). It'll appear as an app with its own icon.";
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault(); deferredPrompt = e;
+    $("installBtn").style.display = "block";
+  });
+  $("installBtn").onclick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    $("installBtn").style.display = "none";
+  };
+}
+</script>
+</body>
+</html>

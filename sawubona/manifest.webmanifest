@@ -1,0 +1,16 @@
+{
+  "name": "Sawubona — daily MTN, Zulu & tech brief",
+  "short_name": "Sawubona",
+  "description": "One friendly notification a day: MTN news, a Zulu word, and a tech fact in plain English.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffcb05",
+  "theme_color": "#ffcb05",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
