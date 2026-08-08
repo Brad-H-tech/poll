@@ -161,6 +161,43 @@ const TECH_FACTS = [
 ];
 
 // ---------------------------------------------------------------------------
+// Daily motivation — Zulu proverbs (with translations) + classic quotes
+// ---------------------------------------------------------------------------
+const QUOTES = [
+  { q: "Umuntu ngumuntu ngabantu.", by: "Zulu proverb", tr: "A person is a person through other people." },
+  { q: "It always seems impossible until it's done.", by: "Nelson Mandela" },
+  { q: "Ithemba alibulali.", by: "Zulu proverb", tr: "Hope never kills — never lose hope." },
+  { q: "Small steps every day add up to big journeys.", by: "" },
+  { q: "Izandla ziyagezana.", by: "Zulu proverb", tr: "Hands wash each other — we rise by helping each other." },
+  { q: "Do not judge me by my successes, judge me by how many times I fell down and got back up again.", by: "Nelson Mandela" },
+  { q: "Indlela ibuzwa kwabaphambili.", by: "Zulu proverb", tr: "The way forward is asked from those who have walked it before." },
+  { q: "Learning one new word a day is 365 words a year. Keep going.", by: "" },
+  { q: "Inkunzi isematholeni.", by: "Zulu proverb", tr: "The future bull is among today's calves — greatness starts small." },
+  { q: "The best time to plant a tree was 20 years ago. The second best time is now.", by: "Proverb" },
+  { q: "Akukho qili lazikhotha emhlane.", by: "Zulu proverb", tr: "No one is clever enough to lick their own back — nobody succeeds alone." },
+  { q: "Education is the most powerful weapon which you can use to change the world.", by: "Nelson Mandela" },
+  { q: "Injobo enhle ithungelwa ebandla.", by: "Zulu proverb", tr: "A fine garment is sewn in company — good things are built together." },
+  { q: "You don't have to be great to start, but you have to start to be great.", by: "Zig Ziglar" },
+  { q: "A river cuts through rock not because of its power, but because of its persistence.", by: "James Watkins" },
+  { q: "May your choices reflect your hopes, not your fears.", by: "Nelson Mandela" },
+  { q: "Every expert was once a beginner.", by: "" },
+  { q: "The secret of getting ahead is getting started.", by: "Mark Twain" },
+  { q: "Little by little, a little becomes a lot.", by: "Tanzanian proverb" },
+  { q: "If you want to go fast, go alone. If you want to go far, go together.", by: "African proverb" },
+  { q: "Fall seven times, stand up eight.", by: "Japanese proverb" },
+  { q: "Your streak doesn't care how you feel today — show up anyway.", by: "" },
+  { q: "Smooth seas do not make skilful sailors.", by: "African proverb" },
+  { q: "The sun does not forget a village just because it is small.", by: "African proverb" },
+  { q: "A winner is a dreamer who never gives up.", by: "Nelson Mandela" },
+  { q: "However long the night, the dawn will break.", by: "African proverb" },
+  { q: "Knowledge is like a garden: if it is not cultivated, it cannot be harvested.", by: "African proverb" },
+  { q: "Success is the sum of small efforts, repeated day in and day out.", by: "Robert Collier" },
+];
+function quoteOfTheDay(date) {
+  return QUOTES[dayNumber(date) % QUOTES.length];
+}
+
+// ---------------------------------------------------------------------------
 // Daily rotation — same pick for everyone on the same calendar day
 // ---------------------------------------------------------------------------
 function dayNumber(date) {

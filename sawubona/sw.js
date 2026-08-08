@@ -1,7 +1,7 @@
 // Sawubona service worker — caches the app shell so it opens instantly (and
 // offline), and shows the daily notification when the browser wakes us up via
 // periodic background sync. Bump VERSION when app files change.
-const VERSION = "sawubona-v1";
+const VERSION = "sawubona-v2";
 const SHELL = ["./", "./index.html", "./data.js", "./manifest.webmanifest",
                "./icon-192.png", "./icon-512.png"];
 
@@ -41,16 +41,15 @@ self.addEventListener("periodicsync", (e) => {
 
 async function showDailyBrief() {
   const zw = zuluWordOfTheDay();
-  const fact = techFactOfTheDay();
   let headline = "Tap for today's MTN news";
   try {
     const items = await fetchMtnNews(1);
     if (items[0]) headline = items[0].title;
-  } catch (e) { /* offline — still show word + fact */ }
+  } catch (e) { /* offline — still show word + quiz nudge */ }
   return self.registration.showNotification("Sawubona! ☀️ Your daily brief", {
     body: "📰 " + headline +
           "\n🗣️ " + zw.w + " — " + zw.m +
-          "\n💡 " + fact.t,
+          "\n🎮 Play today's word quiz — keep the streak!",
     icon: "icon-192.png",
     badge: "icon-192.png",
     tag: "sawubona-daily",

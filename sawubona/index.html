@@ -4,136 +4,273 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Sawubona — daily MTN, Zulu &amp; tech brief</title>
-<meta name="description" content="One friendly notification a day: MTN news, a Zulu word, and a tech fact explained in plain English.">
+<meta name="description" content="One friendly notification a day: MTN news, a Zulu word, a tech fact — plus a daily word game with your own leaderboard.">
 <meta name="theme-color" content="#ffcb05">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   :root{
-    --yellow:#ffcb05; --yellow-soft:#fff3c2; --ink:#141414; --paper:#faf7ef;
-    --card:#ffffff; --line:#eee5cc; --mut:#7a7263; --ok:#15803d; --bad:#b23b3b;
+    --yellow:#ffcb05; --yellow-soft:#fff3c2; --ink:#141414; --paper:#fffbeb;
+    --card:#ffffff; --line:#141414; --mut:#6f6a58; --ok:#059669; --ok-soft:#d9f2e8;
+    --bad:#dc2626; --bad-soft:#fde8e8; --shadow:4px 4px 0 rgba(20,20,20,.9);
+    --disp:'Fredoka','Nunito','Segoe UI',Helvetica,Arial,sans-serif;
   }
-  body{background:var(--paper);color:var(--ink);font-family:'Segoe UI',Helvetica,Arial,sans-serif;
+  html{touch-action:manipulation}
+  body{background:var(--paper);color:var(--ink);
+       font-family:'Nunito','Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;
        padding-bottom:env(safe-area-inset-bottom)}
+  h1,h2,.disp{font-family:var(--disp)}
   #app{max-width:640px;margin:0 auto;padding:0 16px 56px}
+  button{font-family:inherit;cursor:pointer}
+  :focus-visible{outline:3px solid var(--ink);outline-offset:2px;border-radius:6px}
 
-  /* header */
-  .hero{background:var(--yellow);margin:0 -16px;padding:26px 20px 20px;
-        border-radius:0 0 26px 26px;box-shadow:0 6px 20px rgba(255,203,5,.35)}
-  .hero .hi{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.1}
-  .hero .sub{font-size:14px;font-weight:600;color:#5c4d00;margin-top:6px}
-  .hero .date{font-size:12px;color:#6b5b09;margin-top:2px}
+  /* ---------- hero ---------- */
+  .hero{background:var(--yellow);margin:0 -16px;padding:26px 20px 22px;
+        border-bottom:3px solid var(--ink);position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-40px;top:-40px;width:150px;height:150px;
+        border-radius:50%;border:14px solid rgba(20,20,20,.08)}
+  .hero .hi{font-family:var(--disp);font-size:32px;font-weight:700;letter-spacing:-.5px;line-height:1.05}
+  .hero .sub{font-size:14px;font-weight:800;color:#5c4d00;margin-top:6px}
+  .hero .date{font-size:12.5px;font-weight:700;color:#6b5b09;margin-top:2px}
+  .chips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--yellow);
+        font-size:12.5px;font-weight:800;border-radius:999px;padding:6px 12px}
+  .chip svg{width:14px;height:14px}
+  .chip.ghost{background:rgba(20,20,20,.08);color:var(--ink)}
 
-  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;
-        padding:18px 18px 16px;margin-top:16px;box-shadow:0 3px 14px rgba(0,0,0,.05)}
-  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);
-           display:flex;align-items:center;gap:8px;margin-bottom:12px}
-  .card h2 .em{font-size:18px}
+  /* ---------- cards ---------- */
+  .card{background:var(--card);border:2px solid var(--ink);border-radius:18px;
+        padding:18px;margin-top:18px;box-shadow:var(--shadow)}
+  .card h2{font-size:15px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
+           display:flex;align-items:center;gap:9px;margin-bottom:12px}
+  .card h2 svg{width:20px;height:20px;flex:none}
+  @media (prefers-reduced-motion:no-preference){
+    .card{animation:up .4s ease-out backwards}
+    .card:nth-of-type(2){animation-delay:.05s}.card:nth-of-type(3){animation-delay:.1s}
+    .card:nth-of-type(4){animation-delay:.15s}.card:nth-of-type(5){animation-delay:.2s}
+    @keyframes up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  }
 
-  /* news */
-  .news-item{padding:10px 0;border-bottom:1px dashed var(--line)}
-  .news-item:last-child{border-bottom:none}
-  .news-item a{color:var(--ink);text-decoration:none;font-weight:600;font-size:15px;line-height:1.35;display:block}
-  .news-item a:active{color:#8a7500}
-  .news-meta{font-size:11px;color:var(--mut);margin-top:3px}
-  .ai-brief{font-size:15px;line-height:1.55;white-space:pre-wrap}
+  /* ---------- buttons ---------- */
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+       border:2px solid var(--ink);border-radius:14px;padding:14px;font-size:16px;min-height:48px;
+       font-weight:800;background:var(--yellow);color:var(--ink);box-shadow:3px 3px 0 var(--ink);
+       transition:transform .15s ease,box-shadow .15s ease}
+  .btn svg{width:18px;height:18px}
+  .btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+  .btn:disabled{opacity:.45;pointer-events:none}
+  .btn.dark{background:var(--ink);color:var(--yellow);box-shadow:3px 3px 0 rgba(20,20,20,.35)}
+  .btn.ghost{background:var(--card);box-shadow:none}
+  .btn + .btn{margin-top:10px}
+
+  .note{font-size:13.5px;color:var(--mut);line-height:1.55;margin-top:10px;font-weight:600}
+  .note.ok{color:var(--ok)}
+  .txt{width:100%;padding:12px;font-size:16px;border:2px solid var(--ink);border-radius:12px;
+       margin-top:8px;font-family:inherit;background:var(--card)}
+  .refresh{background:none;border:none;color:var(--mut);font-size:12px;font-weight:700;
+           text-decoration:underline;margin-left:auto;min-height:44px;padding:0 4px}
+
+  /* ---------- quote strip ---------- */
+  .quote{background:var(--ink);color:#fff;border-radius:18px;border:2px solid var(--ink);
+         box-shadow:var(--shadow);margin-top:18px;padding:18px 18px 14px;position:relative}
+  .quote .qmark{position:absolute;top:8px;right:14px;font-family:var(--disp);font-size:52px;
+                color:var(--yellow);opacity:.9;line-height:1}
+  .quote .qt{font-size:16.5px;font-weight:700;line-height:1.45;padding-right:34px}
+  .quote .qtr{font-size:13.5px;color:#e8d98a;margin-top:6px;line-height:1.45;font-style:italic}
+  .quote .qby{font-size:12px;color:#bdb58f;font-weight:800;margin-top:8px;text-transform:uppercase;letter-spacing:1px}
+
+  /* ---------- news ---------- */
+  .news-item{padding:11px 0;border-bottom:2px dashed #efe6c8}
+  .news-item:last-child{border-bottom:none;padding-bottom:2px}
+  .news-item a{color:var(--ink);text-decoration:none;font-weight:700;font-size:15px;line-height:1.4;display:block}
+  .news-meta{font-size:11.5px;color:var(--mut);margin-top:3px;font-weight:700}
+  .ai-brief{font-size:15px;line-height:1.55;white-space:pre-wrap;font-weight:600}
   .ai-tag{display:inline-block;background:var(--ink);color:var(--yellow);font-size:10px;font-weight:800;
-          letter-spacing:1px;border-radius:999px;padding:3px 10px;margin-bottom:10px}
-  .spin{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:14px;padding:8px 0}
-  .spin::before{content:"";width:16px;height:16px;border:3px solid var(--yellow);
-                border-top-color:transparent;border-radius:50%;animation:rot 1s linear infinite}
+          letter-spacing:1px;border-radius:999px;padding:4px 10px;margin-bottom:10px}
+  .spin{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:14px;padding:8px 0;font-weight:700}
+  .spin::before{content:"";width:16px;height:16px;flex:none;border:3px solid var(--yellow);
+                border-top-color:var(--ink);border-radius:50%;animation:rot 1s linear infinite}
   @keyframes rot{to{transform:rotate(360deg)}}
-  .err{color:var(--bad);font-size:13px;line-height:1.5}
+  @media (prefers-reduced-motion:reduce){.spin::before{animation:none}}
+  .err{color:var(--bad);font-size:13.5px;line-height:1.5;font-weight:700}
 
-  /* zulu word */
-  .zw{font-size:32px;font-weight:800;color:#8a6d00;letter-spacing:-.5px}
-  .zw-say{font-size:13px;color:var(--mut);margin-top:2px;font-style:italic}
-  .zw-mean{font-size:16px;margin-top:10px;line-height:1.45}
-  .zw-eg{margin-top:10px;background:var(--yellow-soft);border-radius:12px;padding:10px 14px;
-         font-size:14px;line-height:1.5}
+  /* ---------- zulu word ---------- */
+  .zw{font-family:var(--disp);font-size:34px;font-weight:700;color:#a37f00;letter-spacing:-.5px}
+  .zw-say{font-size:13.5px;color:var(--mut);margin-top:2px;font-style:italic;font-weight:600}
+  .zw-mean{font-size:16px;margin-top:10px;line-height:1.45;font-weight:700}
+  .zw-eg{margin-top:12px;background:var(--yellow-soft);border:2px solid #eeda8a;border-radius:12px;
+         padding:10px 14px;font-size:14px;line-height:1.5;font-weight:600}
   .zw-eg b{color:#7a6000}
 
-  /* fact */
-  .fact-t{font-size:18px;font-weight:800;margin-bottom:8px}
-  .fact-f{font-size:15px;line-height:1.6;color:#333}
+  .fact-t{font-family:var(--disp);font-size:20px;font-weight:600;margin-bottom:8px}
+  .fact-f{font-size:15px;line-height:1.62;color:#3c3a30;font-weight:600}
 
-  /* buttons + settings */
-  .btn{display:block;width:100%;border:none;border-radius:14px;padding:14px;font-size:16px;
-       font-weight:800;cursor:pointer;background:var(--ink);color:var(--yellow);margin-top:10px}
-  .btn:disabled{opacity:.45}
-  .btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--ink)}
-  .note{font-size:13px;color:var(--mut);line-height:1.55;margin-top:10px}
-  .note.ok{color:var(--ok);font-weight:700}
-  .txt{width:100%;padding:12px;font-size:15px;border:2px solid var(--line);border-radius:12px;margin-top:8px}
-  details summary{cursor:pointer;font-weight:700;font-size:14px;color:var(--mut);list-style:none;padding:4px 0}
-  details summary::before{content:"▸ "}
-  details[open] summary::before{content:"▾ "}
-  .foot{text-align:center;font-size:12px;color:var(--mut);margin-top:26px;line-height:1.7}
-  .refresh{background:none;border:none;color:var(--mut);font-size:12px;text-decoration:underline;
-           cursor:pointer;float:right}
+  /* ---------- quiz ---------- */
+  .quiz-start p{font-size:15px;font-weight:700;line-height:1.5;margin-bottom:4px}
+  .quiz-stats{display:flex;gap:8px;margin:12px 0 4px}
+  .qstat{flex:1;background:var(--paper);border:2px solid var(--ink);border-radius:14px;
+         padding:10px 6px;text-align:center}
+  .qstat b{display:block;font-family:var(--disp);font-size:24px;font-variant-numeric:tabular-nums}
+  .qstat span{font-size:10.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.8px}
+  .qstat svg{width:16px;height:16px;vertical-align:-2px}
+
+  .qbar{height:10px;background:var(--paper);border:2px solid var(--ink);border-radius:999px;
+        overflow:hidden;margin-bottom:14px}
+  .qbar>div{height:100%;background:var(--ok);transition:width .3s ease;min-width:4%}
+  .qtop{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .qround{font-size:12px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:1px}
+  .qscore{font-family:var(--disp);font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+  .qprompt{font-size:16px;font-weight:700;margin:6px 0 4px}
+  .qword{font-family:var(--disp);font-size:30px;font-weight:700;color:#a37f00;margin-bottom:2px}
+  .qsay{font-size:12.5px;color:var(--mut);font-style:italic;font-weight:600;margin-bottom:12px}
+  .opt{display:block;width:100%;text-align:left;background:var(--card);border:2px solid var(--ink);
+       border-radius:14px;padding:13px 14px;font-size:14.5px;font-weight:700;margin-bottom:9px;
+       min-height:48px;line-height:1.35;transition:transform .12s ease,background .15s ease;
+       box-shadow:3px 3px 0 rgba(20,20,20,.15)}
+  .opt:active{transform:translate(2px,2px);box-shadow:none}
+  .opt.correct{background:var(--ok-soft);border-color:var(--ok);color:#065f46;
+               box-shadow:3px 3px 0 var(--ok)}
+  .opt.wrong{background:var(--bad-soft);border-color:var(--bad);color:#7f1d1d;box-shadow:none}
+  .opt.dim{opacity:.45}
+  .opt:disabled{cursor:default}
+  .qfeed{min-height:26px;font-weight:800;font-size:15px;text-align:center;margin-top:2px}
+  .qfeed.good{color:var(--ok)}.qfeed.badf{color:var(--bad)}
+  @media (prefers-reduced-motion:no-preference){
+    .qfeed.good{animation:pop .35s ease}
+    @keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+    .shake{animation:shk .4s ease}
+    @keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+  }
+
+  .qend{text-align:center;padding:4px 0}
+  .qend .big{font-family:var(--disp);font-size:54px;font-weight:700;line-height:1;
+             font-variant-numeric:tabular-nums}
+  .qend .lab{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--mut)}
+  .qend .msg{font-size:16px;font-weight:800;margin:12px 0 2px}
+  .qend .sub2{font-size:13.5px;color:var(--mut);font-weight:600;margin-bottom:8px}
+  .qend .newbest{display:inline-block;background:var(--ok);color:#fff;font-size:12px;font-weight:800;
+                 border-radius:999px;padding:5px 14px;margin:6px 0;letter-spacing:.5px}
+
+  /* ---------- leaderboard ---------- */
+  .lrow{display:flex;align-items:center;gap:10px;border:2px solid var(--ink);border-radius:13px;
+        padding:10px 13px;margin-bottom:8px;font-weight:700;font-size:14.5px;background:var(--card)}
+  .lrow.top1{background:var(--yellow-soft);box-shadow:3px 3px 0 rgba(20,20,20,.4)}
+  .lrow .rk{font-family:var(--disp);font-size:16px;width:26px;flex:none;text-align:center}
+  .lrow .dt{color:var(--mut);font-size:12px;margin-left:auto;font-weight:700;white-space:nowrap}
+  .lrow .sc{font-family:var(--disp);font-size:18px;font-variant-numeric:tabular-nums;flex:none;width:44px;text-align:right}
+  .lrow .tdy{background:var(--ink);color:var(--yellow);font-size:9.5px;font-weight:800;border-radius:999px;
+             padding:3px 8px;letter-spacing:.5px}
+  .lempty{text-align:center;color:var(--mut);font-weight:700;font-size:14px;padding:14px 6px;line-height:1.6}
+
+  details summary{cursor:pointer;font-weight:800;font-size:14px;color:var(--mut);list-style:none;
+                  padding:6px 0;min-height:44px;display:flex;align-items:center;gap:8px}
+  details summary svg{width:18px;height:18px}
+  details summary::before{content:"▸";font-size:12px}
+  details[open] summary::before{content:"▾"}
+  .foot{text-align:center;font-size:12.5px;color:var(--mut);margin-top:28px;line-height:1.8;font-weight:700}
 </style>
 </head>
 <body>
 <div id="app">
 
   <div class="hero">
-    <div class="hi" id="greet">Sawubona! 👋</div>
+    <div class="hi" id="greet">Sawubona!</div>
     <div class="sub">Your daily MTN, Zulu &amp; tech brief</div>
     <div class="date" id="today"></div>
+    <div class="chips" id="heroChips"></div>
   </div>
 
+  <!-- daily boost -->
+  <div class="quote" id="quoteCard">
+    <div class="qmark">”</div>
+    <div class="qt" id="qText"></div>
+    <div class="qtr" id="qTr"></div>
+    <div class="qby" id="qBy"></div>
+  </div>
+
+  <!-- news -->
   <div class="card">
-    <h2><span class="em">📰</span> MTN today <button class="refresh" id="refreshBtn">refresh</button></h2>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6Z"/></svg>
+      MTN today <button class="refresh" id="refreshBtn">refresh</button></h2>
     <div id="news"><div class="spin">Fetching the latest MTN news…</div></div>
   </div>
 
+  <!-- word of the day -->
   <div class="card">
-    <h2><span class="em">🗣️</span> Zulu word of the day</h2>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+      Zulu word of the day</h2>
     <div class="zw" id="zw"></div>
     <div class="zw-say" id="zwSay"></div>
     <div class="zw-mean" id="zwMean"></div>
     <div class="zw-eg" id="zwEg"></div>
   </div>
 
+  <!-- quiz -->
+  <div class="card" id="quizCard">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg>
+      Dlala! — the word game</h2>
+    <div id="quizBody"></div>
+  </div>
+
+  <!-- leaderboard -->
+  <div class="card" id="lbCard">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+      Your leaderboard</h2>
+    <div id="lbBody"></div>
+  </div>
+
+  <!-- fact -->
   <div class="card">
-    <h2><span class="em">💡</span> Did you know?</h2>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5M9 18h6M10 22h4"/></svg>
+      Did you know?</h2>
     <div class="fact-t" id="factT"></div>
     <div class="fact-f" id="factF"></div>
   </div>
 
+  <!-- notifications -->
   <div class="card">
-    <h2><span class="em">🔔</span> Daily notification</h2>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      Daily notification</h2>
     <div class="note" id="notifStatus">Get one friendly notification a day with the brief.</div>
-    <button class="btn" id="notifBtn">Turn on daily notifications</button>
+    <button class="btn dark" id="notifBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      Turn on daily notifications</button>
   </div>
 
+  <!-- ai mode -->
   <div class="card">
     <details id="aiBox">
-      <summary>⚡ AI mode (optional)</summary>
+      <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> AI mode (optional)</summary>
       <div class="note">
         Paste an Anthropic API key and a real Claude AI agent will search the web each day and
         write your MTN summary for you (instead of plain headlines). The key is stored only on
         this device and calls are billed to your own Anthropic account.
       </div>
-      <input class="txt" id="aiKey" type="password" placeholder="sk-ant-…" autocomplete="off">
+      <input class="txt" id="aiKey" type="password" placeholder="sk-ant-…" autocomplete="off"
+             aria-label="Anthropic API key">
       <button class="btn" id="aiSave">Save key &amp; use AI mode</button>
       <button class="btn ghost" id="aiClear" style="display:none">Turn off AI mode</button>
       <div class="note" id="aiStatus"></div>
     </details>
   </div>
 
+  <!-- install -->
   <div class="card" id="installCard" style="display:none">
-    <h2><span class="em">📲</span> Put it on your home screen</h2>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+      Put it on your home screen</h2>
     <div class="note" id="installHow"></div>
     <button class="btn" id="installBtn" style="display:none">Install app</button>
   </div>
 
   <div class="foot">
-    Sawubona — “I see you.” ☀️<br>
+    Sawubona — “I see you.”<br>
     News via Google News · Built with Claude Code
   </div>
 </div>
@@ -141,45 +278,238 @@
 <script src="data.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// ---------- greetings + date ----------
-const GREETINGS = ["Sawubona! 👋", "Yebo yes! ☀️", "Molo-molo! 🌅", "Heita! ✨", "Sanibonani! 🙌"];
+// ---------- hero ----------
+const GREETINGS = ["Sawubona!", "Yebo yes!", "Heita!", "Sanibonani!", "Molo-molo!"];
 $("greet").textContent = GREETINGS[dayNumber() % GREETINGS.length];
 $("today").textContent = new Date().toLocaleDateString("en-ZA",
   { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
-// ---------- word + fact of the day ----------
-const zw = zuluWordOfTheDay();
-$("zw").textContent = zw.w;
-$("zwSay").textContent = "say it: " + zw.say;
-$("zwMean").textContent = zw.m;
-$("zwEg").innerHTML = "<b>Try it:</b> " + zw.eg;
+// ---------- daily boost ----------
+const Q = quoteOfTheDay();
+$("qText").textContent = "“" + Q.q + "”";
+$("qTr").textContent = Q.tr ? Q.tr : "";
+$("qTr").style.display = Q.tr ? "block" : "none";
+$("qBy").textContent = Q.by || "Daily boost";
 
+// ---------- word + fact ----------
+const zwToday = zuluWordOfTheDay();
+$("zw").textContent = zwToday.w;
+$("zwSay").textContent = "say it: " + zwToday.say;
+$("zwMean").textContent = zwToday.m;
+$("zwEg").innerHTML = "<b>Try it:</b> " + zwToday.eg;
 const fact = techFactOfTheDay();
 $("factT").textContent = fact.t;
 $("factF").textContent = fact.f;
+
+// ---------- score store ----------
+function loadScores() {
+  try { return JSON.parse(localStorage.getItem("sawubona-scores") || "[]"); }
+  catch (e) { return []; }
+}
+function saveScore(entry) {
+  const all = loadScores(); all.push(entry);
+  localStorage.setItem("sawubona-scores", JSON.stringify(all.slice(-200)));
+}
+function bestScore() { return loadScores().reduce((m, s) => Math.max(m, s.score), 0); }
+function dayStreak() {
+  const days = [...new Set(loadScores().map(s => s.d))].sort((a, b) => b - a);
+  if (!days.length) return 0;
+  const today = dayNumber();
+  if (days[0] !== today && days[0] !== today - 1) return 0;
+  let streak = 1;
+  for (let i = 1; i < days.length; i++) {
+    if (days[i] === days[i - 1] - 1) streak++; else break;
+  }
+  return streak;
+}
+
+const ICO = {
+  flame: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
+};
+
+function renderHeroChips() {
+  const st = dayStreak(), bs = bestScore();
+  $("heroChips").innerHTML =
+    (st ? '<span class="chip">' + ICO.flame + st + '-day streak</span>' : "") +
+    (bs ? '<span class="chip ghost">' + ICO.trophy + "best " + bs + "</span>" : "");
+}
+renderHeroChips();
+
+// ---------- quiz ----------
+const ROUNDS = 7, PTS = 10;
+let game = null;
+
+function shuffled(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildQuestions() {
+  const today = zuluWordOfTheDay();
+  const rest = shuffled(ZULU_WORDS.filter(z => z.w !== today.w)).slice(0, ROUNDS - 1);
+  return shuffled([today, ...rest]).map(word => {
+    const wrong = shuffled(ZULU_WORDS.filter(z => z.w !== word.w)).slice(0, 3).map(z => z.m);
+    return { word, options: shuffled([word.m, ...wrong]) };
+  });
+}
+
+function quizStart() {
+  const bs = bestScore(), games = loadScores().length, st = dayStreak();
+  $("quizBody").innerHTML =
+    '<div class="quiz-start">' +
+    '<p>7 rounds. Guess what each Zulu word means, build a combo, beat your own best score.</p>' +
+    '<div class="quiz-stats">' +
+      '<div class="qstat"><b>' + ICO.flame + " " + st + '</b><span>day streak</span></div>' +
+      '<div class="qstat"><b>' + ICO.trophy + " " + bs + '</b><span>best score</span></div>' +
+      '<div class="qstat"><b>' + ICO.target + " " + games + '</b><span>games</span></div>' +
+    "</div>" +
+    '<button class="btn" id="playBtn">' + ICO.play + (games ? "Play today's round" : "Play your first game") + "</button>" +
+    "</div>";
+  $("playBtn").onclick = () => {
+    game = { qs: buildQuestions(), i: 0, score: 0, correct: 0, combo: 0 };
+    quizRound();
+  };
+}
+
+function quizRound() {
+  const q = game.qs[game.i];
+  const pct = Math.round((game.i / ROUNDS) * 100);
+  $("quizBody").innerHTML =
+    '<div class="qbar"><div style="width:' + Math.max(pct, 4) + '%"></div></div>' +
+    '<div class="qtop"><span class="qround">Round ' + (game.i + 1) + " / " + ROUNDS + "</span>" +
+    '<span class="qscore">' + game.score + " pts</span></div>" +
+    '<div class="qprompt">What does this mean?</div>' +
+    '<div class="qword">' + q.word.w + "</div>" +
+    '<div class="qsay">' + q.word.say + "</div>" +
+    '<div id="opts"></div>' +
+    '<div class="qfeed" id="qfeed" aria-live="polite"></div>';
+  const box = $("opts");
+  q.options.forEach((opt) => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.textContent = opt;
+    b.onclick = () => answer(b, opt === q.word.m, q);
+    box.appendChild(b);
+  });
+}
+
+function answer(btn, right, q) {
+  document.querySelectorAll(".opt").forEach(b => {
+    b.disabled = true;
+    if (b.textContent === q.word.m) b.classList.add("correct");
+    else if (b !== btn) b.classList.add("dim");
+  });
+  const feed = $("qfeed");
+  if (right) {
+    game.combo++;
+    const bonus = (game.combo - 1) * 2;
+    game.score += PTS + bonus; game.correct++;
+    feed.className = "qfeed good";
+    feed.textContent = "+" + (PTS + bonus) + (game.combo > 1 ? "  (combo ×" + game.combo + "!)" : "  Yebo!");
+  } else {
+    btn.classList.add("wrong");
+    if (!reduceMotion) btn.classList.add("shake");
+    game.combo = 0;
+    feed.className = "qfeed badf";
+    feed.textContent = "Eish! It means: " + q.word.m;
+  }
+  setTimeout(() => {
+    game.i++;
+    game.i < ROUNDS ? quizRound() : quizEnd();
+  }, right ? 1000 : 1900);
+}
+
+function quizEnd() {
+  const prevBest = bestScore();
+  const isBest = game.score > prevBest && prevBest > 0;
+  saveScore({
+    t: Date.now(), d: dayNumber(), score: game.score,
+    correct: game.correct, total: ROUNDS,
+    date: new Date().toLocaleDateString("en-ZA", { day: "numeric", month: "short" }),
+  });
+  const pc = game.correct / ROUNDS;
+  const msg = pc === 1 ? "Uyingcweti! You're a master!" :
+              pc >= 0.7 ? "Kuhle kakhulu — very good!" :
+              pc >= 0.4 ? "Not bad! Kancane kancane — little by little." :
+              "Good try! Tomorrow's word will help you.";
+  const q2 = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  $("quizBody").innerHTML =
+    '<div class="qend">' +
+    '<div class="lab">Your score</div>' +
+    '<div class="big">' + game.score + "</div>" +
+    '<div class="sub2">' + game.correct + " of " + ROUNDS + " correct</div>" +
+    (isBest ? '<div class="newbest">NEW PERSONAL BEST!</div>' : "") +
+    '<div class="msg">' + msg + "</div>" +
+    '<div class="sub2">“' + q2.q + "”" + (q2.tr ? " — " + q2.tr : "") + "</div>" +
+    '<button class="btn" id="againBtn">' + ICO.play + "Play again</button>" +
+    '<button class="btn ghost" id="lbBtn">' + ICO.trophy + "See your leaderboard</button>" +
+    "</div>";
+  $("againBtn").onclick = () => {
+    game = { qs: buildQuestions(), i: 0, score: 0, correct: 0, combo: 0 };
+    quizRound();
+  };
+  $("lbBtn").onclick = () => {
+    renderLeaderboard();
+    $("lbCard").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+  };
+  renderLeaderboard();
+  renderHeroChips();
+}
+
+// ---------- leaderboard ----------
+function renderLeaderboard() {
+  const scores = loadScores();
+  const body = $("lbBody");
+  if (!scores.length) {
+    body.innerHTML = '<div class="lempty">No games yet — play Dlala! above and your scores will race each other right here. You vs you.</div>';
+    return;
+  }
+  const top = scores.slice().sort((a, b) => b.score - a.score || b.t - a.t).slice(0, 8);
+  const today = dayNumber();
+  const medals = ["1st", "2nd", "3rd"];
+  body.innerHTML =
+    '<div class="quiz-stats" style="margin-top:0">' +
+      '<div class="qstat"><b>' + ICO.flame + " " + dayStreak() + '</b><span>day streak</span></div>' +
+      '<div class="qstat"><b>' + ICO.trophy + " " + bestScore() + '</b><span>best score</span></div>' +
+      '<div class="qstat"><b>' + ICO.target + " " + scores.length + '</b><span>games played</span></div>' +
+    "</div>" +
+    top.map((s, i) =>
+      '<div class="lrow' + (i === 0 ? " top1" : "") + '">' +
+      '<span class="rk">' + (medals[i] || (i + 1)) + "</span>" +
+      "<span>" + s.correct + "/" + s.total + " correct</span>" +
+      (s.d === today ? '<span class="tdy">TODAY</span>' : "") +
+      '<span class="dt">' + (s.date || "") + "</span>" +
+      '<span class="sc">' + s.score + "</span>" +
+      "</div>").join("");
+}
+quizStart();
+renderLeaderboard();
 
 // ---------- news ----------
 async function loadNews() {
   const box = $("news");
   box.innerHTML = '<div class="spin">Fetching the latest MTN news…</div>';
   const key = localStorage.getItem("sawubona-ai-key");
-
   if (key) {
     try {
       box.innerHTML = '<div class="spin">Asking Claude to search the web…</div>';
       const brief = await fetchAiBrief(key);
-      box.innerHTML = '<span class="ai-tag">✦ WRITTEN BY CLAUDE</span>' +
-        '<div class="ai-brief"></div>';
+      box.innerHTML = '<span class="ai-tag">✦ WRITTEN BY CLAUDE</span><div class="ai-brief"></div>';
       box.querySelector(".ai-brief").textContent = brief;
       return;
     } catch (e) {
-      box.innerHTML = '<div class="err">AI mode hit a snag (' + e.message +
-        '). Falling back to headlines…</div>';
+      box.innerHTML = '<div class="err">AI mode hit a snag (' + e.message + '). Falling back to headlines…</div>';
       await new Promise(r => setTimeout(r, 900));
     }
   }
-
   try {
     const items = await fetchMtnNews(6);
     box.innerHTML = "";
@@ -197,17 +527,16 @@ async function loadNews() {
       box.appendChild(div);
     }
   } catch (e) {
-    box.innerHTML = '<div class="err">Couldn\'t fetch the news right now — check your ' +
-      'connection and tap refresh. (' + e.message + ')</div>';
+    box.innerHTML = '<div class="err">Couldn\'t fetch the news right now — check your connection and tap refresh.</div>';
   }
 }
 $("refreshBtn").onclick = loadNews;
 loadNews();
 
-// ---------- AI mode settings ----------
+// ---------- AI mode ----------
 function refreshAiUi() {
   const key = localStorage.getItem("sawubona-ai-key");
-  $("aiClear").style.display = key ? "block" : "none";
+  $("aiClear").style.display = key ? "flex" : "none";
   $("aiSave").textContent = key ? "Update key" : "Save key & use AI mode";
   $("aiStatus").textContent = key ? "AI mode is ON — Claude writes your daily summary." : "";
   $("aiStatus").className = key ? "note ok" : "note";
@@ -225,17 +554,15 @@ $("aiClear").onclick = () => {
 };
 refreshAiUi();
 
-// ---------- service worker + daily notifications ----------
+// ---------- service worker + notifications ----------
 let swReg = null;
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").then(r => { swReg = r; updateNotifUi(); });
 }
-
 function notifState() {
   if (!("Notification" in window)) return "unsupported";
-  return Notification.permission; // default | granted | denied
+  return Notification.permission;
 }
-
 async function updateNotifUi() {
   const st = notifState();
   const btn = $("notifBtn"), note = $("notifStatus");
@@ -258,47 +585,36 @@ async function updateNotifUi() {
       : "✓ Notifications are on. Your phone decides the exact timing — opening the app now and then keeps them coming reliably.";
     return;
   }
-  btn.style.display = "block";
+  btn.style.display = "flex";
   note.className = "note";
-  note.textContent = "Get one friendly notification a day with MTN news, your Zulu word and a tech fact.";
+  note.textContent = "Get one friendly notification a day with MTN news, your Zulu word, a tech fact and a nudge to keep your quiz streak alive.";
 }
-
 $("notifBtn").onclick = async () => {
   const perm = await Notification.requestPermission();
   if (perm !== "granted") { updateNotifUi(); return; }
   localStorage.setItem("sawubona-notif", "on");
-
-  // Ask the browser to wake our service worker roughly daily (Android/Chrome).
   try {
     if (swReg && "periodicSync" in swReg) {
       await swReg.periodicSync.register("daily-brief", { minInterval: 20 * 60 * 60 * 1000 });
     }
-  } catch (e) { /* not critical — fallback below still works */ }
-
-  // Give instant feedback with today's brief.
+  } catch (e) { /* fallback below still works */ }
   showTodayNotification();
   updateNotifUi();
 };
-
 async function showTodayNotification() {
   if (notifState() !== "granted" || !swReg) return;
-  const zwToday = zuluWordOfTheDay();
   let headline = "Tap for today's MTN news";
   try { const items = await fetchMtnNews(1); if (items[0]) headline = items[0].title; } catch (e) {}
   swReg.showNotification("Sawubona! ☀️ Your daily brief", {
-    body: "📰 " + headline + "\n🗣️ " + zwToday.w + " — " + zwToday.m,
+    body: "📰 " + headline + "\n🗣️ " + zwToday.w + " — " + zwToday.m + "\n🎮 Play today's word quiz — keep the streak!",
     icon: "icon-192.png", badge: "icon-192.png", tag: "sawubona-daily",
   });
 }
-
-// Fallback for phones without periodic background sync (e.g. iPhone):
-// when the app opens on a new day with notifications on, show the day's brief once.
 (function dailyFallback() {
   if (localStorage.getItem("sawubona-notif") !== "on") return;
   const today = String(dayNumber());
   if (localStorage.getItem("sawubona-last-shown") === today) return;
   localStorage.setItem("sawubona-last-shown", today);
-  // slight delay so the sw is registered
   setTimeout(showTodayNotification, 2500);
 })();
 
@@ -314,7 +630,7 @@ if (!isStandalone) {
     : "In Chrome: tap the ⋮ menu and choose “Add to Home screen” (or “Install app”). It'll appear as an app with its own icon.";
   window.addEventListener("beforeinstallprompt", (e) => {
     e.preventDefault(); deferredPrompt = e;
-    $("installBtn").style.display = "block";
+    $("installBtn").style.display = "flex";
   });
   $("installBtn").onclick = async () => {
     if (!deferredPrompt) return;
