@@ -19,4 +19,9 @@ window.SLIPSTREAM_CONFIG = {
   APP_NAME: "SlipStream",
   TAGLINE: "Petrol slip tracker",
   CURRENCY: "R",
+
+  // DEMO MODE ONLY: the code that unlocks the admin view on this
+  // phone. In team mode the admin code is set in Supabase instead
+  // (see supabase-schema.sql) so it can't be read from this file.
+  ADMIN_CODE: "2468",
 };

@@ -39,10 +39,11 @@ petrol slips will ever use.
    need it day-to-day). Region: choose the closest (e.g. *West EU* or
    *Central EU* work fine from South Africa).
 2. In the left sidebar open **SQL Editor**, paste the entire contents
-   of `supabase-schema.sql` (in this folder), and click **Run**. That
-   creates the fill-ups table, the photo storage bucket, and the
-   security rules (everyone can *see* all entries, but only edit their
-   own).
+   of `supabase-schema.sql` (in this folder), **change the admin code
+   on the line marked `CHANGE ME`**, and click **Run**. That creates
+   the fill-ups table, the photo storage bucket, and the security
+   rules: each person can only see their *own* entries; admins (see
+   below) can see everyone's.
 3. In **Authentication → Sign In / Up → Email**, turn **off** "Confirm
    email" so the team can sign in immediately after registering
    (otherwise each person must click a confirmation email first —
@@ -59,7 +60,29 @@ account"**, and enters their name, email and a password. If you want to
 lock it down after everyone has registered, flip **Authentication →
 Sign In / Up → "Allow new users to sign up"** off in Supabase.
 
-## 4. Getting the data into Excel
+## 4. How admin access works
+
+Normal users only ever see **their own** slips — that's enforced by
+the database itself, not just hidden in the app.
+
+To become an admin, tap the **🔒 Admin** chip in the app and enter the
+admin code (the one you set in `supabase-schema.sql`). That unlocks:
+
+- **Everyone / Just me** toggle — browse the whole team's slips and
+  photos for any month
+- a **"Who used what"** panel — per person: number of slips, litres,
+  and Rand total for the selected month
+- Excel export of the whole team's data
+
+Give the code only to the one or two people who should have it. To
+change the code later, re-run the `admin_config` insert in Supabase
+with a new value. To revoke someone's admin access: **Table Editor →
+admins** → delete their row.
+
+In **demo mode** the admin code is the `ADMIN_CODE` value in
+`config.js` (default `2468`).
+
+## 5. Getting the data into Excel
 
 - **In the app:** the **⬇ Excel** button downloads whatever you're
   currently looking at (a month, or all time; everyone or just you) as
@@ -71,7 +94,7 @@ Sign In / Up → "Allow new users to sign up"** off in Supabase.
 The database is the "source of truth"; Excel is just an export
 whenever you need one — so nothing to keep in sync manually.
 
-## 5. Where the slip photos live
+## 6. Where the slip photos live
 
 Photos are compressed on the phone (to ~200–400 KB each) and uploaded
 to the private `slips` bucket in Supabase storage. Only signed-in team

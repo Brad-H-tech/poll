@@ -97,6 +97,13 @@ select.chip{appearance:none;padding-right:26px;background-image:url("data:image/
 .empty{padding:60px 20px;text-align:center;color:var(--mut);animation:rise .4s both}
 .empty .cond{font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink)}
 
+/* ---------- admin breakdown ---------- */
+.who-row{display:flex;align-items:baseline;gap:10px;padding:9px 14px;border-bottom:1px dashed var(--line);font-size:12.5px}
+.who-row:last-child{border-bottom:none}
+.who-name{font-family:'Barlow Condensed';font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:15px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who-meta{color:var(--mut);white-space:nowrap;font-variant-numeric:tabular-nums}
+.who-total{font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums;white-space:nowrap}
+
 /* ---------- FAB / actions ---------- */
 .fabbar{position:fixed;bottom:0;left:0;right:0;z-index:25;padding:10px 16px calc(12px + env(safe-area-inset-bottom));
   background:linear-gradient(transparent,rgba(16,18,20,.9) 40%);display:flex;gap:10px;max-width:560px;margin:0 auto}
@@ -235,21 +242,31 @@ select.chip{appearance:none;padding-right:26px;background-image:url("data:image/
     </div>
 
     <div class="filters">
-      <button class="chip on" id="chipAll">Everyone</button>
-      <button class="chip" id="chipMine">Just me</button>
+      <button class="chip hide" id="chipAll">Everyone</button>
+      <button class="chip hide" id="chipMine">Just me</button>
+      <button class="chip" id="chipAdmin">🔒 Admin</button>
       <select class="chip" id="selMonth"></select>
+    </div>
+
+    <div class="readout hide" id="whoPanel" style="animation:none">
+      <div class="readout-top">
+        <span class="lbl">Who used what</span>
+        <span class="lbl" id="whoMonth"></span>
+      </div>
+      <div id="whoRows"></div>
     </div>
 
     <div class="feed" id="feed"></div>
     <div class="empty hide" id="emptyState">
       <div class="cond">No fill-ups yet</div>
-      <p style="margin-top:8px;font-size:12px">Tap “Log a fill-up”, snap your till slip,<br>and it lands here for the whole team.</p>
+      <p style="margin-top:8px;font-size:12px">Tap “📷 Snap slip”, photograph your till slip,<br>hit Save — boom, sorted.</p>
     </div>
   </div>
 
   <div class="fabbar">
     <button class="btn btn-ghost" id="btnExport">⬇ Excel</button>
-    <button class="btn btn-amber" id="btnAdd">＋ Log a fill-up</button>
+    <button class="btn btn-amber" id="btnAdd">📷 Snap slip</button>
+    <button class="btn btn-ghost" id="btnManual" title="Log without a photo">✎</button>
   </div>
 </div>
 
@@ -259,7 +276,7 @@ select.chip{appearance:none;padding-right:26px;background-image:url("data:image/
   <div class="sheet-in">
     <div class="grab"></div>
     <h2>Log a fill-up</h2>
-    <div class="sub">Snap the slip — we’ll keep the original safe.</div>
+    <div class="sub">Photo attached? Then just hit Save — everything else is optional.</div>
 
     <div class="field">
       <label>Petrol slip photo</label>
@@ -335,6 +352,24 @@ select.chip{appearance:none;padding-right:26px;background-image:url("data:image/
   </div>
 </div>
 
+<!-- ============ ADMIN SHEET ============ -->
+<div class="sheet" id="adminSheet">
+  <div class="sheet-in">
+    <div class="grab"></div>
+    <h2>Admin access</h2>
+    <div class="sub">Enter the admin code to see the whole team’s slips and who has used how much.</div>
+    <div class="field">
+      <label>Admin code</label>
+      <input id="inAdminCode" type="password" autocomplete="off" placeholder="••••••••">
+    </div>
+    <div class="err" id="adminErr"></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-ghost" id="btnAdminCancel">Cancel</button>
+      <button class="btn btn-amber" style="flex:1" id="btnAdminGo">Unlock</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -348,7 +383,7 @@ const fmtR = n => (Math.round(n*100)/100).toLocaleString("en-ZA",{minimumFractio
 const todayISO = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
 const monthKey = iso => iso.slice(0,7);
 const monthLabel = k => new Date(k+"-15").toLocaleDateString("en-ZA",{month:"long",year:"numeric"});
-let sb=null, me=null, fills=[], filterMine=false, filterMonth="", detailFill=null, photoBlob=null;
+let sb=null, me=null, fills=[], isAdmin=false, filterMine=true, filterMonth="", detailFill=null, photoBlob=null;
 
 document.title = (CFG.APP_NAME||"SlipStream")+" — "+(CFG.TAGLINE||"Petrol slip tracker");
 $("authTag").textContent = $("hdTag").textContent = CFG.TAGLINE||"Petrol slip tracker";
@@ -415,12 +450,35 @@ const DB = {
   },
   async list(){
     if(TEAM){
+      // Row-level security already limits this to your own rows —
+      // or everything, once you've unlocked admin with the code.
       const {data,error} = await sb.from("fillups").select("*").order("fill_date",{ascending:false}).order("created_at",{ascending:false});
       if(error) throw error;
       return data;
     }
-    const rows = JSON.parse(localStorage.getItem(LS_FILLS)||"[]");
+    let rows = JSON.parse(localStorage.getItem(LS_FILLS)||"[]");
+    if(!isAdmin) rows = rows.filter(r=>r.user_id===me.id);
     return rows.sort((a,b)=> b.fill_date.localeCompare(a.fill_date) || (b.created_at||"").localeCompare(a.created_at||""));
+  },
+  async checkAdmin(){
+    if(TEAM){
+      const {data,error} = await sb.rpc("is_admin");
+      return !error && data === true;
+    }
+    return me?.admin === true;
+  },
+  async claimAdmin(code){
+    if(TEAM){
+      const {data,error} = await sb.rpc("claim_admin",{claim_code:code});
+      if(error) throw new Error(error.message);
+      return data === true;
+    }
+    if(code === String(CFG.ADMIN_CODE||"2468")){
+      me.admin = true;
+      localStorage.setItem(LS_SESSION, JSON.stringify(me));
+      return true;
+    }
+    return false;
   },
   async add(f, blob){
     const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())+Math.random().toString(16).slice(2));
@@ -495,7 +553,17 @@ async function enterApp(){
   $("authScreen").classList.add("hide");
   $("appScreen").classList.remove("hide");
   $("avatar").textContent = (me.name||"?").trim().slice(0,1).toUpperCase();
+  isAdmin = await DB.checkAdmin();
+  filterMine = !isAdmin;
+  applyAdminUI();
   await refresh();
+}
+function applyAdminUI(){
+  $("chipAll").classList.toggle("hide", !isAdmin);
+  $("chipMine").classList.toggle("hide", !isAdmin);
+  $("chipAdmin").classList.toggle("hide", isAdmin);
+  $("chipAll").classList.toggle("on", !filterMine);
+  $("chipMine").classList.toggle("on", filterMine);
 }
 async function refresh(){
   try{ fills = await DB.list(); }
@@ -521,6 +589,25 @@ function render(){
   $("statAvg").textContent = litres>0 ? CUR+(total/litres).toFixed(2) : "—";
   $("statScope").textContent = (filterMonth==="all"?"All time":monthLabel(filterMonth))+" · "+(filterMine?"Just me":"Everyone");
 
+  // admin "who used what" breakdown
+  const showWho = isAdmin && !filterMine && v.length>0;
+  $("whoPanel").classList.toggle("hide", !showWho);
+  if(showWho){
+    $("whoMonth").textContent = filterMonth==="all"?"All time":monthLabel(filterMonth);
+    const by = {};
+    v.forEach(f=>{
+      const k = f.user_id;
+      by[k] = by[k] || {name:f.display_name||"—", fills:0, litres:0, total:0};
+      by[k].fills++; by[k].litres += +f.litres||0; by[k].total += +f.rand_total||0;
+    });
+    $("whoRows").innerHTML = Object.values(by).sort((a,b)=>b.total-a.total).map(p=>`
+      <div class="who-row">
+        <span class="who-name">${esc(p.name)}</span>
+        <span class="who-meta">${p.fills} slip${p.fills===1?"":"s"} · ${p.litres.toFixed(1)} L</span>
+        <span class="who-total">${CUR} ${fmtR(p.total)}</span>
+      </div>`).join("");
+  }
+
   const feed=$("feed");
   feed.innerHTML="";
   $("emptyState").classList.toggle("hide", v.length>0);
@@ -538,8 +625,8 @@ function render(){
         ${f.slip_path?`<img class="thumb" data-id="${f.id}" alt="slip">`:`<div class="thumb none">no slip photo</div>`}
         <div class="slip-lines">
           <div class="slip-row"><span class="slip-station">${esc(f.station||"")}${f.vehicle?(f.station?" · ":"")+esc(f.vehicle):""}</span></div>
-          <div class="slip-row"><span class="k">${(+f.litres||0).toFixed(2)} L${ppl?` @ ${CUR}${ppl}`:""}</span>
-            <span class="v slip-total">${CUR} ${fmtR(+f.rand_total||0)}</span></div>
+          <div class="slip-row"><span class="k">${f.litres>0?(+f.litres).toFixed(2)+" L":"—"}${ppl?` @ ${CUR}${ppl}`:""}</span>
+            <span class="v slip-total">${f.rand_total>0?CUR+" "+fmtR(+f.rand_total):"see slip"}</span></div>
         </div>
       </div>`;
     card.onclick=()=>openDetail(f);
@@ -552,25 +639,46 @@ function render(){
 const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmtDate = iso => new Date(iso+"T12:00").toLocaleDateString("en-ZA",{day:"numeric",month:"short",year:"numeric"});
 
-$("chipAll").onclick=()=>{ filterMine=false; $("chipAll").classList.add("on"); $("chipMine").classList.remove("on"); render(); };
-$("chipMine").onclick=()=>{ filterMine=true; $("chipMine").classList.add("on"); $("chipAll").classList.remove("on"); render(); };
+$("chipAll").onclick=()=>{ filterMine=false; applyAdminUI(); render(); };
+$("chipMine").onclick=()=>{ filterMine=true; applyAdminUI(); render(); };
+
+/* ================= admin unlock ================= */
+$("chipAdmin").onclick=()=>{ $("inAdminCode").value=""; $("adminErr").textContent=""; openSheet("adminSheet"); setTimeout(()=>$("inAdminCode").focus(),350); };
+$("btnAdminCancel").onclick=closeSheets;
+$("btnAdminGo").onclick=async()=>{
+  $("adminErr").textContent="";
+  const b=$("btnAdminGo"); b.disabled=true; b.innerHTML='<span class="spin"></span>';
+  try{
+    const ok = await DB.claimAdmin($("inAdminCode").value.trim());
+    if(ok){
+      isAdmin=true; filterMine=false; applyAdminUI(); closeSheets();
+      toast("Admin unlocked — you can now see the whole team");
+      await refresh();
+    } else $("adminErr").textContent="Wrong code.";
+  }catch(err){ $("adminErr").textContent = err.message||String(err); }
+  b.disabled=false; b.textContent="Unlock";
+};
+$("inAdminCode").addEventListener("keydown",e=>{ if(e.key==="Enter") $("btnAdminGo").click(); });
 $("selMonth").onchange=e=>{ filterMonth=e.target.value; render(); };
 $("btnLogout").onclick=async()=>{ await DB.signOut(); location.reload(); };
 
 /* ================= add sheet ================= */
 function openSheet(id){ $("veil").classList.add("open"); $(id).classList.add("open"); }
-function closeSheets(){ $("veil").classList.remove("open"); $("addSheet").classList.remove("open"); $("detailSheet").classList.remove("open"); }
+function closeSheets(){ $("veil").classList.remove("open"); ["addSheet","detailSheet","adminSheet"].forEach(id=>$(id).classList.remove("open")); }
 $("veil").onclick=closeSheets;
 $("btnCancel").onclick=closeSheets;
 $("btnDetailClose").onclick=closeSheets;
 
-$("btnAdd").onclick=()=>{
+function resetForm(){
   photoBlob=null;
   $("photoPrev").classList.add("hide"); $("photoBtns").classList.remove("hide");
   ["inOdo","inTotal","inLitres","inStation","inVehicle","inNotes"].forEach(i=>$(i).value="");
   $("inDate").value=todayISO(); $("addErr").textContent=""; $("calcHint").textContent="";
-  openSheet("addSheet");
-};
+}
+// The big button goes straight to the camera: snap the slip and the
+// form opens with the photo already attached — just hit Save.
+$("btnAdd").onclick=()=>{ resetForm(); $("fileSnap").click(); };
+$("btnManual").onclick=()=>{ resetForm(); openSheet("addSheet"); };
 $("btnSnap").onclick=()=>$("fileSnap").click();
 $("btnPick").onclick=()=>$("filePick").click();
 $("fileSnap").onchange = $("filePick").onchange = async e => {
@@ -580,6 +688,7 @@ $("fileSnap").onchange = $("filePick").onchange = async e => {
     photoBlob = await compress(file);
     $("prevImg").src = URL.createObjectURL(photoBlob);
     $("photoPrev").classList.remove("hide"); $("photoBtns").classList.add("hide");
+    if(!$("addSheet").classList.contains("open")) openSheet("addSheet");
   }catch(err){ toast("Couldn’t read that photo",true); }
 };
 $("btnPhotoX").onclick=()=>{ photoBlob=null; $("photoPrev").classList.add("hide"); $("photoBtns").classList.remove("hide"); };
@@ -605,12 +714,12 @@ $("btnSave").onclick = async () => {
   const total=parseFloat($("inTotal").value), litres=parseFloat($("inLitres").value);
   $("addErr").textContent="";
   if(!$("inDate").value){ $("addErr").textContent="Pick a date."; return; }
-  if(!(total>0)){ $("addErr").textContent="Enter the total amount paid."; return; }
+  if(!photoBlob && !(total>0)){ $("addErr").textContent="Snap the slip, or enter the amount paid."; return; }
   const b=$("btnSave"); b.disabled=true; b.innerHTML='<span class="spin"></span> Saving…';
   try{
     await DB.add({
       fill_date:$("inDate").value,
-      rand_total:total,
+      rand_total: total>0?total:0,
       litres: litres>0?litres:0,
       odometer: $("inOdo").value?parseInt($("inOdo").value,10):null,
       station: $("inStation").value.trim()||null,
@@ -630,8 +739,8 @@ async function openDetail(f){
   $("dName").textContent=f.display_name||"—";
   $("dDate").textContent=fmtDate(f.fill_date);
   const rows=[
-    ["Total paid", CUR+" "+fmtR(+f.rand_total||0)],
-    ["Litres", (+f.litres||0).toFixed(2)+" L"],
+    ["Total paid", f.rand_total>0?CUR+" "+fmtR(+f.rand_total):"— (on the slip)"],
+    ["Litres", f.litres>0?(+f.litres).toFixed(2)+" L":"— (on the slip)"],
     ["Price per litre", f.litres>0?CUR+" "+(f.rand_total/f.litres).toFixed(2):"—"],
     ["Odometer", f.odometer?f.odometer.toLocaleString("en-ZA")+" km":"—"],
     ["Station", f.station||"—"],
