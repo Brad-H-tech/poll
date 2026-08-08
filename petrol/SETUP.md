@@ -10,66 +10,101 @@ and can export it all to Excel.
 
 # Quick start — the whole thing, in order
 
-There are two separate jobs: **putting the app online** (free, GitHub)
-and **switching on the shared database** (free, Supabase). Do them in
-this order and it takes about 15 minutes.
+Do this bit **on a laptop** — it's much easier than on a phone. You
+only need the phone right at the end. About 15 minutes, all free.
 
-## Part 1 · Put the app online (once)
+Nothing here needs any Git or coding knowledge. You are only clicking
+around two websites: GitHub (to put the app online) and Supabase (the
+shared database).
 
-1. **Merge the branch.** On GitHub, open the pull request for
-   `claude/petrol-expense-tracker-qzv6cv` and merge it into `main`.
-2. **Switch on GitHub Pages.** Repo → **Settings** → **Pages** →
-   Source: *Deploy from a branch* → Branch: **main** / **/ (root)** →
-   **Save**. Wait a minute.
-3. Your app is now live at:
+## Part 1 · Put the app online — GitHub, ~3 min
+
+1. Go to **github.com/Brad-H-tech/poll** and sign in.
+2. Click the **Settings** tab along the top of the page (gear icon,
+   far right of the row that starts with "Code").
+3. In the left-hand menu, scroll down and click **Pages**.
+4. Under **Build and deployment → Source**, choose
+   **Deploy from a branch**.
+5. Under **Branch**, open the first dropdown (it says *None* or
+   *main*) and choose **`claude/petrol-expense-tracker-qzv6cv`**.
+   Leave the second dropdown on **/ (root)**. Click **Save**.
+6. Wait a minute or two, then refresh. A green box appears saying
+   *"Your site is live at …"*.
+7. Your app is now at:
    **`https://brad-h-tech.github.io/poll/petrol/`**
 
-At this point it works, but it's in **demo mode** — everyone's data
-stays on their own phone. Part 2 fixes that.
+> No merging needed — that branch already contains everything on
+> `main`, so nothing on your existing site is affected.
 
-## Part 2 · Switch on the shared database (once)
+The app works now, but it's in **demo mode**: everyone's data stays on
+their own phone. Part 2 fixes that.
 
-4. **Create the project.** Go to [supabase.com](https://supabase.com)
-   → sign up (free, no credit card) → **New project**. Any name; pick
-   a strong database password (you won't need it day-to-day); region:
-   the closest one, e.g. *West EU (London)* or *Central EU*.
-5. **Run the setup script.** Open the app's **setup checker** on your
-   phone at `.../petrol/check.html`, type the admin code you want, and
-   tap **⧉ Copy setup SQL**. Then in Supabase: **SQL Editor** → paste →
-   **Run**. That creates the table, the photo storage, the admin
-   unlock, and all the security rules in one go.
-   *(Prefer doing it by hand? Copy `supabase-schema.sql` from this
-   folder and change the line marked `CHANGE ME` to your admin code.)*
-6. **Turn off email confirmation** so your team can sign in straight
-   away: **Authentication** → **Sign In / Up** → **Email** → switch
-   **Confirm email** off. (Leave it on if you'd rather everyone clicks
-   a confirmation email first — your call.)
-7. **Copy your two keys.** **Project Settings** → **API**:
-   - **Project URL** — looks like `https://abcdefgh.supabase.co`
-   - **anon / public** key — a long string. This one is *meant* to be
-     public; the security rules from step 5 are what protect the data.
-8. **Paste them into the app.** Edit `petrol/config.js` (you can do
-   this straight on GitHub: open the file → pencil icon → edit →
-   *Commit changes*), fill in `SUPABASE_URL` and `SUPABASE_ANON_KEY`,
-   and commit to `main`.
-9. **Check it worked.** Open `.../petrol/check.html` again and tap
-   **▶ Run the checks**. Every line should go green. If one goes red,
-   the fix is written next to it.
+## Part 2 · Create the database — Supabase, ~5 min
 
-## Part 3 · Get your team on it
+8. Go to **supabase.com** → **Start your project** → sign in
+   **with GitHub** (one click, no new password).
+9. Click **New project**.
+   - **Name:** SlipStream
+   - **Database Password:** click *Generate a password*. You won't
+     need it day-to-day, but save it somewhere just in case.
+   - **Region:** the closest — *West EU (London)* is good from SA.
+10. Click **Create new project** and wait ~2 minutes while it builds.
 
-10. Send everyone the link. Each person opens it, taps **"New here?
-    Create your account"**, and enters their name, email and a
-    password.
-11. Tell them to install it: **Android/Chrome** → ⋮ menu → *Add to
-    Home screen*. **iPhone/Safari** → Share button → *Add to Home
-    Screen*. They get the amber pump icon and it opens full-screen.
-12. Give the **admin code** only to yourself and the accountant. In
-    the app they tap the **🔒 Admin** chip, enter it once, and from
+## Part 3 · Run the setup script — ~2 min
+
+11. In a new browser tab open the **setup checker**:
+    `https://brad-h-tech.github.io/poll/petrol/check.html`
+12. In **Your admin code**, type a code you'll remember (e.g.
+    `CELLLOGIC2026`). This is what you and the accountant will use to
+    see everyone's slips. Write it down.
+13. Click **⧉ Copy setup SQL**.
+14. Back in Supabase: left menu → **SQL Editor** → click in the big
+    empty box → paste (**Ctrl+V**, or **Cmd+V** on a Mac) → click
+    **Run** (bottom right).
+15. You should see **"Success. No rows returned"** — that is what
+    success looks like here.
+
+## Part 4 · One setting — ~1 min
+
+16. Supabase left menu → **Authentication** → **Sign In / Up** →
+    find **Email** → switch **Confirm email** *off* → **Save**.
+    (This lets your team sign in immediately instead of waiting for a
+    confirmation email.)
+
+## Part 5 · Connect the app to the database
+
+17. In Supabase, left menu → **Project Settings** (gear, bottom) →
+    **API**. Copy these two values:
+    - **Project URL** — looks like `https://abcdefgh.supabase.co`
+    - the **anon / public** key — a long string
+18. Put them into `petrol/config.js` as `SUPABASE_URL` and
+    `SUPABASE_ANON_KEY`. Easiest way: paste both to Claude in chat and
+    ask it to do this step. (The anon key is *designed* to be public —
+    the security rules from step 14 are what protect your data. Never
+    share the **service_role** key or your database password.)
+19. Open the setup checker again and click **▶ Run the checks**.
+    Every line should go green. If one goes red, the fix is written
+    next to it.
+
+## Part 6 · Get your team on it — phones
+
+20. WhatsApp everyone the link:
+    `https://brad-h-tech.github.io/poll/petrol/`
+21. Each person taps **"New here? Create your account"** and enters
+    their name, email and a password.
+22. Then they install it: **Android/Chrome** → ⋮ menu →
+    *Add to Home screen*. **iPhone/Safari** → Share button →
+    *Add to Home Screen*. They get the amber pump icon.
+23. Give the **admin code** only to yourself and the accountant. In
+    the app they tap the **🔒 Admin** chip and enter it once — from
     then on that account sees everything.
-13. *(Optional)* Once everyone has registered, lock the door behind
-    them: **Authentication** → **Sign In / Up** → switch **"Allow new
-    users to sign up"** off.
+24. *(Optional, later)* Once everyone has registered, close the door:
+    **Authentication** → **Sign In / Up** → switch **"Allow new users
+    to sign up"** off.
+
+> Supabase occasionally rearranges its dashboard. If a menu name
+> doesn't match exactly, look for the nearest equivalent — *SQL
+> Editor*, *Authentication*, and *API* have stayed put for years.
 
 ---
 
