@@ -139,13 +139,15 @@ drop policy if exists profiles_read on public.profiles;
 create policy profiles_read on public.profiles for select to authenticated
   using (id = auth.uid() or (public.is_manager() and public.can_see(store_id)));
 
+-- only a manager creates people. Signing yourself up must NOT let you
+-- write your own profile row, or a stranger could make themselves manager.
 drop policy if exists profiles_write on public.profiles;
 create policy profiles_write on public.profiles for insert to authenticated
-  with check (id = auth.uid() or public.is_manager());
+  with check (public.is_manager() and public.can_see(store_id));
 
 drop policy if exists profiles_update on public.profiles;
 create policy profiles_update on public.profiles for update to authenticated
-  using (id = auth.uid() or (public.is_manager() and public.can_see(store_id)));
+  using (public.is_manager() and public.can_see(store_id));
 
 drop policy if exists profiles_delete on public.profiles;
 create policy profiles_delete on public.profiles for delete to authenticated
