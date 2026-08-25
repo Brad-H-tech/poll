@@ -129,9 +129,10 @@ alter table public.claims   enable row level security;
 alter table public.assign   enable row level security;
 alter table public.settings enable row level security;
 
--- stores: any signed-in person can read the list (needed for the login picker)
+-- stores: readable before signing in too — the login screen shows the store
+-- picker before anyone has typed a password. Only the six names; nothing private.
 drop policy if exists stores_read on public.stores;
-create policy stores_read on public.stores for select to authenticated using (true);
+create policy stores_read on public.stores for select to anon, authenticated using (true);
 
 -- profiles: you always see yourself; managers see their store's people
 drop policy if exists profiles_read on public.profiles;
