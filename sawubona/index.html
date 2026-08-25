@@ -294,12 +294,40 @@
   .lrow{display:flex;align-items:center;gap:10px;border:2px solid var(--ink);border-radius:13px;
         padding:10px 13px;margin-bottom:8px;font-weight:700;font-size:14.5px;background:var(--card)}
   .lrow.top1{background:var(--yellow-soft);box-shadow:3px 3px 0 rgba(20,20,20,.4)}
+  .lrow.me{border-width:3px;box-shadow:3px 3px 0 var(--ok)}
   .lrow .rk{font-family:var(--disp);font-size:16px;width:26px;flex:none;text-align:center}
+  .lrow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:9.5em}
   .lrow .dt{color:var(--mut);font-size:12px;margin-left:auto;font-weight:700;white-space:nowrap}
   .lrow .sc{font-family:var(--disp);font-size:18px;font-variant-numeric:tabular-nums;flex:none;width:44px;text-align:right}
   .lrow .tdy{background:#141414;color:var(--yellow);font-size:9.5px;font-weight:800;border-radius:999px;
              padding:3px 8px;letter-spacing:.5px}
+  .lrow .youtag{background:var(--ok);color:#fff;font-size:9.5px;font-weight:800;border-radius:999px;
+             padding:3px 8px;letter-spacing:.5px}
   .lempty{text-align:center;color:var(--mut);font-weight:700;font-size:14px;padding:14px 6px;line-height:1.6}
+
+  /* segmented control */
+  .seg{display:flex;gap:4px;background:var(--paper);border:2px solid var(--ink);
+       border-radius:14px;padding:4px;margin-bottom:14px}
+  .seg button{flex:1;border:none;background:none;border-radius:10px;padding:9px 4px;min-height:42px;
+       font-size:13px;font-weight:800;color:var(--mut);transition:background .18s ease,color .18s ease}
+  .seg button.on{background:#141414;color:var(--yellow)}
+  .seg button:not(.on):active{transform:scale(.96)}
+
+  /* player identity row */
+  .who{display:flex;align-items:center;gap:10px;background:var(--yellow-soft);
+       border:2px solid var(--soft-border);border-radius:14px;padding:11px 13px;margin-bottom:14px}
+  .who .av{width:34px;height:34px;flex:none;border-radius:50%;background:var(--yellow);
+       border:2px solid var(--ink);display:grid;place-items:center;font-family:var(--disp);
+       font-weight:700;font-size:15px;color:#141414}
+  .who .nm{font-weight:800;font-size:15px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .who .sm{font-size:11.5px;color:var(--mut);font-weight:700}
+  .who button{margin-left:auto;flex:none;background:none;border:none;color:var(--soft-txt);
+       font-size:12px;font-weight:800;text-decoration:underline;min-height:44px;padding:0 4px}
+  .synced{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;
+       color:var(--ok-txt);margin-bottom:10px}
+  .synced svg{width:13px;height:13px}
+  .solo-note{background:var(--yellow-soft);border:2px dashed var(--soft-border);border-radius:14px;
+       padding:12px 14px;font-size:13px;font-weight:700;color:var(--soft-txt);line-height:1.55;margin-top:12px}
 
   details summary{cursor:pointer;font-weight:800;font-size:14px;color:var(--mut);list-style:none;
                   padding:6px 0;min-height:44px;display:flex;align-items:center;gap:8px}
@@ -388,9 +416,12 @@
       <details id="aiBox">
         <summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> AI mode (optional)</summary>
         <div class="note">
-          Paste an Anthropic API key and a real Claude AI agent will search the web each day and
-          write your MTN summary for you (instead of plain headlines). The key is stored only on
-          this device and calls are billed to your own Anthropic account.
+          A real Claude AI agent can search the web each day and write your MTN summary
+          (instead of plain headlines). Two ways to switch it on:<br><br>
+          <b>Best:</b> add your key to Netlify once (<code>ANTHROPIC_API_KEY</code>) — see SETUP.md.
+          Then it works for everyone using the app and the key never touches any phone.<br><br>
+          <b>Or just here:</b> paste a key below. It stays on this device only, and only you get
+          the AI summary. Either way, calls are billed to your own Anthropic account.
         </div>
         <input class="txt" id="aiKey" type="password" placeholder="sk-ant-…" autocomplete="off"
                aria-label="Anthropic API key">
@@ -456,8 +487,8 @@
   <section class="view" id="view-board">
     <div class="minihead">
       <svg class="sun" viewBox="0 0 120 120"><use href="#sunface"/></svg>
-      <div class="t">Your leaderboard</div>
-      <div class="s">Beat yesterday's you</div>
+      <div class="t" id="boardTitle">Your leaderboard</div>
+      <div class="s" id="boardSub">Beat yesterday's you</div>
     </div>
     <div class="zz"></div>
     <div class="card" id="lbCard"><div id="lbBody"></div></div>
@@ -480,6 +511,7 @@
     Board</button>
 </nav>
 
+<script src="config.js"></script>
 <script src="data.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
@@ -699,14 +731,30 @@ function countUp(el, to) {
     if (p < 1) requestAnimationFrame(tick);
   })(t0);
 }
+// Send a finished game to the shared board (if one is set up).
+// No name yet, or no signal? Park it and try again later — nothing is lost.
+async function pushToBoard(entry) {
+  if (!sbOn()) return;
+  const name = playerName();
+  if (!name) { queuePending(entry); return; }
+  try {
+    await sbSaveScore({ ...entry, player: name });
+    flushPending();
+  } catch (e) {
+    queuePending(entry);
+  }
+}
+
 function quizEnd() {
   const prevBest = bestScore();
   const isBest = game.score > prevBest && prevBest > 0;
-  saveScore({
+  const entry = {
     t: Date.now(), d: dayNumber(), score: game.score,
     correct: game.correct, total: ROUNDS,
     date: new Date().toLocaleDateString("en-ZA", { day: "numeric", month: "short" }),
-  });
+  };
+  saveScore(entry);
+  pushToBoard(entry);
   const pc = game.correct / ROUNDS;
   const msg = pc === 1 ? "Uyingcweti! You're a master!" :
               pc >= 0.7 ? "Kuhle kakhulu — very good!" :
@@ -721,10 +769,22 @@ function quizEnd() {
     (isBest ? '<div class="newbest">NEW PERSONAL BEST!</div>' : "") +
     '<div class="msg">' + msg + "</div>" +
     '<div class="sub2">“' + q2.q + "”" + (q2.tr ? " — " + q2.tr : "") + "</div>" +
+    (sbOn() && !playerName()
+      ? '<button class="btn" id="joinBtn">' + ICO.trophy + "Add your name to the board</button>"
+      : "") +
     '<button class="btn" id="againBtn">' + ICO.play + "Play again</button>" +
-    '<button class="btn ghost" id="lbBtn">' + ICO.trophy + "See your leaderboard</button>" +
+    '<button class="btn ghost" id="lbBtn">' + ICO.trophy +
+      (sbOn() ? "See the leaderboard" : "See your leaderboard") + "</button>" +
     "</div>";
   countUp($("scoreNum"), game.score);
+  const jb = $("joinBtn");
+  if (jb) jb.onclick = async () => {
+    if (askName("Nice game! What name should show on the shared leaderboard?")) {
+      await flushPending();
+      renderLeaderboard();
+      showView("board", true);
+    }
+  };
   if (isBest || pc === 1) confetti();
   $("againBtn").onclick = () => {
     game = { qs: buildQuestions(), i: 0, score: 0, correct: 0, combo: 0 };
@@ -735,36 +795,169 @@ function quizEnd() {
   renderHeroChips();
 }
 
-// ---------- leaderboard ----------
-function renderLeaderboard() {
-  const scores = loadScores();
-  const body = $("lbBody");
-  if (!scores.length) {
-    body.innerHTML = '<div class="lempty">No games yet — play Dlala! and your scores will race each other right here. You vs you.</div>' +
-      '<button class="btn" id="goPlay">' + ICO.play + "Play your first game</button>";
-    $("goPlay").onclick = () => showView("play", true);
-    return;
+// ---------- player identity (for the shared board) ----------
+function playerName() { return (localStorage.getItem("sawubona-player") || "").trim(); }
+function setPlayerName(n) {
+  n = (n || "").trim().slice(0, 20);
+  if (n) localStorage.setItem("sawubona-player", n);
+  return n;
+}
+function askName(reason) {
+  const n = prompt(reason || "What name should show on the shared leaderboard?",
+                   playerName() || "");
+  if (n === null) return "";
+  const clean = setPlayerName(n);
+  if (!clean) alert("Please enter a name with at least one letter.");
+  renderLeaderboard();
+  return clean;
+}
+const esc = (s) => String(s).replace(/[&<>"']/g,
+  c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// Games that couldn't reach Supabase get parked here and retried later.
+function queuePending(entry) {
+  try {
+    const q = JSON.parse(localStorage.getItem("sawubona-pending") || "[]");
+    q.push(entry);
+    localStorage.setItem("sawubona-pending", JSON.stringify(q.slice(-40)));
+  } catch (e) {}
+}
+async function flushPending() {
+  if (!sbOn() || !playerName()) return;
+  let q = [];
+  try { q = JSON.parse(localStorage.getItem("sawubona-pending") || "[]"); } catch (e) { return; }
+  if (!q.length) return;
+  const left = [];
+  for (const entry of q) {
+    try { await sbSaveScore({ ...entry, player: entry.player || playerName() }); }
+    catch (e) { left.push(entry); }
   }
-  const top = scores.slice().sort((a, b) => b.score - a.score || b.t - a.t).slice(0, 8);
+  localStorage.setItem("sawubona-pending", JSON.stringify(left));
+}
+
+// ---------- leaderboard ----------
+let lbScope = "today"; // today | all | me
+const ICO_CLOUD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+
+function statsRow() {
+  return '<div class="quiz-stats" style="margin-top:0">' +
+    '<div class="qstat"><b>' + ICO.flame + " " + dayStreak() + '</b><span>day streak</span></div>' +
+    '<div class="qstat"><b>' + ICO.trophy + " " + bestScore() + '</b><span>best score</span></div>' +
+    '<div class="qstat"><b>' + ICO.target + " " + loadScores().length + '</b><span>games played</span></div>' +
+  "</div>";
+}
+function whoRow() {
+  const n = playerName();
+  if (!n) {
+    return '<div class="who"><div class="av">?</div>' +
+      '<div><div class="nm">Playing as a guest</div>' +
+      '<div class="sm">Add a name to join the shared board</div></div>' +
+      '<button id="setName">add name</button></div>';
+  }
+  return '<div class="who"><div class="av">' + esc(n[0].toUpperCase()) + "</div>" +
+    '<div><div class="nm">' + esc(n) + '</div>' +
+    '<div class="sm">on ' + esc(sbConfig().boardName) + "</div></div>" +
+    '<button id="setName">change</button></div>';
+}
+function medalFor(i) { return ["1st", "2nd", "3rd"][i] || (i + 1); }
+
+function localRows() {
   const today = dayNumber();
-  const medals = ["1st", "2nd", "3rd"];
-  body.innerHTML =
-    '<div class="quiz-stats" style="margin-top:0">' +
-      '<div class="qstat"><b>' + ICO.flame + " " + dayStreak() + '</b><span>day streak</span></div>' +
-      '<div class="qstat"><b>' + ICO.trophy + " " + bestScore() + '</b><span>best score</span></div>' +
-      '<div class="qstat"><b>' + ICO.target + " " + scores.length + '</b><span>games played</span></div>' +
-    "</div>" +
-    top.map((s, i) =>
+  return loadScores().slice().sort((a, b) => b.score - a.score || b.t - a.t).slice(0, 8)
+    .map((s, i) =>
       '<div class="lrow' + (i === 0 ? " top1" : "") + '">' +
-      '<span class="rk">' + (medals[i] || (i + 1)) + "</span>" +
+      '<span class="rk">' + medalFor(i) + "</span>" +
       "<span>" + s.correct + "/" + s.total + " correct</span>" +
       (s.d === today ? '<span class="tdy">TODAY</span>' : "") +
       '<span class="dt">' + (s.date || "") + "</span>" +
       '<span class="sc">' + s.score + "</span>" +
       "</div>").join("");
 }
+
+async function renderLeaderboard() {
+  const body = $("lbBody");
+  const scores = loadScores();
+
+  if (sbOn()) {
+    $("boardTitle").textContent = sbConfig().boardName;
+    $("boardSub").textContent = "Everyone plays on one board";
+  }
+
+  // ---- Solo mode: no Supabase configured ----
+  if (!sbOn()) {
+    if (!scores.length) {
+      body.innerHTML = '<div class="lempty">No games yet — play Dlala! and your scores will race each other right here. You vs you.</div>' +
+        '<button class="btn" id="goPlay">' + ICO.play + "Play your first game</button>";
+      $("goPlay").onclick = () => showView("play", true);
+      return;
+    }
+    body.innerHTML = statsRow() + localRows() +
+      '<div class="solo-note">Solo mode: these scores live on this phone only. ' +
+      "Want to play against your friends on one shared board? See SETUP.md — it takes about 10 minutes.</div>";
+    return;
+  }
+
+  // ---- Shared mode ----
+  const head = whoRow() +
+    '<div class="seg" role="tablist">' +
+      '<button data-s="today" class="' + (lbScope === "today" ? "on" : "") + '">Today</button>' +
+      '<button data-s="all" class="' + (lbScope === "all" ? "on" : "") + '">All time</button>' +
+      '<button data-s="me" class="' + (lbScope === "me" ? "on" : "") + '">Just me</button>' +
+    "</div>";
+
+  function wire() {
+    const sn = $("setName");
+    if (sn) sn.onclick = () => { askName(); flushPending(); };
+    document.querySelectorAll(".seg button").forEach(b =>
+      b.onclick = () => { lbScope = b.dataset.s; renderLeaderboard(); });
+  }
+
+  if (lbScope === "me") {
+    body.innerHTML = head + statsRow() +
+      (scores.length ? localRows()
+        : '<div class="lempty">No games on this phone yet — play Dlala! to get on the board.</div>');
+    wire();
+    return;
+  }
+
+  body.innerHTML = head + '<div class="skel"></div><div class="skel s2"></div><div class="skel"></div>';
+  wire();
+
+  let rows;
+  try {
+    rows = bestPerPlayer(await sbTopScores(lbScope === "today" ? "today" : "all", 200)).slice(0, 12);
+  } catch (e) {
+    body.innerHTML = head +
+      '<div class="lempty">Couldn\'t reach the shared board right now.<br>' +
+      esc(e.message) + "</div>" + statsRow() + localRows();
+    wire();
+    return;
+  }
+
+  const me = playerName().toLowerCase();
+  const list = rows.length
+    ? rows.map((r, i) => {
+        const isMe = (r.player || "").trim().toLowerCase() === me && me !== "";
+        return '<div class="lrow' + (i === 0 ? " top1" : "") + (isMe ? " me" : "") + '">' +
+          '<span class="rk">' + medalFor(i) + "</span>" +
+          '<span class="nm">' + esc(r.player) + "</span>" +
+          (isMe ? '<span class="youtag">YOU</span>' : "") +
+          '<span class="dt">' + r.correct + "/" + r.total + "</span>" +
+          '<span class="sc">' + r.score + "</span>" +
+          "</div>";
+      }).join("")
+    : '<div class="lempty">' + (lbScope === "today"
+        ? "Nobody has played yet today — be the first!"
+        : "The board is empty. Play a game to start it off!") + "</div>";
+
+  body.innerHTML = head +
+    '<div class="synced">' + ICO_CLOUD + "Live from " + esc(sbConfig().boardName) + "</div>" +
+    list + statsRow();
+  wire();
+}
 quizStart();
 renderLeaderboard();
+flushPending();
 
 // ---------- news: topic chips + daily web search + phone-world fallback ----------
 let activeTopic = "latest";
@@ -810,16 +1003,23 @@ async function loadNews() {
   const topic = NEWS_TOPICS.find(t => t.id === activeTopic) || NEWS_TOPICS[0];
   box.innerHTML = SKELETON;
 
+  // AI mode on the "Latest MTN" tab. Two ways it can be switched on:
+  //  1. This site has an ANTHROPIC_API_KEY in Netlify (best — no key on the phone)
+  //  2. Someone pasted their own key into AI mode on this device
   const key = localStorage.getItem("sawubona-ai-key");
-  if (key && topic.id === "latest") {
+  if (topic.id === "latest") {
     try {
       box.innerHTML = '<div class="spin">Asking Claude to search the web…</div>' + SKELETON;
-      const brief = await fetchAiBrief(key);
-      box.innerHTML = '<span class="ai-tag">✦ WRITTEN BY CLAUDE</span><div class="ai-brief"></div>';
-      box.querySelector(".ai-brief").textContent = brief;
-      return;
+      let brief = await fetchAiBriefServer();
+      if (!brief && key) brief = await fetchAiBrief(key);
+      if (brief) {
+        box.innerHTML = '<span class="ai-tag">✦ WRITTEN BY CLAUDE</span><div class="ai-brief"></div>';
+        box.querySelector(".ai-brief").textContent = brief;
+        return;
+      }
+      box.innerHTML = SKELETON;
     } catch (e) {
-      box.innerHTML = '<div class="err">AI mode hit a snag (' + e.message + '). Falling back to headlines…</div>';
+      box.innerHTML = '<div class="err">AI mode hit a snag (' + esc(e.message) + '). Falling back to headlines…</div>';
       await new Promise(r => setTimeout(r, 900));
       box.innerHTML = SKELETON;
     }

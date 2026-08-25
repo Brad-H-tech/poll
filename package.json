@@ -1,0 +1,9 @@
+{
+  "name": "sawubona",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sawubona — daily MTN, Zulu & tech brief. Netlify function dependencies only; the app itself needs no build step.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0"
+  }
+}

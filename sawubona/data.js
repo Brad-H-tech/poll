@@ -318,19 +318,46 @@ function parseRssItems(xml, max) {
   return items;
 }
 
+// Is this app running on Netlify (where our own little server
+// helpers exist)? GitHub Pages has no functions, so we skip them.
+function hasNetlifyFunctions() {
+  const h = (typeof location !== "undefined" && location.hostname) || "";
+  return !/github\.io$/i.test(h) && h !== "";
+}
+
+async function fetchWithTimeout(url, ms) {
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), ms || 12000) : null;
+  try {
+    return await fetch(url, controller ? { signal: controller.signal } : {});
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 async function fetchNewsByQuery(query, max) {
   max = max || 6;
   const url = rssUrlFor(query);
   let lastErr = null;
+
+  // 1. Our own Netlify helper first — fastest and most reliable
+  if (hasNetlifyFunctions()) {
+    try {
+      const res = await fetchWithTimeout(
+        "/.netlify/functions/news?q=" + encodeURIComponent(query), 12000);
+      if (res.ok) {
+        const items = parseRssItems(await res.text(), max);
+        if (items.length) return items;
+      }
+    } catch (e) { lastErr = e; }
+  }
+
+  // 2. Free public proxies as a backup (also covers GitHub Pages)
   for (const wrap of NEWS_PROXIES) {
     try {
-      const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-      const timer = controller ? setTimeout(() => controller.abort(), 12000) : null;
-      const res = await fetch(wrap(url), controller ? { signal: controller.signal } : {});
-      if (timer) clearTimeout(timer);
+      const res = await fetchWithTimeout(wrap(url), 12000);
       if (!res.ok) throw new Error("HTTP " + res.status);
-      const xml = await res.text();
-      const items = parseRssItems(xml, max);
+      const items = parseRssItems(await res.text(), max);
       if (items.length) return items;
       throw new Error("no items parsed");
     } catch (e) {
@@ -342,6 +369,27 @@ async function fetchNewsByQuery(query, max) {
 
 function fetchMtnNews(max) { return fetchNewsByQuery(NEWS_TOPICS[0].q, max); }
 function fetchPhoneNews(max) { return fetchNewsByQuery(NEWS_TOPICS[3].q, max); }
+
+// ---------------------------------------------------------------------------
+// AI mode, server-side (Netlify). The API key lives in Netlify's settings,
+// never on the phone. Returns null when the site has no AI set up, so the
+// app can quietly fall back to plain headlines.
+// ---------------------------------------------------------------------------
+async function fetchAiBriefServer() {
+  if (!hasNetlifyFunctions()) return null;
+  let res;
+  try {
+    res = await fetchWithTimeout("/.netlify/functions/brief", 45000);
+  } catch (e) {
+    return null; // no function deployed / offline — not an error worth showing
+  }
+  if (res.status === 404 || res.status === 503) return null;
+  let data = {};
+  try { data = await res.json(); } catch (e) { return null; }
+  if (data.brief) return data.brief;
+  if (data.error && res.status !== 200) throw new Error(data.error);
+  return null;
+}
 
 // ---------------------------------------------------------------------------
 // Optional AI mode — a real Claude agent that searches today's web for MTN
@@ -388,4 +436,83 @@ async function fetchAiBrief(apiKey) {
     .trim();
   if (!text) throw new Error("Empty AI response");
   return text;
+}
+
+// ---------------------------------------------------------------------------
+// Shared leaderboard (Supabase). Optional — if config.js is left empty the
+// app stays in solo mode and everything else works exactly the same.
+// Talks to Supabase's REST API directly, so there's nothing to install.
+// ---------------------------------------------------------------------------
+function sbConfig() {
+  const c = (typeof window !== "undefined" && window.SAWUBONA_CONFIG) ||
+            (typeof self !== "undefined" && self.SAWUBONA_CONFIG) || null;
+  if (!c) return null;
+  const url = (c.SUPABASE_URL || "").trim().replace(/\/+$/, "");
+  const key = (c.SUPABASE_ANON_KEY || "").trim();
+  if (!url || !key) return null;
+  return { url, key, boardName: c.BOARD_NAME || "The shared board" };
+}
+function sbOn() { return sbConfig() !== null; }
+
+function sbHeaders(extra) {
+  const c = sbConfig();
+  return Object.assign({
+    apikey: c.key,
+    Authorization: "Bearer " + c.key,
+    "Content-Type": "application/json",
+  }, extra || {});
+}
+
+// Save one finished game to the shared board.
+async function sbSaveScore(entry) {
+  const c = sbConfig();
+  if (!c) return false;
+  const res = await fetchWithTimeout2(c.url + "/rest/v1/sawubona_scores", 12000, {
+    method: "POST",
+    headers: sbHeaders({ Prefer: "return=minimal" }),
+    body: JSON.stringify({
+      player: String(entry.player).trim().slice(0, 20),
+      score: entry.score,
+      correct: entry.correct,
+      total: entry.total,
+      day: entry.d,
+    }),
+  });
+  if (!res.ok) throw new Error("Supabase said " + res.status + " — check SETUP.md");
+  return true;
+}
+
+// Read the board. scope: "today" | "all"
+async function sbTopScores(scope, limit) {
+  const c = sbConfig();
+  if (!c) return [];
+  let q = c.url + "/rest/v1/sawubona_scores" +
+    "?select=player,score,correct,total,day,created_at" +
+    "&order=score.desc,created_at.asc&limit=" + (limit || 200);
+  if (scope === "today") q += "&day=eq." + dayNumber();
+  const res = await fetchWithTimeout2(q, 12000, { headers: sbHeaders() });
+  if (!res.ok) throw new Error("Supabase said " + res.status);
+  return await res.json();
+}
+
+// Keep only each player's best game, so one person can't fill the whole board.
+function bestPerPlayer(rows) {
+  const seen = new Map();
+  for (const r of rows) {
+    const k = (r.player || "").trim().toLowerCase();
+    if (!seen.has(k)) seen.set(k, r);
+  }
+  return [...seen.values()].sort((a, b) => b.score - a.score);
+}
+
+// Small helper so this section works in both the app and the service worker
+async function fetchWithTimeout2(url, ms, opts) {
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), ms || 12000) : null;
+  try {
+    return await fetch(url, Object.assign({}, opts || {},
+      controller ? { signal: controller.signal } : {}));
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }

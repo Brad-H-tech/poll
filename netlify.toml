@@ -1,0 +1,36 @@
+# ============================================================
+#  Netlify settings for the Sawubona app
+# ============================================================
+#  Netlify reads this file automatically when it deploys.
+#  You should not need to change anything in here.
+# ============================================================
+
+[build]
+  # The folder that becomes the website
+  publish = "sawubona"
+  # The folder holding the little server helpers (see SETUP.md)
+  functions = "sawubona/netlify/functions"
+
+# Send visitors of the bare address straight to the app
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+# Security + caching headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    # Never cache the service worker itself, so app updates arrive
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/config.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

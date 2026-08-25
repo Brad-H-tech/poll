@@ -1,11 +1,11 @@
 // Sawubona service worker — caches the app shell so it opens instantly (and
 // offline), and shows the daily notification when the browser wakes us up via
 // periodic background sync. Bump VERSION when app files change.
-const VERSION = "sawubona-v4";
-const SHELL = ["./", "./index.html", "./data.js", "./manifest.webmanifest",
+const VERSION = "sawubona-v5";
+const SHELL = ["./", "./index.html", "./config.js", "./data.js", "./manifest.webmanifest",
                "./icon-192.png", "./icon-512.png"];
 
-importScripts("data.js"); // ZULU_WORDS, zuluWordOfTheDay(), fetchMtnNews(), …
+importScripts("config.js", "data.js"); // ZULU_WORDS, zuluWordOfTheDay(), fetchMtnNews(), …
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -23,6 +23,8 @@ self.addEventListener("activate", (e) => {
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (url.origin !== location.origin || e.request.method !== "GET") return;
+  // Never cache our Netlify helpers — they must always be live
+  if (url.pathname.startsWith("/.netlify/")) return;
   e.respondWith(
     fetch(e.request)
       .then((res) => {
