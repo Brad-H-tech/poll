@@ -1,7 +1,7 @@
 // Sawubona service worker — caches the app shell so it opens instantly (and
 // offline), and shows the daily notification when the browser wakes us up via
 // periodic background sync. Bump VERSION when app files change.
-const VERSION = "sawubona-v5";
+const VERSION = "sawubona-v6";
 const SHELL = ["./", "./index.html", "./config.js", "./data.js", "./manifest.webmanifest",
                "./icon-192.png", "./icon-512.png"];
 
