@@ -1,0 +1,8 @@
+{
+  "name": "shelly",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shelly — MTN dealer sales intelligence & customer tracking (team edition)",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}

@@ -1,0 +1,11 @@
+// Tells Cloudflare exactly what to deploy for this repo:
+// serve the ready-built Chase app in ./site as a static site.
+// No build step, no server code — the app talks to Supabase directly.
+{
+  "name": "poll",
+  "compatibility_date": "2026-08-01",
+  "assets": {
+    "directory": "./site",
+    "not_found_handling": "single-page-application"
+  }
+}
