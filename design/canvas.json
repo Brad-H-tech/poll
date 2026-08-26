@@ -1,0 +1,31 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",     "x": 0,    "y": 0, "w": 390, "h": 844, "title": "A · Y'ello Bold" },
+    { "file": "Midnight.dc.html", "x": 510,  "y": 0, "w": 390, "h": 844, "title": "B · Midnight" },
+    { "file": "Almanac.dc.html",  "x": 1020, "y": 0, "w": 390, "h": 844, "title": "C · Almanac" }
+  ],
+  "annotations": [
+    {
+      "id": "note-a",
+      "x": 0,
+      "y": -260,
+      "w": 390,
+      "text": "A · Y'ELLO BOLD\nWhere the app is now, tightened up.\n\nWhy: unmistakably MTN. Loud, playful, and the game feels like a game.\n\nTrade-off: a lot of yellow to meet every single morning, and it's the busiest of the three."
+    },
+    {
+      "id": "note-b",
+      "x": 510,
+      "y": -260,
+      "w": 390,
+      "text": "B · MIDNIGHT\nDark, quiet, premium.\n\nWhy: kind to your eyes at 6am and last thing at night. Yellow is rare here, so it actually lands when it appears.\n\nTrade-off: reads less 'MTN' at a glance, and the quiz feels calm rather than fun."
+    },
+    {
+      "id": "note-c",
+      "x": 1020,
+      "y": -260,
+      "w": 390,
+      "text": "C · ALMANAC\nA printed daily almanac.\n\nWhy: content first and timeless. It reads like a proper briefing you sit down with, not an app.\n\nTrade-off: the quietest of the three; the word game has to work harder to feel playful."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

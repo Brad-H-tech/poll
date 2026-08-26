@@ -1,0 +1,101 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;700;800&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: #e3c25c; text-decoration: none; }
+    a:hover { color: #ffcb05; }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; overflow: hidden; background: #100e0a; font-family: 'Manrope', 'Segoe UI', Helvetica, sans-serif; color: #f4efe2; display: flex; flex-direction: column;">
+
+  <!-- masthead -->
+  <div style="padding: 34px 26px 0;">
+
+    <!-- beadwork accent: a row of small diamonds -->
+    <div style="display: flex; gap: 7px; align-items: center; margin-bottom: 24px;">
+      <span style="width: 7px; height: 7px; background: #ffcb05; transform: rotate(45deg);"></span>
+      <span style="width: 7px; height: 7px; background: #4a4232; transform: rotate(45deg);"></span>
+      <span style="width: 7px; height: 7px; background: #ffcb05; transform: rotate(45deg);"></span>
+      <span style="width: 7px; height: 7px; background: #4a4232; transform: rotate(45deg);"></span>
+      <span style="width: 7px; height: 7px; background: #c9a227; transform: rotate(45deg);"></span>
+      <span style="flex-grow: 1; height: 1px; background: #2c2820;"></span>
+      <span style="font-size: 10px; font-weight: 800; letter-spacing: 2.2px; color: #8f8877; text-transform: uppercase;">Mon 10 Aug</span>
+    </div>
+
+    <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 58px; line-height: 0.94; letter-spacing: -1px; color: #f7f2e6;">Sawubona</div>
+    <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 21px; color: #c9a227; margin-top: 6px;">I see you.</div>
+
+    <div style="display: flex; align-items: center; gap: 10px; margin-top: 18px;">
+      <span style="font-size: 11.5px; font-weight: 800; letter-spacing: 1.6px; color: #8f8877; text-transform: uppercase;">5 day streak</span>
+      <span style="width: 3px; height: 3px; border-radius: 50%; background: #4a4232;"></span>
+      <span style="font-size: 11.5px; font-weight: 800; letter-spacing: 1.6px; color: #8f8877; text-transform: uppercase;">Best 138</span>
+    </div>
+  </div>
+
+  <!-- content -->
+  <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 26px; padding: 30px 26px 0;">
+
+    <!-- quote -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="height: 1px; background: #2c2820;"></div>
+      <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 27px; line-height: 1.22; color: #f7f2e6; padding-top: 6px;">Izandla ziyagezana.</div>
+      <div style="font-size: 13.5px; line-height: 1.5; color: #a49c88;">Hands wash each other — we rise by helping each other.</div>
+      <div style="font-size: 10px; font-weight: 800; letter-spacing: 2.2px; color: #6d6656; text-transform: uppercase;">Zulu proverb</div>
+    </div>
+
+    <!-- word of the day -->
+    <div style="background: #17140e; border: 1px solid #2c2820; border-radius: 4px; padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 4px;">
+      <div style="font-size: 10px; font-weight: 800; letter-spacing: 2.2px; color: #8f8877; text-transform: uppercase; margin-bottom: 8px;">Word of the day</div>
+      <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 46px; line-height: 1; color: #ffcb05;">Amanzi</div>
+      <div style="font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-size: 16px; color: #a49c88; margin-top: 6px;">ah-MAHN-zee</div>
+      <div style="height: 1px; background: #2c2820; margin: 16px 0 14px;"></div>
+      <div style="display: flex; align-items: center; gap: 9px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#c9a227" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px; flex: none;"><path d="M9 11.5a3 3 0 1 1 6 0v3"></path><path d="M12 2v3M4.9 4.9l2.1 2.1M19.1 4.9 17 7M2 12h3M19 12h3"></path><path d="M9 11.5V18a3 3 0 0 0 3 3h1.5a3.5 3.5 0 0 0 3.5-3.5v-3"></path></svg>
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: 1.4px; color: #c9a227; text-transform: uppercase;">Tap to reveal the meaning</span>
+      </div>
+    </div>
+
+    <!-- did you know -->
+    <div style="display: flex; flex-direction: column; gap: 8px;">
+      <div style="height: 1px; background: #2c2820;"></div>
+      <div style="font-size: 10px; font-weight: 800; letter-spacing: 2.2px; color: #8f8877; text-transform: uppercase; padding-top: 6px;">Did you know</div>
+      <div style="font-family: 'Instrument Serif', Georgia, serif; font-size: 25px; line-height: 1.2; color: #f7f2e6;">What is a pull request?</div>
+    </div>
+  </div>
+
+  <!-- nav: text only, gold marker on the active item -->
+  <div style="border-top: 1px solid #2c2820; display: flex; padding: 16px 26px 22px;">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 7px;">
+      <span style="font-size: 11px; font-weight: 800; letter-spacing: 1.8px; color: #ffcb05; text-transform: uppercase;">Today</span>
+      <span style="width: 4px; height: 4px; background: #ffcb05; transform: rotate(45deg);"></span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 7px;">
+      <span style="font-size: 11px; font-weight: 800; letter-spacing: 1.8px; color: #6d6656; text-transform: uppercase;">MTN</span>
+      <span style="width: 4px; height: 4px;"></span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 7px;">
+      <span style="font-size: 11px; font-weight: 800; letter-spacing: 1.8px; color: #6d6656; text-transform: uppercase;">Dlala</span>
+      <span style="width: 4px; height: 4px;"></span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 7px;">
+      <span style="font-size: 11px; font-weight: 800; letter-spacing: 1.8px; color: #6d6656; text-transform: uppercase;">Board</span>
+      <span style="width: 4px; height: 4px;"></span>
+    </div>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>
