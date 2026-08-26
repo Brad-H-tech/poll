@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: #8a5a00; text-decoration: none; }
+    a:hover { color: #5f3e00; }
+  </style>
+</helmet>
+
+<div style="width: 390px; height: 844px; overflow: hidden; position: relative; background: #fdf3d8; font-family: 'Manrope', -apple-system, 'Segoe UI', sans-serif; color: #241d05;">
+
+  <!-- colour field behind the glass -->
+  <div style="position: absolute; inset: 0; background: linear-gradient(165deg, #ffd93d 0%, #ffb703 42%, #ff9f43 70%, #f7e8b0 100%);"></div>
+  <div style="position: absolute; width: 320px; height: 320px; border-radius: 50%; left: -110px; top: 90px; background: radial-gradient(circle, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 70%);"></div>
+  <div style="position: absolute; width: 300px; height: 300px; border-radius: 50%; right: -120px; top: 380px; background: radial-gradient(circle, rgba(255,110,64,0.55) 0%, rgba(255,110,64,0) 70%);"></div>
+  <div style="position: absolute; width: 260px; height: 260px; border-radius: 50%; left: 40px; bottom: -60px; background: radial-gradient(circle, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 72%);"></div>
+
+  <!-- content -->
+  <div style="position: relative; height: 100%; display: flex; flex-direction: column; gap: 13px; padding: 58px 18px 0;">
+
+    <div>
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 1.4px; color: rgba(36,29,5,0.55); text-transform: uppercase;">Monday, 10 August</div>
+      <div style="font-size: 36px; font-weight: 800; letter-spacing: -1.1px; line-height: 1.05; margin-top: 4px;">Sawubona</div>
+    </div>
+
+    <!-- stats, glass -->
+    <div style="display: flex; gap: 10px;">
+      <div style="flex-grow: 1; background: rgba(255,255,255,0.42); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.65); border-radius: 18px; padding: 12px 14px; box-shadow: 0 6px 20px rgba(120,72,0,0.1);">
+        <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.6px;">5</div>
+        <div style="font-size: 11.5px; font-weight: 600; color: rgba(36,29,5,0.58); letter-spacing: 0.3px;">day streak</div>
+      </div>
+      <div style="flex-grow: 1; background: rgba(255,255,255,0.42); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.65); border-radius: 18px; padding: 12px 14px; box-shadow: 0 6px 20px rgba(120,72,0,0.1);">
+        <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.6px;">138</div>
+        <div style="font-size: 11.5px; font-weight: 600; color: rgba(36,29,5,0.58); letter-spacing: 0.3px;">best score</div>
+      </div>
+      <div style="flex-grow: 1; background: rgba(255,255,255,0.42); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.65); border-radius: 18px; padding: 12px 14px; box-shadow: 0 6px 20px rgba(120,72,0,0.1);">
+        <div style="font-size: 24px; font-weight: 800; letter-spacing: -0.6px;">42</div>
+        <div style="font-size: 11.5px; font-weight: 600; color: rgba(36,29,5,0.58); letter-spacing: 0.3px;">games</div>
+      </div>
+    </div>
+
+    <!-- word of the day -->
+    <div style="background: rgba(255,255,255,0.46); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); border: 1px solid rgba(255,255,255,0.7); border-radius: 26px; padding: 22px; box-shadow: 0 14px 40px rgba(120,72,0,0.14);">
+      <div style="font-size: 11px; font-weight: 800; letter-spacing: 1.6px; color: rgba(36,29,5,0.55); text-transform: uppercase;">Word of the day</div>
+      <div style="font-size: 42px; font-weight: 800; letter-spacing: -1.4px; line-height: 1; margin-top: 12px;">Amanzi</div>
+      <div style="font-size: 15px; font-weight: 600; color: rgba(36,29,5,0.55); margin-top: 8px;">ah-MAHN-zee</div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(36,29,5,0.9); border-radius: 16px; min-height: 46px; margin-top: 18px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffd93d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width: 17px; height: 17px;"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        <span style="font-size: 15px; font-weight: 700; color: #ffd93d;">Reveal the meaning</span>
+      </div>
+    </div>
+
+    <!-- proverb -->
+    <div style="background: rgba(255,255,255,0.34); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.6); border-radius: 22px; padding: 17px 19px; box-shadow: 0 8px 26px rgba(120,72,0,0.1);">
+      <div style="font-size: 18.5px; font-weight: 700; line-height: 1.34; letter-spacing: -0.3px;">Izandla ziyagezana.</div>
+      <div style="font-size: 14px; font-weight: 500; line-height: 1.45; color: rgba(36,29,5,0.6); margin-top: 5px;">Hands wash each other — we rise by helping each other.</div>
+    </div>
+
+    <!-- did you know -->
+    <div style="background: rgba(255,255,255,0.34); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.6); border-radius: 22px; padding: 15px 19px; box-shadow: 0 8px 26px rgba(120,72,0,0.1);">
+      <div style="font-size: 11px; font-weight: 800; letter-spacing: 1.6px; color: rgba(36,29,5,0.55); text-transform: uppercase; margin-bottom: 5px;">Did you know</div>
+      <div style="font-size: 16.5px; font-weight: 700; letter-spacing: -0.2px;">What is a pull request?</div>
+    </div>
+  </div>
+
+  <!-- floating glass tab bar -->
+  <div style="position: absolute; left: 16px; right: 16px; bottom: 26px; background: rgba(255,255,255,0.5); backdrop-filter: blur(26px); -webkit-backdrop-filter: blur(26px); border: 1px solid rgba(255,255,255,0.75); border-radius: 26px; display: flex; padding: 7px; box-shadow: 0 12px 34px rgba(120,72,0,0.2);">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 7px; background: rgba(255,255,255,0.85); border-radius: 20px; color: #241d05;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width: 22px; height: 22px;"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+      <span style="font-size: 10px; font-weight: 800; letter-spacing: 0.3px;">Today</span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 7px; color: rgba(36,29,5,0.5);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 22px; height: 22px;"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"></path><path d="M18 14h-8M15 18h-5M10 6h8v4h-8V6Z"></path></svg>
+      <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.3px;">MTN</span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 7px; color: rgba(36,29,5,0.5);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 22px; height: 22px;"><line x1="6" x2="10" y1="11" y2="11"></line><line x1="8" x2="8" y1="9" y2="13"></line><line x1="15" x2="15.01" y1="12" y2="12"></line><line x1="18" x2="18.01" y1="10" y2="10"></line><path d="M17.32 5H6.68a4 4 0 0 0-3.98 3.59c0 .05-.1.1-.1.15C2.6 9.42 2 14.46 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.41-1.41A2 2 0 0 1 9.83 16h4.34a2 2 0 0 1 1.41.59L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.55-.6-6.58-.69-7.26 0-.05 0-.1-.01-.15A4 4 0 0 0 17.32 5z"></path></svg>
+      <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.3px;">Dlala</span>
+    </div>
+    <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 7px; color: rgba(36,29,5,0.5);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 22px; height: 22px;"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M18 2H6v7a6 6 0 0 0 12 0V2Z"></path></svg>
+      <span style="font-size: 10px; font-weight: 700; letter-spacing: 0.3px;">Board</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {}
+</script>
+</body>
+</html>

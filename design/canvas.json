@@ -1,8 +1,10 @@
 {
   "artboards": [
-    { "file": "Main.dc.html",     "x": 0,    "y": 0, "w": 390, "h": 844, "title": "A · Y'ello Bold" },
-    { "file": "Midnight.dc.html", "x": 510,  "y": 0, "w": 390, "h": 844, "title": "B · Midnight" },
-    { "file": "Almanac.dc.html",  "x": 1020, "y": 0, "w": 390, "h": 844, "title": "C · Almanac" }
+    { "file": "Main.dc.html",      "x": 0,    "y": 0, "w": 390, "h": 844, "title": "A · Card Stack" },
+    { "file": "Glass.dc.html",     "x": 510,  "y": 0, "w": 390, "h": 844, "title": "B · Glass" },
+    { "file": "Streak.dc.html",    "x": 1020, "y": 0, "w": 390, "h": 844, "title": "C · Streak" },
+    { "file": "Editorial.dc.html", "x": 1530, "y": 0, "w": 390, "h": 844, "title": "D · Editorial" },
+    { "file": "Widgets.dc.html",   "x": 2040, "y": 0, "w": 390, "h": 844, "title": "E · Widgets" }
   ],
   "annotations": [
     {
@@ -10,21 +12,35 @@
       "x": 0,
       "y": -260,
       "w": 390,
-      "text": "A · Y'ELLO BOLD\nWhere the app is now, tightened up.\n\nWhy: unmistakably MTN. Loud, playful, and the game feels like a game.\n\nTrade-off: a lot of yellow to meet every single morning, and it's the busiest of the three."
+      "text": "A · CARD STACK\nThe standard modern iOS look.\n\nWhy: instantly familiar — big title, soft white cards on grey, one clear yellow button. Nobody has to learn it.\n\nTrade-off: safe. It could be almost any well-made app; the MTN yellow is the only thing that says it's yours."
     },
     {
       "id": "note-b",
       "x": 510,
       "y": -260,
       "w": 390,
-      "text": "B · MIDNIGHT\nDark, quiet, premium.\n\nWhy: kind to your eyes at 6am and last thing at night. Yellow is rare here, so it actually lands when it appears.\n\nTrade-off: reads less 'MTN' at a glance, and the quiz feels calm rather than fun."
+      "text": "B · GLASS\nFrosted panels over a warm colour wash.\n\nWhy: the newest-feeling of the five, and it lets the yellow fill the whole screen without shouting. Premium.\n\nTrade-off: the busiest background — long reading is harder, and older phones render the blur less cleanly."
     },
     {
       "id": "note-c",
       "x": 1020,
       "y": -260,
       "w": 390,
-      "text": "C · ALMANAC\nA printed daily almanac.\n\nWhy: content first and timeless. It reads like a proper briefing you sit down with, not an app.\n\nTrade-off: the quietest of the three; the word game has to work harder to feel playful."
+      "text": "C · STREAK\nThe game comes first.\n\nWhy: opens on your streak ring and one big Play button. If the daily habit is the point, this is the one that builds it.\n\nTrade-off: the news and the word become side dishes. It's an app you play, not one you read."
+    },
+    {
+      "id": "note-d",
+      "x": 1530,
+      "y": -260,
+      "w": 390,
+      "text": "D · EDITORIAL\nDark, serif, like a good reading app.\n\nWhy: calm and grown-up. The word of the day gets the whole top of the screen, and it's kind to your eyes early and late.\n\nTrade-off: the quietest. The quiz has to sell itself from a tab, and there's no colour to catch a bored eye."
+    },
+    {
+      "id": "note-e",
+      "x": 2040,
+      "y": -260,
+      "w": 390,
+      "text": "E · WIDGETS\nA board of tiles, like your phone's home screen.\n\nWhy: everything visible at a glance with no scrolling, and each tile can grow into its own feature later.\n\nTrade-off: no single focal point — five tiles competing means nothing is obviously the main thing to do."
     }
   ],
   "launch": { "view": "canvas" }
