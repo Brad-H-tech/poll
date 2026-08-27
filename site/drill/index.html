@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en-ZA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iLula Docs Drill — Cell Logic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --acc:#2EE6C6;
+  --acc-2:#A8F3E4;
+  --acc-deep:#0EA58D;
+  --ink:#0B0B0B;
+  --ink-2:#3B3B38;
+  --ink-3:#6E6E68;
+  --paper:#FAF7EF;
+  --white:#FFFFFF;
+  --line:#DFD9C7;
+  --ok:#0E7A3C;
+  --ok-bg:#E8F5ED;
+  --no:#BE1B21;
+  --no-bg:#FBEBEB;
+  --info:#1B4F9C;
+  --info-bg:#EAF0FA;
+  --r:8px;
+  --shadow:3px 3px 0 var(--ink);
+  --shadow-lg:5px 5px 0 var(--ink);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:'Instrument Sans',system-ui,sans-serif;
+  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  touch-action:manipulation;
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.4;
+  background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:24px 24px;
+}
+h1,h2,h3,h4,.mono{font-family:'Archivo',sans-serif;font-weight:900;letter-spacing:-.02em}
+.wrap{position:relative;z-index:1;max-width:1060px;margin:0 auto;padding:0 20px}
+:focus-visible{outline:3px solid var(--info);outline-offset:3px;border-radius:4px}
+button{font:inherit;cursor:pointer;touch-action:manipulation}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ── TOP BAR ─────────────────────────── */
+.topbar{background:var(--ink);color:#fff;border-bottom:4px solid var(--acc)}
+.topbar .wrap{display:flex;align-items:center;gap:14px;padding-top:14px;padding-bottom:14px;flex-wrap:wrap}
+.logo{background:var(--acc);color:var(--ink);font-family:'Archivo';font-weight:900;font-size:14px;letter-spacing:.14em;padding:7px 12px;border-radius:3px}
+.topbar .title{font-family:'Archivo';font-weight:900;font-size:17px;letter-spacing:-.01em}
+.topbar .co{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:#8E8E88;font-weight:600}
+.spacer{flex:1}
+.ghost{
+  background:transparent;border:2px solid #45453F;color:#fff;font-family:'Archivo';font-weight:800;
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:10px 14px;border-radius:4px;
+  min-height:44px;display:inline-flex;align-items:center;gap:7px;transition:background .15s,border-color .15s
+}
+.ghost:hover{border-color:var(--acc);color:var(--acc)}
+.ghost[aria-pressed="true"]{background:var(--acc);color:var(--ink);border-color:var(--acc)}
+
+/* ── HUD ─────────────────────────────── */
+.hud{background:var(--acc);border-bottom:3px solid var(--ink)}
+.hud .wrap{display:flex;align-items:center;gap:10px;padding-top:10px;padding-bottom:10px;flex-wrap:wrap}
+.stat{background:var(--ink);color:#fff;border-radius:5px;padding:7px 13px;display:flex;align-items:center;gap:9px;min-height:44px}
+.stat span{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#9A9A93;font-weight:700;line-height:1}
+.stat strong{font-family:'Archivo';font-weight:900;font-size:19px;color:var(--acc);line-height:1}
+.stat.streak strong{color:#FF8A3D}
+.xpwrap{flex:1;min-width:160px;display:flex;align-items:center;gap:10px}
+.xpbar{flex:1;height:14px;background:rgba(0,0,0,.18);border:2px solid var(--ink);border-radius:99px;overflow:hidden}
+.xpbar i{display:block;height:100%;width:0;background:var(--ink);transition:width .35s cubic-bezier(.3,1,.4,1)}
+.rankchip{font-family:'Archivo';font-weight:900;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+
+/* ── PANELS ──────────────────────────── */
+.screen{display:none;padding:34px 0 60px}
+.screen.active{display:block;animation:fade .28s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.panel{background:var(--white);border:3px solid var(--ink);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:26px 24px}
+.panel + .panel{margin-top:20px}
+
+.kicker{font-family:'Archivo';font-weight:800;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+h1.big{font-size:clamp(30px,6vw,50px);line-height:.98;text-transform:uppercase;margin-bottom:12px}
+h1.big em{font-style:normal;background:var(--acc);padding:0 8px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.lede{color:var(--ink-2);max-width:60ch;font-size:16.5px}
+
+/* ── MODE CARDS ──────────────────────── */
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-top:24px}
+.mode{
+  text-align:left;background:var(--white);border:3px solid var(--ink);border-radius:var(--r);
+  padding:20px 18px 18px;box-shadow:var(--shadow);transition:transform .15s,background .15s;
+  display:flex;flex-direction:column;gap:6px;min-height:44px
+}
+.mode:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink);background:var(--acc)}
+.mode .ico{width:38px;height:38px;margin-bottom:6px}
+.mode h3{font-size:18px;text-transform:uppercase}
+.mode p{font-size:13.5px;color:var(--ink-2)}
+.mode .len{margin-top:8px;font-family:'Archivo';font-weight:800;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+
+.namerow{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-top:22px}
+.field{flex:1;min-width:200px}
+.field label{display:block;font-family:'Archivo';font-weight:800;font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.field input{
+  width:100%;border:3px solid var(--ink);border-radius:5px;padding:12px 14px;font-size:16px;
+  font-family:'Instrument Sans';background:var(--paper);min-height:48px
+}
+.field input:focus{background:#fff}
+.hint{font-size:12.5px;color:var(--ink-3);margin-top:6px}
+
+/* ── SCENARIO ────────────────────────── */
+.qtop{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.qnum{font-family:'Archivo';font-weight:900;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.timer{display:flex;align-items:center;gap:8px;font-family:'Archivo';font-weight:900;font-size:15px}
+.timer svg{width:18px;height:18px}
+.timer.warn{color:var(--no)}
+.tbar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:20px;border:1px solid var(--ink)}
+.tbar i{display:block;height:100%;background:var(--ok);width:100%;transition:width 1s linear,background .3s}
+.tbar i.warn{background:var(--no)}
+
+.brief{background:var(--info-bg);border:3px solid var(--ink);border-left-width:10px;border-radius:6px;padding:18px 20px;margin-bottom:8px}
+.brief .apptype{
+  display:inline-block;background:var(--ink);color:var(--acc);font-family:'Archivo';font-weight:900;
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:6px 11px;border-radius:4px;margin-bottom:10px
+}
+.brief p{font-size:17px;line-height:1.5}
+.brief ul{list-style:none;margin-top:12px;display:grid;gap:7px}
+.brief li{display:flex;gap:10px;font-size:14.5px;color:var(--ink-2)}
+.brief li b{color:var(--ink);font-family:'Archivo';flex:0 0 auto}
+
+.ask{font-family:'Archivo';font-weight:900;font-size:15px;text-transform:uppercase;margin:22px 0 12px}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:11px}
+.chip{
+  display:flex;align-items:center;gap:12px;text-align:left;background:var(--white);
+  border:3px solid var(--ink);border-radius:6px;padding:13px 14px;min-height:60px;
+  box-shadow:2px 2px 0 var(--ink);transition:background .15s,transform .12s
+}
+.chip:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--ink)}
+.chip .cbox{
+  width:26px;height:26px;flex:0 0 26px;border:3px solid var(--ink);border-radius:5px;background:#fff;
+  display:grid;place-items:center
+}
+.chip .cbox svg{width:15px;height:15px;opacity:0;transition:opacity .12s}
+.chip[aria-pressed="true"]{background:var(--acc)}
+.chip[aria-pressed="true"] .cbox{background:var(--ink)}
+.chip[aria-pressed="true"] .cbox svg{opacity:1}
+.chip .lbl{font-family:'Archivo';font-weight:800;font-size:14px;line-height:1.25}
+.chip .sub{display:block;font-family:'Instrument Sans';font-weight:400;font-size:12px;color:var(--ink-3);margin-top:2px}
+.chip[aria-pressed="true"] .sub{color:#04564A}
+.chip:disabled{cursor:default;transform:none}
+.chip.hit{background:var(--ok-bg);border-color:var(--ok)}
+.chip.hit .cbox{background:var(--ok);border-color:var(--ok)}
+.chip.miss{background:var(--no-bg);border-color:var(--no)}
+.chip.miss .cbox{background:var(--no);border-color:var(--no)}
+.chip.shouldve{background:var(--ok-bg);border-color:var(--ok);border-style:dashed}
+
+/* true/false */
+.tf{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.tf button{
+  border:3px solid var(--ink);border-radius:6px;padding:18px;font-family:'Archivo';font-weight:900;
+  font-size:17px;text-transform:uppercase;background:var(--white);box-shadow:var(--shadow);min-height:64px;
+  transition:transform .12s,background .15s;display:flex;align-items:center;justify-content:center;gap:10px
+}
+.tf button:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.tf button.t:hover{background:var(--ok-bg)}
+.tf button.f:hover{background:var(--no-bg)}
+.tf button svg{width:22px;height:22px}
+.tf button:disabled{cursor:default;transform:none;box-shadow:var(--shadow);opacity:.45}
+.tf button.chosen-right{background:var(--ok);color:#fff;opacity:1;border-color:var(--ok)}
+.tf button.chosen-wrong{background:var(--no);color:#fff;opacity:1;border-color:var(--no)}
+.tf button.was-right{background:var(--ok-bg);border-color:var(--ok);opacity:1}
+
+.statement{font-size:19px;line-height:1.45;font-weight:500;margin:6px 0 20px}
+
+/* ── FEEDBACK ────────────────────────── */
+.fb{margin-top:20px;border:3px solid var(--ink);border-radius:6px;overflow:hidden;box-shadow:var(--shadow);display:none}
+.fb.show{display:block;animation:pop .28s cubic-bezier(.3,1.4,.5,1)}
+@keyframes pop{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+.fb .head{padding:14px 18px;display:flex;align-items:center;gap:12px;color:#fff}
+.fb.good .head{background:var(--ok)}
+.fb.part .head{background:var(--acc-deep);color:var(--ink)}
+.fb.bad .head{background:var(--no)}
+.fb .head svg{width:24px;height:24px;flex:0 0 24px}
+.fb .head h4{font-size:17px;text-transform:uppercase}
+.fb .head .pts{margin-left:auto;font-family:'Archivo';font-weight:900;font-size:19px}
+.fb .body{padding:16px 18px;background:var(--white)}
+.fb .body p{font-size:14.5px;color:var(--ink-2)}
+.fb .body p + p{margin-top:9px}
+.fb .body b{color:var(--ink)}
+.fb .why{margin-top:12px;padding-top:12px;border-top:2px solid var(--line);font-size:14px}
+.fb .why strong{font-family:'Archivo';font-size:11px;letter-spacing:.14em;text-transform:uppercase;display:block;margin-bottom:5px;color:var(--ink-3)}
+
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px}
+.btn{
+  background:var(--ink);color:var(--acc);border:3px solid var(--ink);border-radius:6px;
+  font-family:'Archivo';font-weight:900;font-size:14px;letter-spacing:.06em;text-transform:uppercase;
+  padding:15px 26px;box-shadow:var(--shadow);min-height:52px;display:inline-flex;align-items:center;gap:9px;
+  transition:transform .12s
+}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:var(--shadow)}
+.btn.alt{background:var(--acc);color:var(--ink)}
+.btn.plain{background:var(--white);color:var(--ink)}
+.btn svg{width:18px;height:18px}
+
+/* ── RESULTS ─────────────────────────── */
+.scorebig{text-align:center;padding:14px 0 4px}
+.scorebig .pct{font-family:'Archivo';font-weight:900;font-size:clamp(64px,16vw,120px);line-height:.9}
+.scorebig .rank{
+  display:inline-block;background:var(--acc);border:3px solid var(--ink);border-radius:99px;
+  font-family:'Archivo';font-weight:900;font-size:15px;letter-spacing:.08em;text-transform:uppercase;
+  padding:10px 22px;margin-top:14px;box-shadow:var(--shadow)
+}
+.tally{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:26px}
+.tally div{border:3px solid var(--ink);border-radius:6px;padding:14px;text-align:center;background:var(--paper)}
+.tally span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:5px}
+.tally strong{font-family:'Archivo';font-weight:900;font-size:26px}
+
+.badges{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.badge{
+  display:flex;align-items:center;gap:9px;border:3px solid var(--ink);border-radius:99px;
+  padding:9px 16px 9px 11px;background:var(--acc);font-family:'Archivo';font-weight:800;font-size:12.5px;
+  letter-spacing:.04em;text-transform:uppercase;box-shadow:2px 2px 0 var(--ink)
+}
+.badge svg{width:18px;height:18px}
+.badge.locked{background:var(--paper);border-color:var(--line);color:#A9A399;box-shadow:none}
+
+.weak{margin-top:24px}
+.weak h4{font-size:14px;text-transform:uppercase;margin-bottom:10px}
+.weak ul{list-style:none;display:grid;gap:8px}
+.weak li{display:flex;gap:11px;font-size:14.5px;border-left:5px solid var(--no);padding:9px 12px;background:var(--no-bg);border-radius:0 5px 5px 0}
+
+.board{margin-top:20px}
+.board table{width:100%;border-collapse:collapse;border:3px solid var(--ink);border-radius:6px;overflow:hidden}
+.board th{background:var(--ink);color:var(--acc);font-family:'Archivo';font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;text-align:left;padding:11px 14px}
+.board td{padding:11px 14px;border-top:2px solid var(--line);font-size:14.5px}
+.board tr.me td{background:var(--acc)}
+.board td.pos{font-family:'Archivo';font-weight:900;width:44px}
+
+/* ── CHEAT SHEET ─────────────────────── */
+.tablescroll{overflow-x:auto;border:3px solid var(--ink);border-radius:6px;box-shadow:var(--shadow);background:#fff;-webkit-overflow-scrolling:touch}
+.matrix{width:100%;border-collapse:collapse;min-width:760px;font-size:13.5px}
+.matrix th{background:var(--ink);color:var(--acc);font-family:'Archivo';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:12px 10px;text-align:center;vertical-align:bottom}
+.matrix th.rowhead{text-align:left;min-width:210px;position:sticky;left:0;z-index:2}
+.matrix td{padding:11px 10px;border-top:2px solid var(--line);text-align:center;vertical-align:middle}
+.matrix td.rowhead{
+  text-align:left;font-weight:600;background:var(--paper);position:sticky;left:0;z-index:1;
+  border-right:2px solid var(--ink)
+}
+.matrix tr:nth-child(even) td{background:#FDFCF8}
+.matrix tr:nth-child(even) td.rowhead{background:#F4F0E4}
+.yn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-family:'Archivo';font-weight:900;font-size:12px}
+.yn.y{background:var(--ok);color:#fff}
+.yn.n{background:#DAD5C6;color:#6E6E68}
+.cond{font-size:12px;color:var(--ink-2);line-height:1.35;display:block;max-width:150px;margin:0 auto}
+.tablecap{font-family:'Archivo';font-weight:900;font-size:15px;text-transform:uppercase;margin:26px 0 10px;display:flex;align-items:center;gap:10px}
+.tablecap::after{content:'';flex:1;height:4px;background:var(--acc);border-radius:2px}
+
+.ruleslist{display:grid;gap:12px;margin-top:6px}
+.rulecard{border:3px solid var(--ink);border-radius:6px;padding:15px 17px;background:#fff;box-shadow:2px 2px 0 var(--ink);display:flex;gap:14px}
+.rulecard .rn{font-family:'Archivo';font-weight:900;font-size:13px;background:var(--acc);border:2px solid var(--ink);border-radius:4px;width:32px;height:32px;flex:0 0 32px;display:grid;place-items:center}
+.rulecard h4{font-size:15px;margin-bottom:4px}
+.rulecard p{font-size:14px;color:var(--ink-2)}
+
+.warnbox{background:var(--no-bg);border:3px solid var(--no);border-radius:6px;padding:16px 18px;margin-top:18px}
+.warnbox h4{font-size:14px;text-transform:uppercase;color:var(--no);margin-bottom:6px}
+.warnbox p{font-size:14px;color:var(--ink-2)}
+
+.verify{background:var(--info-bg);border:3px solid var(--info);border-radius:6px;padding:16px 18px;margin-top:18px}
+.verify h4{font-size:14px;text-transform:uppercase;color:var(--info);margin-bottom:6px}
+.verify p{font-size:14px;color:var(--ink-2)}
+.verify ul{margin:8px 0 0 18px;font-size:14px;color:var(--ink-2)}
+
+footer{background:var(--ink);color:#8E8E88;padding:26px 0;margin-top:40px;font-size:12.5px;letter-spacing:.03em}
+footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+
+@media(max-width:600px){
+  .panel{padding:20px 16px}
+  .tf{grid-template-columns:1fr}
+  .stat strong{font-size:17px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="logo">CL</span>
+    <span class="title">iLula Docs Drill</span>
+    <span class="co">Cell Logic&nbsp;·&nbsp;Connect KZN</span>
+    <span class="spacer"></span>
+    <button class="ghost" id="navSheet" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+      Cheat sheet
+    </button>
+    <button class="ghost" id="navHome">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      Home
+    </button>
+  </div>
+</div>
+
+<div class="hud" id="hud" style="display:none">
+  <div class="wrap">
+    <div class="stat"><span>Score</span><strong id="hudScore">0</strong></div>
+    <div class="stat streak"><span>Streak</span><strong id="hudStreak">0</strong></div>
+    <div class="stat"><span>Round</span><strong id="hudRound">1/10</strong></div>
+    <div class="xpwrap">
+      <div class="xpbar"><i id="xpFill"></i></div>
+      <span class="rankchip" id="rankChip">Trainee</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ HOME ══════════════════════════════ -->
+<main class="screen active" id="scHome">
+  <div class="wrap">
+    <div class="panel">
+      <div class="kicker">Cell Logic · Compliance training</div>
+      <h1 class="big">Get the docs<br>right, <em>first time</em></h1>
+      <p class="lede">Every iLula order needs a specific set of documents uploaded and linked before you finalise. Get it wrong and the order sits, the customer waits, and the dealership carries the compliance risk. Play a round, find your gaps, fix them.</p>
+
+      <div class="namerow">
+        <div class="field">
+          <label for="playerName">Your name (for the store board)</label>
+          <input id="playerName" type="text" placeholder="e.g. Tammy" autocomplete="off" maxlength="22">
+          <p class="hint">Finish a round with your name filled in and your score goes on the shared store board.</p>
+        </div>
+      </div>
+
+      <div class="modes">
+        <button class="mode" data-mode="orders">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+          <h3>Order Desk</h3>
+          <p>A customer walks in. Pick exactly the documents that order needs — no more, no less.</p>
+          <span class="len">10 scenarios</span>
+        </button>
+        <button class="mode" data-mode="rules">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 4.5-3.2 8.3-8 9.5C7.2 20.3 4 16.5 4 12V7z"/><path d="M9 12l2 2 4-4"/></svg>
+          <h3>Rules Round</h3>
+          <p>True or false on signatures, tick-boxes and the clause that sits in your employment contract.</p>
+          <span class="len">10 statements</span>
+        </button>
+        <button class="mode" data-mode="mixed">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h6l3 10h6"/><path d="M18 4l3 3-3 3"/><path d="M3 17h4"/></svg>
+          <h3>Full Shift</h3>
+          <p>Scenarios and rules mixed together, no warning which is coming. The real test.</p>
+          <span class="len">14 rounds</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel board" id="boardPanel" style="display:none">
+      <div class="kicker">Leaderboard</div>
+      <h3 style="font-size:20px;text-transform:uppercase;margin-bottom:12px">Store board</h3>
+      <table><thead><tr><th>#</th><th>Consultant</th><th>Mode</th><th>Score</th><th>Accuracy</th></tr></thead><tbody id="boardBody"></tbody></table>
+      <p class="hint" id="boardHint" style="margin-top:10px">Pass the tablet along and run it as a team drill.</p>
+    </div>
+  </div>
+</main>
+
+<!-- ══ GAME ══════════════════════════════ -->
+<main class="screen" id="scGame">
+  <div class="wrap">
+    <div class="panel">
+      <div class="qtop">
+        <span class="qnum" id="qLabel">Round 1 of 10</span>
+        <span class="timer" id="timerBox">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>
+          <span id="timerNum">45</span>s
+        </span>
+      </div>
+      <div class="tbar"><i id="tFill"></i></div>
+      <div id="qBody"></div>
+      <div class="fb" id="fb" role="status" aria-live="polite">
+        <div class="head"><span id="fbIcon"></span><h4 id="fbTitle"></h4><span class="pts" id="fbPts"></span></div>
+        <div class="body" id="fbBody"></div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="submitBtn">
+          Lock it in
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </button>
+        <button class="btn alt" id="nextBtn" style="display:none">
+          Next round
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </button>
+        <button class="btn plain" id="quitBtn">End round</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══ RESULTS ═══════════════════════════ -->
+<main class="screen" id="scResult">
+  <div class="wrap">
+    <div class="panel">
+      <div class="scorebig">
+        <div class="kicker" id="resMode">Order Desk</div>
+        <div class="pct" id="resPct">0%</div>
+        <div class="rank" id="resRank">Trainee</div>
+      </div>
+      <div class="tally">
+        <div><span>Points</span><strong id="resPoints">0</strong></div>
+        <div><span>Perfect</span><strong id="resPerfect">0</strong></div>
+        <div><span>Best streak</span><strong id="resStreak">0</strong></div>
+        <div><span>Rounds</span><strong id="resRounds">0</strong></div>
+      </div>
+      <div class="badges" id="badges"></div>
+      <div class="weak" id="weakBox" style="display:none">
+        <h4>Worth a second look</h4>
+        <ul id="weakList"></ul>
+      </div>
+      <div class="actions">
+        <button class="btn" id="againBtn">Play again</button>
+        <button class="btn alt" id="sheetBtn">Open cheat sheet</button>
+        <button class="btn plain" id="homeBtn">Home</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══ CHEAT SHEET ═══════════════════════ -->
+<main class="screen" id="scSheet">
+  <div class="wrap">
+    <div class="panel">
+      <div class="kicker">Reference</div>
+      <h1 class="big" style="font-size:clamp(26px,5vw,40px)">Documents by <em>order type</em></h1>
+      <p class="lede">The list below covers the most common iLula order scenarios. It does not cover every possible case — if the order in front of you is not here, check with your Store Manager before finalising.</p>
+
+      <div class="tablecap">New contracts</div>
+      <div class="tablescroll"><table class="matrix" id="mxNew"></table></div>
+
+      <div class="tablecap">Add-SIM &amp; upgrades</div>
+      <div class="tablescroll"><table class="matrix" id="mxUp"></table></div>
+
+      <div class="tablecap">Employee / corporate (EC) lines</div>
+      <div class="tablescroll"><table class="matrix" id="mxEc"></table></div>
+
+      <div class="tablecap">Additional mandatory documents</div>
+      <div class="ruleslist">
+        <div class="rulecard"><span class="rn">+</span><div><h4>Number being ported in from another network</h4><p>An MNP (Mobile Number Portability) form is required on top of everything else for that order type.</p></div></div>
+        <div class="rulecard"><span class="rn">+</span><div><h4>Existing prepaid number used for the contract</h4><p>A Number-for-life form is required on top of everything else for that order type.</p></div></div>
+      </div>
+
+      <div class="tablecap">Signature rules</div>
+      <div class="ruleslist" id="rulesList"></div>
+
+      <div class="warnbox">
+        <h4>Why this is not optional</h4>
+        <p>Clause 31 of your employment contract requires you to follow the practices and procedures the network prescribes, in support of the Dealer Agreement Cell Logic holds with the network. Failing to do so — particularly on administrative records — can result in disciplinary charges and, if found guilty, dismissal.</p>
+      </div>
+
+      <div class="verify">
+        <h4>Before this goes to the floor</h4>
+        <p>This matrix was rebuilt from a scanned copy of the 09 September 2025 notice. A few cells on that scan were hard to read with confidence and should be confirmed against the original before this is issued to staff:</p>
+        <ul>
+          <li>Proof of residence and driver's licence rows on the <b>New Month-2-Month</b> column</li>
+          <li>Whether <b>Latest payslip</b> or <b>Payslip not older than 3 months</b> applies on each EC column</li>
+          <li>The self-employed column: the notice shows bank statements rather than a payslip, which is worth restating explicitly</li>
+        </ul>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="sheetHome">Back to the drill</button>
+        <button class="btn plain" onclick="window.print()">Print</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Cell Logic (Pty) Ltd · Internal training tool · Based on the notice dated 09 September 2025</span>
+    <span>The network may change these requirements at any time — keep up via BRC communications, eLearning and awareness sessions.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════════════════════════════════════════════
+   1. DOCUMENT MATRIX  —  EDIT HERE IF ANYTHING IS WRONG
+   Values: 'Y' = required, 'N' = not required,
+           'EITHER' = ID copy OR driver's licence accepted,
+           'IFNOTBANK' = required only if not shown on the bank statement,
+           'AGREEMENT' = must be uploaded AND linked before finalising
+   ══════════════════════════════════════════════════════════ */
+
+var DOCS = [
+  {id:'id',       label:'ID copy',                  sub:'Certified copy of the customer ID'},
+  {id:'licence',  label:"Driver's licence",         sub:'Accepted in place of ID on some order types'},
+  {id:'bank',     label:'3 months bank statements', sub:'Latest three months'},
+  {id:'por',      label:'Proof of residence',       sub:'Only if the address is not on the statement'},
+  {id:'payslip3', label:'Payslip (max 3 months old)',sub:'Dated within the last three months'},
+  {id:'payslipL', label:'Latest payslip',           sub:'Most recent payslip'},
+  {id:'agree',    label:'Signed subscriber agreement',sub:'Signed — not the tick-box option'},
+  {id:'mnp',      label:'MNP form',                 sub:'Porting a number in from another network'},
+  {id:'nfl',      label:'Number-for-life form',     sub:'Prepaid number used for the contract'}
+];
+
+var TYPES = {
+  newline:      {name:'New line',                group:'new', docs:{id:'Y', licence:'N', bank:'Y', por:'IFNOTBANK', payslip3:'Y', payslipL:'N', agree:'AGREEMENT'}},
+  newselfemp:   {name:'New line — self-employed', group:'new', docs:{id:'Y', licence:'N', bank:'Y', por:'IFNOTBANK', payslip3:'N', payslipL:'N', agree:'AGREEMENT'}},
+  newm2m:       {name:'New Month-2-Month',        group:'new', docs:{id:'Y', licence:'N', bank:'Y', por:'IFNOTBANK', payslip3:'N', payslipL:'N', agree:'AGREEMENT'},
+                 note:'Bank statements here serve as proof of bank account.'},
+  addsim:       {name:'Add-SIM',                  group:'up',  docs:{id:'EITHER', licence:'EITHER', bank:'N', por:'N', payslip3:'N', payslipL:'N', agree:'AGREEMENT'}},
+  addsimm2m:    {name:'Add-SIM Month-2-Month',    group:'up',  docs:{id:'EITHER', licence:'EITHER', bank:'N', por:'N', payslip3:'N', payslipL:'N', agree:'AGREEMENT'}},
+  upgradem2m:   {name:'Upgrade Month-2-Month',    group:'up',  docs:{id:'EITHER', licence:'EITHER', bank:'N', por:'N', payslip3:'N', payslipL:'N', agree:'AGREEMENT'}},
+  upgrade:      {name:'Upgrade',                  group:'up',  docs:{id:'EITHER', licence:'EITHER', bank:'N', por:'N', payslip3:'N', payslipL:'N', agree:'AGREEMENT'}},
+  ecnew:        {name:'New EC line',              group:'ec',  docs:{id:'Y', licence:'N', bank:'Y', por:'IFNOTBANK', payslip3:'N', payslipL:'Y', agree:'AGREEMENT'}},
+  ecaddsim:     {name:'Add-SIM EC line',          group:'ec',  docs:{id:'Y', licence:'N', bank:'N', por:'N', payslip3:'N', payslipL:'Y', agree:'AGREEMENT'}},
+  ecupgrade:    {name:'EC upgrade',               group:'ec',  docs:{id:'EITHER', licence:'EITHER', bank:'N', por:'N', payslip3:'N', payslipL:'Y', agree:'AGREEMENT'}}
+};
+
+var RULES = [
+  {t:'Ticking "customer agrees to the contract" on iLula replaces the customer signing the agreement.', a:false,
+   why:'The tick-box only inserts the customer\u2019s name where they are supposed to sign. It is a call-centre option and must not be used in store.'},
+  {t:'A manually signed agreement must have every page initialled, as well as signatures in the correct places.', a:true,
+   why:'All pages initialled plus signatures in the right places — otherwise the agreement is not valid.'},
+  {t:'When a digital signature pad is used, three signatures with no initials on the pages is acceptable.', a:true,
+   why:'The pad only applies the three signatures and cannot add initials. The system cannot be changed, so this is accepted.'},
+  {t:'It is enough to upload the signed agreement — you do not need to link it to the order.', a:false,
+   why:'It must be uploaded AND linked to the order before you finalise.'},
+  {t:'The network can change these document requirements at any time, and it is your responsibility to keep up.', a:true,
+   why:'Changes come through BRC communications, eLearning and awareness sessions. Keeping current is on you as an individual.'},
+  {t:'Not following the network\u2019s prescribed practices can lead to disciplinary charges and dismissal.', a:true,
+   why:'Clause 31 of your employment contract, in support of the Dealer Agreement Cell Logic holds with the network.'},
+  {t:'Proof of residence is always required, even when the address already appears on the bank statement.', a:false,
+   why:'It is only required if the address does not appear on the bank statement.'},
+  {t:'A number being ported in from another network needs an MNP form on top of the standard documents.', a:true,
+   why:'Mobile Number Portability form, in addition to everything the order type already requires.'},
+  {t:'An existing prepaid number used for a contract needs a Number-for-life form.', a:true,
+   why:'Additional mandatory document whenever a prepaid number is carried onto the contract.'},
+  {t:'A straight upgrade needs three months of bank statements.', a:false,
+   why:'Upgrades need ID or driver\u2019s licence plus the signed agreement. No bank statements, payslip or proof of residence.'},
+  {t:'On a new line, a payslip from five months ago is acceptable.', a:false,
+   why:'The payslip may not be older than three months.'},
+  {t:'The documents listed in the notice cover every possible order scenario on iLula.', a:false,
+   why:'The notice covers the most common scenarios only. Anything unusual goes to your Store Manager first.'},
+  {t:'As a dealer, Cell Logic facilitates the contract between the customer and the network, so the network must hold a copy of the signed agreement.', a:true,
+   why:'That is exactly why the upload-and-link step exists in the iLula order process.'},
+  {t:'A self-employed customer taking a new line needs a payslip.', a:false,
+   why:'Self-employed customers are assessed on the three months of bank statements instead.'}
+];
+
+var NAMES = ['Thabo','Nomsa','Pieter','Ayanda','Riaan','Zanele','Sipho','Michelle','Lungile','Deon','Precious','Andile','Karin','Mandla','Farhana','Wesley','Nokuthula','Jaco'];
+
+/* ══════════════════════════════════════════════════════════
+   2. STATE
+   ══════════════════════════════════════════════════════════ */
+
+var S = {
+  mode:'orders', queue:[], idx:0, score:0, streak:0, bestStreak:0,
+  perfect:0, maxScore:0, earned:0, answered:false, timer:null, left:45,
+  weak:[], player:'', board:[]
+};
+
+var RANKS = [
+  {min:0,   name:'Trainee'},
+  {min:400, name:'Floor Ready'},
+  {min:900, name:'Order Desk Pro'},
+  {min:1500,name:'Compliance Champion'},
+  {min:2200,name:'iLula Legend'}
+];
+
+var ICONS = {
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>',
+  cross:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  half:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>',
+  trophy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h8v5a4 4 0 01-8 0z"/><path d="M8 5H5v2a3 3 0 003 3M16 5h3v2a3 3 0 01-3 3"/><path d="M10 13h4v3h-4zM8 20h8"/><path d="M12 16v4"/></svg>',
+  bolt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 4.5-3.2 8.3-8 9.5C7.2 20.3 4 16.5 4 12V7z"/></svg>',
+  eye:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>'
+};
+
+var $ = function(id){ return document.getElementById(id); };
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t;} return a; }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ══════════════════════════════════════════════════════════
+   3. SCENARIO BUILDER
+   ══════════════════════════════════════════════════════════ */
+
+function buildScenario(){
+  var keys = Object.keys(TYPES);
+  var key = pick(keys);
+  var type = TYPES[key];
+  var name = pick(NAMES);
+
+  var facts = [];
+  var required = {};          // docId -> true
+  var eitherGroups = [];      // arrays of docIds where any one satisfies
+
+  Object.keys(type.docs).forEach(function(d){
+    var v = type.docs[d];
+    if(v === 'Y' || v === 'AGREEMENT') required[d] = true;
+  });
+
+  // ID or licence handling
+  if(type.docs.id === 'EITHER'){ eitherGroups.push(['id','licence']); }
+
+  // Proof of residence condition
+  var addressOnStatement = null;
+  if(type.docs.por === 'IFNOTBANK'){
+    addressOnStatement = Math.random() < 0.5;
+    if(addressOnStatement){
+      facts.push('Their residential address <b>does appear</b> on the bank statements.');
+    } else {
+      facts.push('Their residential address <b>does not appear</b> on the bank statements.');
+      required.por = true;
+    }
+  }
+
+  // Employment framing
+  if(key === 'newselfemp'){ facts.push('The customer is <b>self-employed</b> and has no payslip.'); }
+  else if(key === 'newline'){ facts.push('The customer is <b>permanently employed</b> and has payslips available.'); }
+  else if(type.group === 'ec'){ facts.push('This is an <b>EC (employee/corporate) line</b>.'); }
+
+  // Port-in
+  if(Math.random() < 0.3){
+    facts.push('They are <b>porting their number</b> across from another network.');
+    required.mnp = true;
+  }
+  // Number-for-life
+  if(type.group === 'new' && Math.random() < 0.28){
+    facts.push('They want to use their <b>existing prepaid number</b> on the contract.');
+    required.nfl = true;
+  }
+
+  var verb = type.group === 'up' ? 'is at the counter for' : 'wants to take out';
+  var brief = name + ' ' + verb + ' <b>' + type.name.toLowerCase() + '</b>.';
+
+  return {
+    kind:'order', typeKey:key, typeName:type.name, brief:brief, facts:facts,
+    required:required, eitherGroups:eitherGroups, note:type.note || null,
+    addressOnStatement:addressOnStatement
+  };
+}
+
+function buildQueue(mode){
+  var q = [];
+  if(mode === 'orders'){
+    for(var i=0;i<10;i++) q.push(buildScenario());
+  } else if(mode === 'rules'){
+    q = shuffle(RULES).slice(0,10).map(function(r){ return {kind:'rule', rule:r}; });
+  } else {
+    var r = shuffle(RULES).slice(0,7).map(function(x){ return {kind:'rule', rule:x}; });
+    for(var j=0;j<7;j++) r.push(buildScenario());
+    q = shuffle(r);
+  }
+  return q;
+}
+
+/* ══════════════════════════════════════════════════════════
+   4. RENDER
+   ══════════════════════════════════════════════════════════ */
+
+function show(id){
+  ['scHome','scGame','scResult','scSheet'].forEach(function(s){ $(s).classList.remove('active'); });
+  $(id).classList.add('active');
+  $('hud').style.display = (id === 'scGame') ? 'block' : 'none';
+  $('navSheet').setAttribute('aria-pressed', id === 'scSheet' ? 'true' : 'false');
+  window.scrollTo(0,0);
+}
+
+function renderQuestion(){
+  var q = S.queue[S.idx];
+  S.answered = false;
+  $('fb').classList.remove('show','good','bad','part');
+  $('submitBtn').style.display = 'inline-flex';
+  $('submitBtn').disabled = false;
+  $('nextBtn').style.display = 'none';
+  $('qLabel').textContent = 'Round ' + (S.idx+1) + ' of ' + S.queue.length;
+  $('hudRound').textContent = (S.idx+1) + '/' + S.queue.length;
+
+  var h = '';
+  if(q.kind === 'order'){
+    h += '<div class="brief"><span class="apptype">' + esc(q.typeName) + '</span>';
+    h += '<p>' + q.brief + '</p>';
+    if(q.facts.length){
+      h += '<ul>';
+      q.facts.forEach(function(f){ h += '<li><b>&rsaquo;</b><span>' + f + '</span></li>'; });
+      h += '</ul>';
+    }
+    h += '</div>';
+    h += '<p class="ask">Which documents must be uploaded and linked before you finalise?</p>';
+    h += '<div class="chips" role="group" aria-label="Document selection">';
+    DOCS.forEach(function(d){
+      h += '<button class="chip" type="button" role="checkbox" aria-checked="false" aria-pressed="false" data-doc="'+d.id+'">' +
+           '<span class="cbox">'+ICONS.check.replace('currentColor','#2EE6C6')+'</span>' +
+           '<span class="lbl">'+esc(d.label)+'<span class="sub">'+esc(d.sub)+'</span></span></button>';
+    });
+    h += '</div>';
+  } else {
+    h += '<p class="ask">True or false?</p>';
+    h += '<p class="statement">' + esc(q.rule.t) + '</p>';
+    h += '<div class="tf">';
+    h += '<button class="t" type="button" data-tf="true">'+ICONS.check+'True</button>';
+    h += '<button class="f" type="button" data-tf="false">'+ICONS.cross+'False</button>';
+    h += '</div>';
+  }
+  $('qBody').innerHTML = h;
+
+  var chips = $('qBody').querySelectorAll('.chip');
+  Array.prototype.forEach.call(chips, function(c){
+    c.addEventListener('click', function(){
+      if(S.answered) return;
+      var on = c.getAttribute('aria-pressed') === 'true';
+      c.setAttribute('aria-pressed', on ? 'false' : 'true');
+      c.setAttribute('aria-checked', on ? 'false' : 'true');
+    });
+  });
+  var tfs = $('qBody').querySelectorAll('.tf button');
+  Array.prototype.forEach.call(tfs, function(b){
+    b.addEventListener('click', function(){
+      if(S.answered) return;
+      gradeRule(b.getAttribute('data-tf') === 'true');
+    });
+  });
+  if(q.kind === 'rule'){ $('submitBtn').style.display = 'none'; }
+
+  startTimer(q.kind === 'order' ? 45 : 25);
+}
+
+function startTimer(secs){
+  clearInterval(S.timer);
+  S.left = secs; S.max = secs;
+  $('timerNum').textContent = secs;
+  $('timerBox').classList.remove('warn');
+  $('tFill').classList.remove('warn');
+  $('tFill').style.width = '100%';
+  S.timer = setInterval(function(){
+    S.left--;
+    if(S.left <= 0){ S.left = 0; clearInterval(S.timer); if(!S.answered){ autoSubmit(); } }
+    $('timerNum').textContent = S.left;
+    $('tFill').style.width = (S.left / S.max * 100) + '%';
+    if(S.left <= 8){ $('timerBox').classList.add('warn'); $('tFill').classList.add('warn'); }
+  }, 1000);
+}
+
+function autoSubmit(){
+  var q = S.queue[S.idx];
+  if(q.kind === 'order') gradeOrder(); else gradeRule(null);
+}
+
+/* ══════════════════════════════════════════════════════════
+   5. GRADING
+   ══════════════════════════════════════════════════════════ */
+
+function gradeOrder(){
+  if(S.answered) return;
+  S.answered = true;
+  clearInterval(S.timer);
+
+  var q = S.queue[S.idx];
+  var chips = $('qBody').querySelectorAll('.chip');
+  var chosen = {};
+  Array.prototype.forEach.call(chips, function(c){
+    if(c.getAttribute('aria-pressed') === 'true') chosen[c.getAttribute('data-doc')] = true;
+    c.disabled = true;
+  });
+
+  var needed = Object.keys(q.required);
+  var hits = 0, falsePos = [], missed = [];
+
+  needed.forEach(function(d){ if(chosen[d]) hits++; else missed.push(d); });
+
+  // either-group: one of the pair satisfies
+  var eitherOk = true;
+  q.eitherGroups.forEach(function(g){
+    var any = g.some(function(d){ return chosen[d]; });
+    if(!any){ eitherOk = false; missed.push(g[0]); }
+  });
+
+  Object.keys(chosen).forEach(function(d){
+    if(q.required[d]) return;
+    var inEither = q.eitherGroups.some(function(g){ return g.indexOf(d) !== -1; });
+    if(inEither) return;
+    falsePos.push(d);
+  });
+
+  var totalNeeded = needed.length + q.eitherGroups.length;
+  var correctCount = hits + (eitherOk ? q.eitherGroups.length : 0);
+  var accuracy = totalNeeded ? correctCount / totalNeeded : 1;
+  var penalty = Math.min(falsePos.length * 0.2, 0.8);
+  var quality = Math.max(0, accuracy - penalty);
+  var isPerfect = (correctCount === totalNeeded && falsePos.length === 0);
+
+  // visual marking
+  Array.prototype.forEach.call(chips, function(c){
+    var d = c.getAttribute('data-doc');
+    var inEither = q.eitherGroups.some(function(g){ return g.indexOf(d) !== -1; });
+    var need = q.required[d] || (inEither && eitherOk && chosen[d]);
+    if(chosen[d] && (q.required[d] || inEither)) c.classList.add('hit');
+    else if(chosen[d]) c.classList.add('miss');
+    else if(q.required[d] || (inEither && !eitherOk)) c.classList.add('shouldve');
+  });
+
+  var base = Math.round(140 * quality);
+  var speed = isPerfect ? Math.round(S.left * 2.2) : 0;
+  var mult = S.streak >= 5 ? 2 : (S.streak >= 3 ? 1.5 : 1);
+  var pts = Math.round((base + speed) * mult);
+
+  finish(isPerfect, pts, buildOrderFeedback(q, missed, falsePos, isPerfect), q.typeName);
+}
+
+function docLabel(id){
+  for(var i=0;i<DOCS.length;i++){ if(DOCS[i].id === id) return DOCS[i].label; }
+  return id;
+}
+
+function buildOrderFeedback(q, missed, falsePos, perfect){
+  var h = '';
+  if(perfect){
+    h += '<p>Exactly right for a <b>' + esc(q.typeName) + '</b>. Nothing missing, nothing unnecessary.</p>';
+  } else {
+    if(missed.length){
+      h += '<p><b>You left out:</b> ' + missed.map(function(d){
+        return d === 'id' && q.eitherGroups.length ? 'ID copy or driver\u2019s licence' : docLabel(d);
+      }).join(', ') + '.</p>';
+    }
+    if(falsePos.length){
+      h += '<p><b>Not needed here:</b> ' + falsePos.map(docLabel).join(', ') + '. Asking for documents the order does not require slows the customer down and is not what the network prescribes.</p>';
+    }
+  }
+  var why = [];
+  if(q.addressOnStatement === true) why.push('Because the address appeared on the bank statement, no separate proof of residence was needed.');
+  if(q.addressOnStatement === false) why.push('The address was not on the statement, so proof of residence became mandatory.');
+  if(q.required.mnp) why.push('Porting in from another network always adds the MNP form.');
+  if(q.required.nfl) why.push('Carrying an existing prepaid number onto the contract always adds the Number-for-life form.');
+  if(q.note) why.push(q.note);
+  why.push('The signed subscriber agreement must be uploaded and linked to the order before you finalise — the tick-box is not a substitute.');
+  h += '<div class="why"><strong>Why</strong>' + why.join(' ') + '</div>';
+  return h;
+}
+
+function gradeRule(answer){
+  if(S.answered) return;
+  S.answered = true;
+  clearInterval(S.timer);
+
+  var q = S.queue[S.idx];
+  var right = (answer === q.rule.a);
+  var btns = $('qBody').querySelectorAll('.tf button');
+  Array.prototype.forEach.call(btns, function(b){
+    b.disabled = true;
+    var v = b.getAttribute('data-tf') === 'true';
+    if(v === q.rule.a) b.classList.add(answer === null ? 'was-right' : (right ? 'chosen-right' : 'was-right'));
+    if(answer !== null && v === answer && !right) b.classList.add('chosen-wrong');
+  });
+
+  var mult = S.streak >= 5 ? 2 : (S.streak >= 3 ? 1.5 : 1);
+  var pts = right ? Math.round((100 + S.left * 2.4) * mult) : 0;
+
+  var h = '<p>' + (answer === null ? 'Time ran out. ' : '') +
+          'The statement is <b>' + (q.rule.a ? 'true' : 'false') + '</b>.</p>' +
+          '<div class="why"><strong>Why</strong>' + esc(q.rule.why) + '</div>';
+
+  finish(right, pts, h, 'Rules');
+}
+
+function finish(good, pts, bodyHtml, topic){
+  S.maxScore += 300;
+  if(good){ S.streak++; S.perfect++; if(S.streak > S.bestStreak) S.bestStreak = S.streak; }
+  else { S.streak = 0; if(S.weak.indexOf(topic) === -1) S.weak.push(topic); }
+  S.score += pts;
+  S.earned += pts;
+
+  var fb = $('fb');
+  fb.classList.add('show');
+  fb.classList.add(good ? 'good' : (pts > 0 ? 'part' : 'bad'));
+  $('fbIcon').innerHTML = good ? ICONS.check : (pts > 0 ? ICONS.half : ICONS.cross);
+  $('fbTitle').textContent = good ? 'Clean order' : (pts > 0 ? 'Close, but not clean' : 'Not quite');
+  $('fbPts').textContent = '+' + pts;
+  $('fbBody').innerHTML = bodyHtml;
+
+  updateHud();
+  $('submitBtn').style.display = 'none';
+  $('nextBtn').style.display = 'inline-flex';
+  $('nextBtn').textContent = (S.idx + 1 >= S.queue.length) ? 'See results' : 'Next round';
+  $('nextBtn').focus();
+}
+
+function updateHud(){
+  $('hudScore').textContent = S.score;
+  $('hudStreak').textContent = S.streak + (S.streak >= 3 ? (S.streak >= 5 ? ' \u00d72' : ' \u00d71.5') : '');
+  var rank = RANKS[0];
+  RANKS.forEach(function(r){ if(S.score >= r.min) rank = r; });
+  $('rankChip').textContent = rank.name;
+  var next = RANKS.filter(function(r){ return r.min > S.score; })[0];
+  var pct = next ? ((S.score - rank.min) / (next.min - rank.min) * 100) : 100;
+  $('xpFill').style.width = Math.max(3, Math.min(100, pct)) + '%';
+}
+
+/* ══════════════════════════════════════════════════════════
+   6. RESULTS
+   ══════════════════════════════════════════════════════════ */
+
+function showResults(){
+  clearInterval(S.timer);
+  var acc = S.queue.length ? Math.round(S.perfect / S.queue.length * 100) : 0;
+  $('resPct').textContent = acc + '%';
+  $('resPoints').textContent = S.score;
+  $('resPerfect').textContent = S.perfect + '/' + S.queue.length;
+  $('resStreak').textContent = S.bestStreak;
+  $('resRounds').textContent = S.queue.length;
+  $('resMode').textContent = S.mode === 'orders' ? 'Order Desk' : (S.mode === 'rules' ? 'Rules Round' : 'Full Shift');
+
+  var rank;
+  if(acc === 100) rank = 'iLula Legend';
+  else if(acc >= 85) rank = 'Compliance Champion';
+  else if(acc >= 70) rank = 'Order Desk Pro';
+  else if(acc >= 50) rank = 'Floor Ready';
+  else rank = 'Back to eLearning';
+  $('resRank').textContent = rank;
+
+  var badges = [
+    {got:acc === 100,        icon:ICONS.trophy, label:'Flawless round'},
+    {got:S.bestStreak >= 5,  icon:ICONS.bolt,   label:'Streak of 5'},
+    {got:S.score >= 1200,    icon:ICONS.shield, label:'1 200 points'},
+    {got:S.perfect >= 7,     icon:ICONS.eye,    label:'Sharp eye'}
+  ];
+  $('badges').innerHTML = badges.map(function(b){
+    return '<span class="badge' + (b.got ? '' : ' locked') + '">' + b.icon + b.label + '</span>';
+  }).join('');
+
+  if(S.weak.length){
+    $('weakBox').style.display = 'block';
+    $('weakList').innerHTML = S.weak.map(function(w){
+      return '<li><b>&rsaquo;</b><span>' + esc(w) + '</span></li>';
+    }).join('');
+  } else {
+    $('weakBox').style.display = 'none';
+  }
+
+  if(S.player){
+    saveScore({name:S.player, mode:$('resMode').textContent, score:S.score, acc:acc});
+  }
+  show('scResult');
+}
+
+/* ── Shared store board (Supabase) ──
+   Scores post straight to the drill_scores table with the public
+   (publishable) key; row-level security only allows insert + read.
+   If Supabase can't be reached, the board quietly falls back to
+   this-device-only for the session. */
+var SB_URL = 'https://dzmqogwggompkwasiglq.supabase.co';
+var SB_KEY = 'sb_publishable_fu6yXakyx-Egk6Jcb_9BMg_cwh2dZTX';
+var SB_HEADERS = {
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=minimal'
+};
+S.boardOnline = false;
+
+function loadBoard(){
+  if(!window.fetch) return;
+  fetch(SB_URL + '/rest/v1/drill_scores?select=name,mode,score,accuracy&order=score.desc&limit=25', {headers:SB_HEADERS})
+    .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(rows){
+      S.boardOnline = true;
+      S.board = rows.map(function(r){ return {name:r.name, mode:r.mode, score:r.score, acc:r.accuracy}; });
+      renderBoard();
+    })
+    .catch(function(){ S.boardOnline = false; renderBoard(); });
+}
+
+function saveScore(entry){
+  S.board.push(entry);
+  renderBoard();
+  if(!window.fetch) return;
+  fetch(SB_URL + '/rest/v1/drill_scores', {
+    method:'POST', headers:SB_HEADERS,
+    body:JSON.stringify({
+      name:entry.name, mode:entry.mode, score:entry.score, accuracy:entry.acc,
+      rounds:S.queue.length, perfect:S.perfect, best_streak:S.bestStreak
+    })
+  })
+  .then(function(r){ if(!r.ok) throw new Error(r.status); loadBoard(); })
+  .catch(function(){ S.boardOnline = false; renderBoard(); });
+}
+
+function renderBoard(){
+  if(!S.board.length){ $('boardPanel').style.display = 'none'; return; }
+  $('boardPanel').style.display = 'block';
+  var sorted = S.board.slice().sort(function(a,b){ return b.score - a.score; });
+  $('boardBody').innerHTML = sorted.map(function(r,i){
+    return '<tr class="' + (r.name === S.player && i === 0 ? 'me' : '') + '">' +
+      '<td class="pos">' + (i+1) + '</td><td>' + esc(r.name) + '</td><td>' + esc(r.mode) +
+      '</td><td>' + r.score + '</td><td>' + r.acc + '%</td></tr>';
+  }).join('');
+  $('boardHint').textContent = S.boardOnline
+    ? 'Shared across every device — top 25 scores. Pass the tablet along and run it as a team drill.'
+    : 'Could not reach the shared board right now — showing scores from this device only.';
+}
+
+/* ══════════════════════════════════════════════════════════
+   7. CHEAT SHEET RENDER
+   ══════════════════════════════════════════════════════════ */
+
+function cell(v){
+  if(v === 'Y') return '<span class="yn y" title="Required">Y</span>';
+  if(v === 'N') return '<span class="yn n" title="Not required">N</span>';
+  if(v === 'EITHER') return '<span class="cond">ID <b>or</b> driver\u2019s licence</span>';
+  if(v === 'IFNOTBANK') return '<span class="cond">Yes, if not on the bank statement</span>';
+  if(v === 'AGREEMENT') return '<span class="cond">Uploaded <b>and linked</b> before finalising</span>';
+  return '';
+}
+
+function renderMatrix(elId, groupKey){
+  var cols = Object.keys(TYPES).filter(function(k){ return TYPES[k].group === groupKey; });
+  var h = '<thead><tr><th class="rowhead">Documentation required</th>';
+  cols.forEach(function(k){ h += '<th>' + esc(TYPES[k].name) + '</th>'; });
+  h += '</tr></thead><tbody>';
+  DOCS.forEach(function(d){
+    if(d.id === 'mnp' || d.id === 'nfl') return;
+    h += '<tr><td class="rowhead">' + esc(d.label) + '</td>';
+    cols.forEach(function(k){ h += '<td>' + cell(TYPES[k].docs[d.id]) + '</td>'; });
+    h += '</tr>';
+  });
+  h += '</tbody>';
+  $(elId).innerHTML = h;
+}
+
+function renderRules(){
+  var picked = [RULES[0], RULES[1], RULES[2], RULES[3], RULES[12]];
+  $('rulesList').innerHTML = picked.map(function(r,i){
+    return '<div class="rulecard"><span class="rn">' + (i+1) + '</span><div>' +
+      '<h4>' + (r.a ? 'Correct: ' : 'Common mistake: ') + esc(r.t) + '</h4>' +
+      '<p>' + esc(r.why) + '</p></div></div>';
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════
+   8. WIRING
+   ══════════════════════════════════════════════════════════ */
+
+Array.prototype.forEach.call(document.querySelectorAll('.mode'), function(b){
+  b.addEventListener('click', function(){
+    S.mode = b.getAttribute('data-mode');
+    S.player = ($('playerName').value || '').trim().slice(0,22);
+    try{ if(S.player) localStorage.setItem('drill-name', S.player); }catch(e){}
+    S.queue = buildQueue(S.mode);
+    S.idx = 0; S.score = 0; S.streak = 0; S.bestStreak = 0;
+    S.perfect = 0; S.maxScore = 0; S.earned = 0; S.weak = [];
+    updateHud();
+    show('scGame');
+    renderQuestion();
+  });
+});
+
+$('submitBtn').addEventListener('click', gradeOrder);
+$('nextBtn').addEventListener('click', function(){
+  S.idx++;
+  if(S.idx >= S.queue.length) showResults(); else renderQuestion();
+});
+$('quitBtn').addEventListener('click', function(){
+  S.queue = S.queue.slice(0, S.idx + (S.answered ? 1 : 0));
+  if(!S.queue.length){ clearInterval(S.timer); show('scHome'); return; }
+  showResults();
+});
+$('againBtn').addEventListener('click', function(){
+  S.queue = buildQueue(S.mode);
+  S.idx = 0; S.score = 0; S.streak = 0; S.bestStreak = 0; S.perfect = 0; S.weak = [];
+  updateHud(); show('scGame'); renderQuestion();
+});
+$('homeBtn').addEventListener('click', function(){ clearInterval(S.timer); show('scHome'); });
+$('navHome').addEventListener('click', function(){ clearInterval(S.timer); show('scHome'); });
+$('sheetBtn').addEventListener('click', function(){ show('scSheet'); });
+$('navSheet').addEventListener('click', function(){ clearInterval(S.timer); show('scSheet'); });
+$('sheetHome').addEventListener('click', function(){ show('scHome'); });
+
+renderMatrix('mxNew','new');
+renderMatrix('mxUp','up');
+renderMatrix('mxEc','ec');
+renderRules();
+updateHud();
+try{ var savedName = localStorage.getItem('drill-name'); if(savedName) $('playerName').value = savedName; }catch(e){}
+loadBoard();
+
+})();
+</script>
+</body>
+</html>
