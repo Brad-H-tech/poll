@@ -391,31 +391,19 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
     <div class="panel">
       <div class="kicker">New — upskill</div>
       <h1 class="big" style="font-size:clamp(24px,4.5vw,36px)">Know the <em>phones &amp; forms</em></h1>
-      <p class="lede">Selling is easier when you can explain what RAM actually does, why a Huawei has no Play Store, and what every EasyForm in the pack is for. Read the guide, then prove it in the drill.</p>
+      <p class="lede">Pick a topic. Inside each one: read the guide first, or jump straight into the test.</p>
       <div class="modes">
-        <button class="mode" data-go="scDevices">
+        <button class="mode" data-go="scDevHub">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
-          <h3>Device Guide</h3>
-          <p>RAM, storage, batteries, cameras, iPhone vs Samsung vs Honor vs Oppo vs Huawei — and the price tiers.</p>
-          <span class="len">Read — 5 min</span>
+          <h3>Devices</h3>
+          <p>RAM, storage, batteries, cameras — and iPhone vs Samsung vs Honor vs Oppo vs Huawei, with the price tiers.</p>
+          <span class="len">Guide + test</span>
         </button>
-        <button class="mode" data-mode="devices">
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M9.5 9.5l2 2 3.5-3.5"/></svg>
-          <h3>Device Drill</h3>
-          <p>True or false on specs, brands and tiers. Can you talk phones with a straight face?</p>
-          <span class="len">10 statements</span>
-        </button>
-        <button class="mode" data-go="scForms">
+        <button class="mode" data-go="scFormHub">
           <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h6M10 16h6"/></svg>
-          <h3>EasyForms Guide</h3>
-          <p>CPD, KIP, usage limits, insurance waiver, N4L, upgrades, SIM swaps, transfers — what each form is for and where people slip.</p>
-          <span class="len">Read — 5 min</span>
-        </button>
-        <button class="mode" data-mode="forms">
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M9.5 13.5l2 2 3.5-3.5"/></svg>
-          <h3>Forms Drill</h3>
-          <p>True or false on the form pack. The 7-day, 14-day and 6-month rules live here.</p>
-          <span class="len">10 statements</span>
+          <h3>EasyForms</h3>
+          <p>CPD, KIP, usage limits, insurance waiver, N4L, upgrades, SIM swaps, transfers — what each form is for.</p>
+          <span class="len">Guide + test</span>
         </button>
       </div>
     </div>
@@ -550,6 +538,62 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
   </div>
 </main>
 
+<!-- ══ DEVICE HUB ════════════════════════ -->
+<main class="screen" id="scDevHub">
+  <div class="wrap">
+    <div class="panel">
+      <div class="kicker">Device Lab</div>
+      <h1 class="big" style="font-size:clamp(26px,5vw,40px)">Devices</h1>
+      <p class="lede">Learn the phones first, or go straight in and test yourself — your score goes on the store board either way.</p>
+      <div class="modes">
+        <button class="mode" data-go="scDevices">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h7v14H4zM13 5h7v14h-7z"/><path d="M4 5c2-1.5 5-1.5 7 0M13 5c2-1.5 5-1.5 7 0"/></svg>
+          <h3>Device Guide</h3>
+          <p>The spec words translated, the six brands on our shelf, the Platinum-to-Bronze tiers, and the current stock list.</p>
+          <span class="len">Read — 5 min</span>
+        </button>
+        <button class="mode" data-mode="devices">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M9.5 9.5l2 2 3.5-3.5"/></svg>
+          <h3>Device Test</h3>
+          <p>10 true-or-false statements on specs, brands and tiers. Can you talk phones with a straight face?</p>
+          <span class="len">10 statements</span>
+        </button>
+      </div>
+      <div class="actions">
+        <button class="btn plain" data-go="scHome">Home</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══ FORMS HUB ═════════════════════════ -->
+<main class="screen" id="scFormHub">
+  <div class="wrap">
+    <div class="panel">
+      <div class="kicker">EasyForms</div>
+      <h1 class="big" style="font-size:clamp(26px,5vw,40px)">EasyForms</h1>
+      <p class="lede">Every form in the pack, decoded — then a test on the rules that catch people out.</p>
+      <div class="modes">
+        <button class="mode" data-go="scForms">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h7v14H4zM13 5h7v14h-7z"/><path d="M4 5c2-1.5 5-1.5 7 0M13 5c2-1.5 5-1.5 7 0"/></svg>
+          <h3>Forms Guide</h3>
+          <p>CPD, KIP, usage limits, insurance waiver, N4L, upgrade approval, SIM swaps and transfers — with the traps highlighted.</p>
+          <span class="len">Read — 5 min</span>
+        </button>
+        <button class="mode" data-mode="forms">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M9.5 13.5l2 2 3.5-3.5"/></svg>
+          <h3>Forms Test</h3>
+          <p>10 true-or-false statements. The 7-day, 14-day and 6-month rules live here.</p>
+          <span class="len">10 statements</span>
+        </button>
+      </div>
+      <div class="actions">
+        <button class="btn plain" data-go="scHome">Home</button>
+      </div>
+    </div>
+  </div>
+</main>
+
 <!-- ══ DEVICE GUIDE ══════════════════════ -->
 <main class="screen" id="scDevices">
   <div class="wrap">
@@ -632,7 +676,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
       <div class="tablescroll"><table class="matrix" id="mxStock"></table></div>
 
       <div class="actions">
-        <button class="btn" data-mode="devices" id="devDrillBtn">Take the Device Drill</button>
+        <button class="btn" data-mode="devices" id="devDrillBtn">Take the Device Test</button>
+        <button class="btn plain" data-go="scDevHub">Back</button>
         <button class="btn plain" data-go="scHome">Home</button>
       </div>
     </div>
@@ -686,7 +731,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
       </div>
 
       <div class="actions">
-        <button class="btn" data-mode="forms" id="formDrillBtn">Take the Forms Drill</button>
+        <button class="btn" data-mode="forms" id="formDrillBtn">Take the Forms Test</button>
+        <button class="btn plain" data-go="scFormHub">Back</button>
         <button class="btn plain" data-go="scHome">Home</button>
       </div>
     </div>
@@ -960,7 +1006,7 @@ var S = {
   weak:[], player:'', board:[]
 };
 
-var MODE_LABEL = {orders:'Order Desk', rules:'Rules Round', mixed:'Full Shift', devices:'Device Drill', forms:'Forms Drill'};
+var MODE_LABEL = {orders:'Order Desk', rules:'Rules Round', mixed:'Full Shift', devices:'Device Test', forms:'Forms Test'};
 
 var RANKS = [
   {min:0,   name:'Trainee'},
@@ -1068,7 +1114,7 @@ function buildQueue(mode){
    ══════════════════════════════════════════════════════════ */
 
 function show(id){
-  ['scHome','scGame','scResult','scSheet','scDevices','scForms','scSim'].forEach(function(s){ $(s).classList.remove('active'); });
+  ['scHome','scGame','scResult','scSheet','scDevHub','scFormHub','scDevices','scForms','scSim'].forEach(function(s){ $(s).classList.remove('active'); });
   $(id).classList.add('active');
   $('hud').style.display = (id === 'scGame') ? 'block' : 'none';
   $('navSheet').setAttribute('aria-pressed', id === 'scSheet' ? 'true' : 'false');
