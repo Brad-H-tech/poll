@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>iLula Docs Drill — Preview</title>
+<title>CL Academy — Preview</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -323,7 +323,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 <div class="topbar">
   <div class="wrap">
     <span class="logo">CL</span>
-    <span class="title">iLula Docs Drill</span>
+    <span class="title">CL Academy</span>
     <span class="co">Cell Logic&nbsp;·&nbsp;Connect KZN</span>
     <span class="spacer"></span>
     <button class="ghost" id="navSheet" aria-pressed="false">
@@ -356,7 +356,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
     <div class="panel">
       <div class="kicker">Cell Logic · Compliance training</div>
       <h1 class="big">Get the docs<br>right, <em>first time</em></h1>
-      <p class="lede">Every iLula order needs a specific set of documents uploaded and linked before you finalise. Get it wrong and the order sits, the customer waits, and the dealership carries the compliance risk. Play a round, find your gaps, fix them.</p>
+      <p class="lede">Every contract order needs a specific set of documents uploaded and linked on the ordering system before you finalise. Get it wrong and the order sits, the customer waits, and the dealership carries the compliance risk. Play a round, find your gaps, fix them.</p>
 
       <div class="namerow">
         <div class="field">
@@ -495,7 +495,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
     <div class="panel">
       <div class="kicker">Reference</div>
       <h1 class="big" style="font-size:clamp(26px,5vw,40px)">Documents by <em>order type</em></h1>
-      <p class="lede">The list below covers the most common iLula order scenarios. It does not cover every possible case — if the order in front of you is not here, check with your Store Manager before finalising.</p>
+      <p class="lede">The list below covers the most common order scenarios. It does not cover every possible case — if the order in front of you is not here, check with your Store Manager before finalising.</p>
 
       <div class="tablecap">New contracts</div>
       <div class="tablescroll"><table class="matrix" id="mxNew"></table></div>
@@ -786,7 +786,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 <footer>
   <div class="wrap">
     <span>Cell Logic (Pty) Ltd · Internal training tool · Based on the notice dated 09 September 2025</span>
-    <span>The network may change these requirements at any time — keep up via BRC communications, eLearning and awareness sessions.</span>
+    <span>The network may change these requirements at any time — keep up via head-office communications, eLearning and awareness sessions.</span>
   </div>
 </footer>
 
@@ -829,7 +829,7 @@ var TYPES = {
 };
 
 var RULES = [
-  {t:'Ticking "customer agrees to the contract" on iLula replaces the customer signing the agreement.', a:false,
+  {t:'Ticking "customer agrees to the contract" on the ordering system replaces the customer signing the agreement.', a:false,
    why:'The tick-box only inserts the customer\u2019s name where they are supposed to sign. It is a call-centre option and must not be used in store.'},
   {t:'A manually signed agreement must have every page initialled, as well as signatures in the correct places.', a:true,
    why:'All pages initialled plus signatures in the right places — otherwise the agreement is not valid.'},
@@ -838,7 +838,7 @@ var RULES = [
   {t:'It is enough to upload the signed agreement — you do not need to link it to the order.', a:false,
    why:'It must be uploaded AND linked to the order before you finalise.'},
   {t:'The network can change these document requirements at any time, and it is your responsibility to keep up.', a:true,
-   why:'Changes come through BRC communications, eLearning and awareness sessions. Keeping current is on you as an individual.'},
+   why:'Changes come through head-office communications, eLearning and awareness sessions. Keeping current is on you as an individual.'},
   {t:'Not following the network\u2019s prescribed practices can lead to disciplinary charges and dismissal.', a:true,
    why:'Clause 31 of your employment contract, in support of the Dealer Agreement Cell Logic holds with the network.'},
   {t:'Proof of residence is always required, even when the address already appears on the bank statement.', a:false,
@@ -851,10 +851,10 @@ var RULES = [
    why:'Upgrades need ID or driver\u2019s licence plus the signed agreement. No bank statements, payslip or proof of residence.'},
   {t:'On a new line, a payslip from five months ago is acceptable.', a:false,
    why:'The payslip may not be older than three months.'},
-  {t:'The documents listed in the notice cover every possible order scenario on iLula.', a:false,
+  {t:'The documents listed in the notice cover every possible order scenario.', a:false,
    why:'The notice covers the most common scenarios only. Anything unusual goes to your Store Manager first.'},
   {t:'As a dealer, Cell Logic facilitates the contract between the customer and the network, so the network must hold a copy of the signed agreement.', a:true,
-   why:'That is exactly why the upload-and-link step exists in the iLula order process.'},
+   why:'That is exactly why the upload-and-link step exists in the order process.'},
   {t:'A self-employed customer taking a new line needs a payslip.', a:false,
    why:'Self-employed customers are assessed on the three months of bank statements instead.'}
 ];
@@ -1013,7 +1013,7 @@ var RANKS = [
   {min:400, name:'Floor Ready'},
   {min:900, name:'Order Desk Pro'},
   {min:1500,name:'Compliance Champion'},
-  {min:2200,name:'iLula Legend'}
+  {min:2200,name:'Store Legend'}
 ];
 
 var ICONS = {
@@ -1365,7 +1365,7 @@ function showResults(){
   $('resMode').textContent = MODE_LABEL[S.mode] || 'Drill';
 
   var rank;
-  if(acc === 100) rank = 'iLula Legend';
+  if(acc === 100) rank = 'Store Legend';
   else if(acc >= 85) rank = 'Compliance Champion';
   else if(acc >= 70) rank = 'Order Desk Pro';
   else if(acc >= 50) rank = 'Floor Ready';
