@@ -1,10 +1,10 @@
-// Config for the SEPARATE iLula Docs Drill worker.
+// Config for the SEPARATE CL Academy worker.
 // The main wrangler.jsonc still serves Chase from ./site — this one
-// serves only the drill, as its own site with its own address.
+// serves only the training site, with its own address.
 // In Cloudflare, connect this repo a second time with the deploy command:
 //   npx wrangler deploy --config drill.wrangler.jsonc
 {
-  "name": "ilula-docs-drill",
+  "name": "cl-academy",
   "compatibility_date": "2026-08-01",
   "assets": {
     "directory": "./site/drill",
