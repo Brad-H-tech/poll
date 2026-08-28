@@ -275,6 +275,34 @@ h1.big em{font-style:normal;background:var(--acc);padding:0 8px;box-decoration-b
 /* ── PREVIEW RIBBON ──────────────────── */
 .ribbon{background:var(--acc-deep);color:var(--ink);text-align:center;font-family:'Archivo';font-weight:900;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:7px 12px;border-bottom:3px solid var(--ink)}
 
+/* ── INK HERO (home) ─────────────────── */
+#scHome{padding-top:0}
+#scHome > .wrap{margin-top:32px}
+.hero{background:var(--ink);border-bottom:5px solid var(--acc)}
+.hero .wrap{display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap;padding-top:42px;padding-bottom:46px}
+.hero .htxt{flex:1;min-width:300px}
+.hero .kicker{color:#8E8E88}
+.hero h1.big{color:#fff}
+.hero h1.big em{background:none;color:var(--acc);padding:0}
+.hero .lede{color:#C9C9C2}
+.streakchip{display:inline-flex;align-items:center;gap:9px;border:2px solid #45453F;border-radius:6px;padding:10px 15px;font-family:'Archivo';font-weight:800;font-size:13px;color:#fff;white-space:nowrap}
+.streakchip svg{width:17px;height:17px}
+
+/* ── MODE CARD BADGES ────────────────── */
+.mtop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.mtop .ico{margin-bottom:0}
+.mbadge{font-family:'Archivo';font-weight:900;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;border-radius:99px;padding:3px 10px;border:2px solid var(--line);background:var(--paper);color:var(--ink-3);white-space:nowrap}
+.mbadge.good{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.mbadge.bad{background:var(--no-bg);border-color:var(--no);color:var(--no)}
+
+/* ── SIMULATOR CARD ──────────────────── */
+.simcard{width:100%;text-align:left;background:var(--ink);color:#fff;border:3px solid var(--ink);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:22px 24px;display:flex;align-items:center;gap:18px;transition:transform .15s;margin-top:20px}
+.simcard:hover{transform:translate(-2px,-2px)}
+.simcard .stxt{flex:1}
+.simcard h3{color:var(--acc);font-size:18px;text-transform:uppercase;margin-bottom:3px}
+.simcard p{color:#C9C9C2;font-size:14px}
+.simcard svg{flex:0 0 auto}
+
 /* ── LEARN SCREENS ───────────────────── */
 .learngrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:16px}
 .learncard{border:3px solid var(--ink);border-radius:6px;background:#fff;box-shadow:2px 2px 0 var(--ink);padding:15px 16px}
@@ -351,12 +379,21 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 
 <!-- ══ HOME ══════════════════════════════ -->
 <main class="screen active" id="scHome">
+  <div class="hero">
+    <div class="wrap">
+      <div class="htxt">
+        <div class="kicker">Cell Logic · Compliance training</div>
+        <h1 class="big">Get the docs<br>right, <em>first time</em></h1>
+        <p class="lede">Every contract order needs a specific set of documents uploaded and linked on the ordering system before you finalise. Get it wrong and the order sits, the customer waits, and the dealership carries the compliance risk. Play a round, find your gaps, fix them.</p>
+      </div>
+      <div class="streakchip" id="streakChip" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#FF8A3D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3-2 4-2 7a4 4 0 0 0 8 .5C18 7 15 6 12 3z"/><path d="M8 14c-1.5 1.5-2 5 4 7 6-2 5.5-5.5 4-7"/></svg>
+        <span id="streakLbl"></span>
+      </div>
+    </div>
+  </div>
   <div class="wrap">
     <div class="panel">
-      <div class="kicker">Cell Logic · Compliance training</div>
-      <h1 class="big">Get the docs<br>right, <em>first time</em></h1>
-      <p class="lede">Every contract order needs a specific set of documents uploaded and linked on the ordering system before you finalise. Get it wrong and the order sits, the customer waits, and the dealership carries the compliance risk. Play a round, find your gaps, fix them.</p>
-
       <div class="namerow">
         <div class="field">
           <label for="playerName">Your name (for the store board)</label>
@@ -367,19 +404,28 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 
       <div class="modes">
         <button class="mode" data-mode="orders">
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>
+          <span class="mtop">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5V4a3 3 0 0 1 6 0v1"/><path d="M8.5 11.2l1.7 1.7 3.2-3.4"/><path d="M8.5 16.5h7"/></svg>
+            <span class="mbadge" data-badge="orders">Not played</span>
+          </span>
           <h3>Order Desk</h3>
           <p>A customer walks in. Pick exactly the documents that order needs — no more, no less.</p>
           <span class="len">10 scenarios</span>
         </button>
         <button class="mode" data-mode="rules">
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 4.5-3.2 8.3-8 9.5C7.2 20.3 4 16.5 4 12V7z"/><path d="M9 12l2 2 4-4"/></svg>
+          <span class="mtop">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4.5l5 5L9.5 19.5 4 21l1.5-5.5z"/><path d="M12.8 6.2l5 5"/><path d="M14 21h6"/></svg>
+            <span class="mbadge" data-badge="rules">Not played</span>
+          </span>
           <h3>Rules Round</h3>
           <p>True or false on signatures, tick-boxes and the clause that sits in your employment contract.</p>
           <span class="len">10 statements</span>
         </button>
         <button class="mode" data-mode="mixed">
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h6l3 10h6"/><path d="M18 4l3 3-3 3"/><path d="M3 17h4"/></svg>
+          <span class="mtop">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.8 2"/><path d="M9.5 2.5h5"/></svg>
+            <span class="mbadge" data-badge="mixed">Not played</span>
+          </span>
           <h3>Full Shift</h3>
           <p>Scenarios and rules mixed together, no warning which is coming. The real test.</p>
           <span class="len">14 rounds</span>
@@ -393,13 +439,19 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
       <p class="lede">Pick a topic. Inside each one: read the guide first, or jump straight into the test.</p>
       <div class="modes">
         <button class="mode" data-go="scDevHub">
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+          <span class="mtop">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/><path d="M9.8 8.5a3.2 3.2 0 0 1 4.4 0M8.3 6.5a5.5 5.5 0 0 1 7.4 0"/></svg>
+            <span class="mbadge" data-badge="devices">Not played</span>
+          </span>
           <h3>Devices</h3>
           <p>RAM, storage, batteries, cameras — and iPhone vs Samsung vs Honor vs Oppo vs Huawei, with the price tiers.</p>
           <span class="len">Guide + test</span>
         </button>
         <button class="mode" data-go="scFormHub">
-          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h6M10 16h6"/></svg>
+          <span class="mtop">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v13a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V4.5A1.5 1.5 0 0 1 7.5 3z"/><path d="M14 3v4h4"/><path d="M9.5 12h6M9.5 15.5h6"/></svg>
+            <span class="mbadge" data-badge="forms">Not played</span>
+          </span>
           <h3>EasyForms</h3>
           <p>CPD, KIP, usage limits, insurance waiver, N4L, upgrades, SIM swaps, transfers — what each form is for.</p>
           <span class="len">Guide + test</span>
@@ -407,16 +459,14 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
       </div>
     </div>
 
-    <div class="panel">
-      <div class="kicker">New — simulation</div>
-      <h1 class="big" style="font-size:clamp(24px,4.5vw,36px)">What documents <em>do I need?</em></h1>
-      <p class="lede">A customer is in front of you. Tick what's true about them — new customer, porting, keeping their prepaid number — and get the exact list of documents and forms for that order. No guessing, no score, just the answer.</p>
-      <div class="actions" style="margin-top:16px">
-        <button class="btn" id="simOpen">Start the simulator
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
-        </button>
-      </div>
-    </div>
+    <button class="simcard" id="simOpen">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#2EE6C6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="15" cy="7" r="2.6" fill="#0B0B0B"/><circle cx="9" cy="17" r="2.6" fill="#0B0B0B"/></svg>
+      <span class="stxt">
+        <h3>Simulator</h3>
+        <p>A customer is in front of you. Tick what's true about them — new customer, porting, keeping their prepaid number — and get the exact list of documents and forms for that order. No guessing, no score, just the answer.</p>
+      </span>
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#2EE6C6" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+    </button>
 
     <div class="panel board" id="boardPanel" style="display:none">
       <div class="kicker">Leaderboard</div>
@@ -1120,7 +1170,29 @@ function show(id){
   $(id).classList.add('active');
   $('hud').style.display = (id === 'scGame') ? 'block' : 'none';
   $('navSheet').setAttribute('aria-pressed', id === 'scSheet' ? 'true' : 'false');
+  if(id === 'scHome') refreshHome();
   window.scrollTo(0,0);
+}
+
+/* Best-score badges + day streak on the home screen (this device). */
+function refreshHome(){
+  var best = {};
+  try{ best = JSON.parse(localStorage.getItem('drill-best') || '{}'); }catch(e){}
+  Array.prototype.forEach.call(document.querySelectorAll('[data-badge]'), function(el){
+    var m = el.getAttribute('data-badge');
+    if(best[m] === undefined){ el.className = 'mbadge'; el.textContent = 'Not played'; }
+    else if(best[m] >= 70){ el.className = 'mbadge good'; el.textContent = 'Best ' + best[m] + '%'; }
+    else { el.className = 'mbadge bad'; el.textContent = 'Try again'; }
+  });
+  var chip = $('streakChip');
+  try{
+    var st = JSON.parse(localStorage.getItem('drill-streak') || '{}');
+    var today = new Date().toISOString().slice(0,10);
+    var yday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+    var live = (st.last === today || st.last === yday) ? (st.n || 0) : 0;
+    if(live >= 2){ chip.style.display = 'inline-flex'; $('streakLbl').textContent = live + '-day streak'; }
+    else chip.style.display = 'none';
+  }catch(e){ chip.style.display = 'none'; }
 }
 
 function renderQuestion(){
@@ -1359,6 +1431,20 @@ function updateHud(){
 function showResults(){
   clearInterval(S.timer);
   var acc = S.queue.length ? Math.round(S.perfect / S.queue.length * 100) : 0;
+  try{
+    var bestStore = JSON.parse(localStorage.getItem('drill-best') || '{}');
+    if(acc > (bestStore[S.mode] === undefined ? -1 : bestStore[S.mode])){
+      bestStore[S.mode] = acc;
+      localStorage.setItem('drill-best', JSON.stringify(bestStore));
+    }
+    var today = new Date().toISOString().slice(0,10);
+    var st = JSON.parse(localStorage.getItem('drill-streak') || '{}');
+    if(st.last !== today){
+      var yday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+      st = { last: today, n: st.last === yday ? (st.n || 0) + 1 : 1 };
+      localStorage.setItem('drill-streak', JSON.stringify(st));
+    }
+  }catch(e){}
   $('resPct').textContent = acc + '%';
   $('resPoints').textContent = S.score;
   $('resPerfect').textContent = S.perfect + '/' + S.queue.length;
@@ -1686,6 +1772,7 @@ renderStock();
 initSim();
 updateHud();
 try{ var savedName = localStorage.getItem('drill-name'); if(savedName) $('playerName').value = savedName; }catch(e){}
+refreshHome();
 loadBoard();
 
 })();
