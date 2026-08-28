@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>iLula Docs Drill — Cell Logic</title>
+<title>CL Academy — Cell Logic</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
@@ -272,6 +272,39 @@ h1.big em{font-style:normal;background:var(--acc);padding:0 8px;box-decoration-b
 .verify p{font-size:14px;color:var(--ink-2)}
 .verify ul{margin:8px 0 0 18px;font-size:14px;color:var(--ink-2)}
 
+/* ── PREVIEW RIBBON ──────────────────── */
+.ribbon{background:var(--acc-deep);color:var(--ink);text-align:center;font-family:'Archivo';font-weight:900;font-size:11px;letter-spacing:.16em;text-transform:uppercase;padding:7px 12px;border-bottom:3px solid var(--ink)}
+
+/* ── LEARN SCREENS ───────────────────── */
+.learngrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;margin-top:16px}
+.learncard{border:3px solid var(--ink);border-radius:6px;background:#fff;box-shadow:2px 2px 0 var(--ink);padding:15px 16px}
+.learncard h4{font-size:15px;text-transform:uppercase;margin-bottom:6px}
+.learncard p{font-size:13.5px;color:var(--ink-2)}
+.learncard p + p{margin-top:7px}
+.learncard .tag{display:inline-block;background:var(--acc);border:2px solid var(--ink);border-radius:4px;font-family:'Archivo';font-weight:900;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;margin-bottom:9px}
+.learncard .tag.alt{background:var(--info-bg)}
+.learncard .trap{margin-top:9px;border-left:4px solid var(--no);background:var(--no-bg);padding:7px 10px;font-size:12.5px;border-radius:0 4px 4px 0}
+
+/* ── SIMULATOR ───────────────────────── */
+.simstep{margin-top:24px}
+.simstep h3{font-size:15px;text-transform:uppercase;margin-bottom:11px;display:flex;align-items:center;gap:10px}
+.simstep h3 .n{background:var(--ink);color:var(--acc);font-family:'Archivo';border-radius:4px;width:27px;height:27px;flex:0 0 27px;display:grid;place-items:center;font-size:13px}
+.simout{display:none;margin-top:26px;border:3px solid var(--ink);border-radius:6px;overflow:hidden;box-shadow:var(--shadow)}
+.simout.show{display:block;animation:pop .28s cubic-bezier(.3,1.4,.5,1)}
+.simout .head{background:var(--ink);color:var(--acc);padding:13px 17px;font-family:'Archivo';font-weight:900;text-transform:uppercase;font-size:15px}
+.simout .body{background:#fff;padding:16px 18px}
+.doclist{list-style:none;display:grid;gap:9px}
+.doclist li{display:flex;gap:11px;align-items:flex-start;border:2px solid var(--ok);border-radius:5px;padding:10px 12px;background:var(--ok-bg)}
+.doclist li .tick{width:22px;height:22px;flex:0 0 22px;background:var(--ok);border-radius:50%;display:grid;place-items:center;color:#fff}
+.doclist li .tick svg{width:13px;height:13px}
+.doclist li b{display:block;font-family:'Archivo';font-size:13.5px}
+.doclist li span{font-size:12.5px;color:var(--ink-2)}
+.simnotes{margin-top:15px;padding-top:13px;border-top:2px solid var(--line)}
+.simnotes h4{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
+.simnotes ul{list-style:none;display:grid;gap:6px}
+.simnotes li{font-size:13.5px;color:var(--ink-2);display:flex;gap:9px}
+.simnotes li b:first-child{color:var(--ink);flex:0 0 auto}
+
 footer{background:var(--ink);color:#8E8E88;padding:26px 0;margin-top:40px;font-size:12.5px;letter-spacing:.03em}
 footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 
@@ -290,7 +323,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 <div class="topbar">
   <div class="wrap">
     <span class="logo">CL</span>
-    <span class="title">iLula Docs Drill</span>
+    <span class="title">CL Academy</span>
     <span class="co">Cell Logic&nbsp;·&nbsp;Connect KZN</span>
     <span class="spacer"></span>
     <button class="ghost" id="navSheet" aria-pressed="false">
@@ -322,7 +355,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
     <div class="panel">
       <div class="kicker">Cell Logic · Compliance training</div>
       <h1 class="big">Get the docs<br>right, <em>first time</em></h1>
-      <p class="lede">Every iLula order needs a specific set of documents uploaded and linked before you finalise. Get it wrong and the order sits, the customer waits, and the dealership carries the compliance risk. Play a round, find your gaps, fix them.</p>
+      <p class="lede">Every contract order needs a specific set of documents uploaded and linked on the ordering system before you finalise. Get it wrong and the order sits, the customer waits, and the dealership carries the compliance risk. Play a round, find your gaps, fix them.</p>
 
       <div class="namerow">
         <div class="field">
@@ -350,6 +383,37 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
           <h3>Full Shift</h3>
           <p>Scenarios and rules mixed together, no warning which is coming. The real test.</p>
           <span class="len">14 rounds</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="kicker">New — upskill</div>
+      <h1 class="big" style="font-size:clamp(24px,4.5vw,36px)">Know the <em>phones &amp; forms</em></h1>
+      <p class="lede">Pick a topic. Inside each one: read the guide first, or jump straight into the test.</p>
+      <div class="modes">
+        <button class="mode" data-go="scDevHub">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+          <h3>Devices</h3>
+          <p>RAM, storage, batteries, cameras — and iPhone vs Samsung vs Honor vs Oppo vs Huawei, with the price tiers.</p>
+          <span class="len">Guide + test</span>
+        </button>
+        <button class="mode" data-go="scFormHub">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h6M10 16h6"/></svg>
+          <h3>EasyForms</h3>
+          <p>CPD, KIP, usage limits, insurance waiver, N4L, upgrades, SIM swaps, transfers — what each form is for.</p>
+          <span class="len">Guide + test</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="kicker">New — simulation</div>
+      <h1 class="big" style="font-size:clamp(24px,4.5vw,36px)">What documents <em>do I need?</em></h1>
+      <p class="lede">A customer is in front of you. Tick what's true about them — new customer, porting, keeping their prepaid number — and get the exact list of documents and forms for that order. No guessing, no score, just the answer.</p>
+      <div class="actions" style="margin-top:16px">
+        <button class="btn" id="simOpen">Start the simulator
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
         </button>
       </div>
     </div>
@@ -430,7 +494,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
     <div class="panel">
       <div class="kicker">Reference</div>
       <h1 class="big" style="font-size:clamp(26px,5vw,40px)">Documents by <em>order type</em></h1>
-      <p class="lede">The list below covers the most common iLula order scenarios. It does not cover every possible case — if the order in front of you is not here, check with your Store Manager before finalising.</p>
+      <p class="lede">The list below covers the most common order scenarios. It does not cover every possible case — if the order in front of you is not here, check with your Store Manager before finalising.</p>
 
       <div class="tablecap">New contracts</div>
       <div class="tablescroll"><table class="matrix" id="mxNew"></table></div>
@@ -473,10 +537,258 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
   </div>
 </main>
 
+<!-- ══ DEVICE HUB ════════════════════════ -->
+<main class="screen" id="scDevHub">
+  <div class="wrap">
+    <div class="panel">
+      <div class="kicker">Device Lab</div>
+      <h1 class="big" style="font-size:clamp(26px,5vw,40px)">Devices</h1>
+      <p class="lede">Learn the phones first, or go straight in and test yourself — your score goes on the store board either way.</p>
+      <div class="modes">
+        <button class="mode" data-go="scDevices">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h7v14H4zM13 5h7v14h-7z"/><path d="M4 5c2-1.5 5-1.5 7 0M13 5c2-1.5 5-1.5 7 0"/></svg>
+          <h3>Device Guide</h3>
+          <p>The spec words translated, the six brands on our shelf, the Platinum-to-Bronze tiers, and the current stock list.</p>
+          <span class="len">Read — 5 min</span>
+        </button>
+        <button class="mode" data-mode="devices">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M9.5 9.5l2 2 3.5-3.5"/></svg>
+          <h3>Device Test</h3>
+          <p>10 true-or-false statements on specs, brands and tiers. Can you talk phones with a straight face?</p>
+          <span class="len">10 statements</span>
+        </button>
+      </div>
+      <div class="actions">
+        <button class="btn plain" data-go="scHome">Home</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══ FORMS HUB ═════════════════════════ -->
+<main class="screen" id="scFormHub">
+  <div class="wrap">
+    <div class="panel">
+      <div class="kicker">EasyForms</div>
+      <h1 class="big" style="font-size:clamp(26px,5vw,40px)">EasyForms</h1>
+      <p class="lede">Every form in the pack, decoded — then a test on the rules that catch people out.</p>
+      <div class="modes">
+        <button class="mode" data-go="scForms">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h7v14H4zM13 5h7v14h-7z"/><path d="M4 5c2-1.5 5-1.5 7 0M13 5c2-1.5 5-1.5 7 0"/></svg>
+          <h3>Forms Guide</h3>
+          <p>CPD, KIP, usage limits, insurance waiver, N4L, upgrade approval, SIM swaps and transfers — with the traps highlighted.</p>
+          <span class="len">Read — 5 min</span>
+        </button>
+        <button class="mode" data-mode="forms">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#0B0B0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M9.5 13.5l2 2 3.5-3.5"/></svg>
+          <h3>Forms Test</h3>
+          <p>10 true-or-false statements. The 7-day, 14-day and 6-month rules live here.</p>
+          <span class="len">10 statements</span>
+        </button>
+      </div>
+      <div class="actions">
+        <button class="btn plain" data-go="scHome">Home</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══ DEVICE GUIDE ══════════════════════ -->
+<main class="screen" id="scDevices">
+  <div class="wrap">
+    <div class="panel">
+      <div class="kicker">Device Lab · Reference</div>
+      <h1 class="big" style="font-size:clamp(26px,5vw,40px)">Talk phones <em>like a pro</em></h1>
+      <p class="lede">Customers don't buy spec sheets — they buy someone who can explain, in one sentence, why this phone fits them. These are the words on the box, translated.</p>
+
+      <div class="tablecap">The spec words, translated</div>
+      <div class="learngrid">
+        <div class="learncard"><span class="tag">RAM</span>
+          <h4>The phone's short-term memory</h4>
+          <p>RAM is where running apps live. More RAM (6–12GB) = more apps open at once without stutter or reloading. It is <b>not</b> storage — closing apps doesn't free up photo space.</p>
+          <p><b>Sell it as:</b> "keeps WhatsApp, banking and camera running smoothly at the same time."</p></div>
+        <div class="learncard"><span class="tag">Storage</span>
+          <h4>The cupboard — 64 / 128 / 256 / 512GB</h4>
+          <p>Where photos, videos, apps and WhatsApp backups live. 128GB is the comfortable minimum today; heavy camera users want 256GB+.</p>
+          <p class="trap">iPhones and most new flagships have <b>no SD-card slot</b> — the storage they buy is the storage they keep. Ask about their photo habits before choosing.</p></div>
+        <div class="learncard"><span class="tag">Battery</span>
+          <h4>mAh — the fuel tank</h4>
+          <p>5000mAh is the modern standard and gets most people through a full day. 6000mAh (Huawei Nova Y74) is the "never near a plug" choice. Fast charge = less time on the cable.</p></div>
+        <div class="learncard"><span class="tag">Camera</span>
+          <h4>MP is not the whole story</h4>
+          <p>Megapixels = detail, but sensor quality and software matter as much — a 12MP iPhone can out-shoot a 108MP budget phone. <b>OIS</b> (optical image stabilisation) = sharp shots in low light and steady video.</p></div>
+        <div class="learncard"><span class="tag">Screen</span>
+          <h4>AMOLED &amp; 120Hz</h4>
+          <p><b>AMOLED</b> = deep blacks, punchy colour, better outdoors. <b>120Hz</b> = scrolling looks twice as smooth as a basic 60Hz screen. Together they make a phone feel expensive.</p></div>
+        <div class="learncard"><span class="tag">5G</span>
+          <h4>Faster data — with conditions</h4>
+          <p>5G needs three things: a 5G phone, a 5G-capable SIM, and 5G coverage in the area. Where there's no 5G signal the phone simply uses 4G/LTE — nothing breaks.</p></div>
+        <div class="learncard"><span class="tag">IP rating</span>
+          <h4>IP67 — dust and splash protection</h4>
+          <p>Survives rain and an accidental dunk. It is <b>not</b> "waterproof forever" — seals age, and water damage is still typically excluded from warranty.</p></div>
+        <div class="learncard"><span class="tag">Software</span>
+          <h4>iOS · Android GMS · Huawei HMS</h4>
+          <p><b>iOS</b> — iPhones only, long updates. <b>Android with GMS</b> (Samsung, Honor, Oppo, Vivo) — full Google Play. <b>Huawei HMS</b> — Huawei's AppGallery instead of Google.</p>
+          <p class="trap">New Huawei devices have <b>no Google Play Store</b> and not every Google app is supported — the Usage Limit form even makes the customer sign for this. Say it <b>before</b> the sale, not after.</p></div>
+      </div>
+
+      <div class="tablecap">The brands on our shelf</div>
+      <div class="learngrid">
+        <div class="learncard"><span class="tag alt">Apple</span>
+          <h4>iPhone — the badge and the ecosystem</h4>
+          <p>Holds value, long software support, effortless with AirPods/iPads. "e" models (16e/17e) = the affordable door in; Pro = cameras and 120Hz ProMotion; Air = thinnest premium.</p>
+          <p><b>Preowned iPhones</b> (13/14) are the cheapest way into Apple.</p>
+          <p class="trap">Apple carries a <b>12-month warranty</b> — most Androids carry 24. It's on the KIP checklist for a reason.</p></div>
+        <div class="learncard"><span class="tag alt">Samsung</span>
+          <h4>Galaxy — something at every price</h4>
+          <p><b>A-series</b> = the volume sellers (A17→A57): 5G, AMOLED, long support. <b>S-series</b> = flagship (S26); <b>FE</b> = flagship features at mid price; <b>Ultra</b> = 200MP camera + S-Pen; <b>Z Fold</b> = the folding showpiece.</p></div>
+        <div class="learncard"><span class="tag alt">Honor</span>
+          <h4>Spec-per-rand fighter</h4>
+          <p><b>X-series</b> = tough, big-battery value (X6e, X9D). <b>400/600 series</b> = camera-led mid and upper-mid. Watch for <b>bundles</b> — the X7e ships with a smartwatch and earbuds in the box, an easy value story.</p>
+          <p>Honor runs full Android with Google apps — it split from Huawei in 2020.</p></div>
+        <div class="learncard"><span class="tag alt">Oppo</span>
+          <h4>Design-led, camera-led</h4>
+          <p><b>A-series</b> = solid budget/mid (A6K, A6, A6 Pro). <b>Reno</b> = the slim, style-and-camera line (Reno15 F, Reno15 Pro) for customers who care how the phone looks in hand. Full Google apps.</p></div>
+        <div class="learncard"><span class="tag alt">Huawei</span>
+          <h4>Hardware heavyweight, HMS software</h4>
+          <p><b>Nova</b> = value and battery (Y-series, Nova 15 Max). <b>Pura</b> = serious camera flagship. Build quality punches above the price.</p>
+          <p class="trap">Runs <b>HMS / AppGallery — no Google Play</b>. Perfect for WhatsApp-and-camera customers; wrong for someone glued to Google apps. Qualify first.</p></div>
+        <div class="learncard"><span class="tag alt">Vivo</span>
+          <h4>Entry-level workhorse</h4>
+          <p><b>Y-series</b> (Y04): big battery, big screen, low price. An honest first smartphone or a no-fuss replacement.</p></div>
+      </div>
+
+      <div class="tablecap">Price tiers — Platinum to Bronze</div>
+      <div class="tablescroll"><table class="matrix" style="min-width:520px">
+        <thead><tr><th class="rowhead" style="min-width:120px">Tier</th><th>Price (incl VAT)</th><th>What lives here</th></tr></thead>
+        <tbody>
+          <tr><td class="rowhead">💎 Platinum</td><td>R25 000+</td><td><span class="cond" style="max-width:none">iPhone 17 Pro/Pro Max, S25/S26 Ultra, Z Fold — flagships and the foldable</span></td></tr>
+          <tr><td class="rowhead">🥇 Gold</td><td>R15 000 – R24 999</td><td><span class="cond" style="max-width:none">iPhone 17, Galaxy S26, Honor 600 Pro, Reno15 Pro — new flagships, base storage</span></td></tr>
+          <tr><td class="rowhead">🥈 Silver</td><td>R8 000 – R14 999</td><td><span class="cond" style="max-width:none">The sweet spot: A37/A56/S25 FE, iPhone 15/16e, preowned iPhones, Honor 600, Reno15 F</span></td></tr>
+          <tr><td class="rowhead">🥉 Bronze</td><td>R4 000 – R7 999</td><td><span class="cond" style="max-width:none">A26/A27/A36, Nova 14i/Y74, Honor 400 Lite, X7e bundle — dependable mid-budget</span></td></tr>
+          <tr><td class="rowhead">Entry</td><td>Under R4 000</td><td><span class="cond" style="max-width:none">Nova Y62/Y63, Vivo Y04, Honor X6-family, Galaxy A17/A25 — first smartphones</span></td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="tablecap">Stock snapshot — what's on the shelf</div>
+      <p class="hint" style="margin-bottom:10px">From the stock lookup of 20 Aug 2026. Prices are max RSP incl VAT and move — treat as a guide, check the system before quoting.</p>
+      <div class="tablescroll"><table class="matrix" id="mxStock"></table></div>
+
+      <div class="actions">
+        <button class="btn" data-mode="devices" id="devDrillBtn">Take the Device Test</button>
+        <button class="btn plain" data-go="scDevHub">Back</button>
+        <button class="btn plain" data-go="scHome">Home</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══ EASYFORMS GUIDE ═══════════════════ -->
+<main class="screen" id="scForms">
+  <div class="wrap">
+    <div class="panel">
+      <div class="kicker">EasyForms · Reference</div>
+      <h1 class="big" style="font-size:clamp(26px,5vw,40px)">The form pack, <em>decoded</em></h1>
+      <p class="lede">The EasyForm workbook prints the whole pack for an order. Fill the <b>Details</b> sheet once and it feeds every form. Here's what each page is for — and the traps that cost people.</p>
+
+      <div class="learngrid">
+        <div class="learncard"><span class="tag">Details sheet</span>
+          <h4>Fill once, feeds everything</h4>
+          <p>Customer, device, package and consultant details go in here and flow onto every form. Then print only what the order needs: <b>pages 1–3</b> (KIP + waiver) for most, <b>4</b> N4L, <b>5</b> upgrade approval, <b>6</b> SIM swap, <b>7–11</b> transfer.</p></div>
+        <div class="learncard"><span class="tag">CPD</span>
+          <h4>Customer Pick-up Document</h4>
+          <p>Proves the customer received the device they ordered, in good order — signed by both of you at handover.</p>
+          <p class="trap">The CPD is <b>not proof of purchase</b>. The till slip / invoice is — no slip, no warranty claim. Tell every customer to keep it, plus the box and accessories.</p>
+          <p><b>7 days</b> — out-of-box failure can be exchanged/refunded. <b>6 months</b> — defective goods rights under the CPA. Both need the slip.</p></div>
+        <div class="learncard"><span class="tag">KIP</span>
+          <h4>The mandatory checklist</h4>
+          <p>Every contract type — no exceptions. You tick that you explained the package, fees, first-bill pro-rata, bill &amp; debit dates, out-of-bundle rates, credit and usage limits, early termination, OBF policy, and that <b>insurance is a separate product</b>.</p>
+          <p class="trap">Upgrades: the <b>R150 (excl VAT) upgrade fee</b> on the next bill must be explained — it's a named tick-box.</p></div>
+        <div class="learncard"><span class="tag">Usage limit</span>
+          <h4>The customer's choice, the customer's job</h4>
+          <p>They choose a limit or decline one — but <b>setting it is their responsibility</b>, via the app or <b>*136*5#</b>. The store isn't liable if they skip it.</p>
+          <p class="trap">The limit does <b>not</b> cover loaded bundles, me-to-you transfers or in-app purchases. This form also carries the HMS acknowledgement for Huawei devices.</p></div>
+        <div class="learncard"><span class="tag">Ins. waiver</span>
+          <h4>Declining insurance, in writing</h4>
+          <p>If they don't take device insurance, they sign the waiver: their choice, freely made, device is their responsibility outside warranty.</p>
+          <p><b>14 days</b> — they can still take the insurance after purchase. After that, the door closes. Ticking "insurance" on a form is only an <b>application</b> — cover starts when the debit order is actually on the account.</p></div>
+        <div class="learncard"><span class="tag">N4L</span>
+          <h4>Number-for-life migration</h4>
+          <p>Moves an existing prepaid number onto the contract. It's an addendum to the subscriber agreement and goes through credit vetting like any application.</p>
+          <p class="trap">Airtime and data bought on prepaid <b>do not carry over</b> — anything unused when the migration goes through is lost. Tell them to use it up first.</p></div>
+        <div class="learncard"><span class="tag">Upgrade</span>
+          <h4>Upgrade Approval form</h4>
+          <p>The approval is valid for <b>7 days</b> and subject to stock. A new 24-month term starts. If the deal requires the old handset back, it must work — and come with battery and charger.</p></div>
+        <div class="learncard"><span class="tag">SIM swap</span>
+          <h4>Consumer SIM swap</h4>
+          <p>Lost or stolen SIM? <b>Suspend it immediately.</b> Swap activates in 2–24 hours. Original ID / ID card / passport, or an <b>original certified copy</b> — never a copy of a certified copy.</p>
+          <p class="trap">Someone else doing it for the customer needs a <b>delegation letter</b> (dated, signed, saying exactly what they may do) plus both parties' IDs.</p></div>
+        <div class="learncard"><span class="tag">Transfer</span>
+          <h4>Contract to a new account holder</h4>
+          <p>Pages 7–11: the new client takes over the remainder of the contract. Every document must be in before it processes.</p>
+          <p class="trap">The account holder's name and the <b>bank account holder's name must match</b>. The existing client stays liable up to and including transfer day.</p></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" data-mode="forms" id="formDrillBtn">Take the Forms Test</button>
+        <button class="btn plain" data-go="scFormHub">Back</button>
+        <button class="btn plain" data-go="scHome">Home</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ══ SIMULATOR ═════════════════════════ -->
+<main class="screen" id="scSim">
+  <div class="wrap">
+    <div class="panel">
+      <div class="kicker">Simulation</div>
+      <h1 class="big" style="font-size:clamp(26px,5vw,40px)">Build the <em>document list</em></h1>
+      <p class="lede">Tick what's true about the customer at your counter. The exact paperwork for that order appears below.</p>
+
+      <div class="simstep">
+        <h3><span class="n">1</span>What is the order?</h3>
+        <div class="chips" id="simTypes"></div>
+      </div>
+      <div class="simstep" id="simEmpStep" style="display:none">
+        <h3><span class="n">2</span>The customer is…</h3>
+        <div class="chips" id="simEmp"></div>
+      </div>
+      <div class="simstep" id="simAddrStep" style="display:none">
+        <h3><span class="n">3</span>Their address on the bank statements?</h3>
+        <div class="chips" id="simAddr"></div>
+      </div>
+      <div class="simstep" id="simExtraStep" style="display:none">
+        <h3><span class="n">4</span>Anything extra? (tick all that apply)</h3>
+        <div class="chips" id="simExtras"></div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="simGo" disabled>Show me the documents
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>
+        </button>
+        <button class="btn plain" id="simReset">Start over</button>
+        <button class="btn plain" data-go="scHome">Home</button>
+      </div>
+
+      <div class="simout" id="simOut" role="status" aria-live="polite">
+        <div class="head" id="simOutHead">Documents for this order</div>
+        <div class="body">
+          <ul class="doclist" id="simDocs"></ul>
+          <div class="simnotes" id="simNotes"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
 <footer>
+  <div class="wrap" style="display:block;border-bottom:1px solid #2E2E2A;padding-bottom:15px;margin-bottom:15px">
+    <span style="color:#B9B9B2"><b style="color:#fff">Please note:</b> CL Academy is a study aid to help Cell Logic staff with their work. It does not replace official procedures or the latest notices — always check the current official process, and consult your Store Manager about anything unusual or any possible problem before finalising an order.</span>
+  </div>
   <div class="wrap">
     <span>Cell Logic (Pty) Ltd · Internal training tool · Based on the notice dated 09 September 2025</span>
-    <span>The network may change these requirements at any time — keep up via BRC communications, eLearning and awareness sessions.</span>
+    <span>The network may change these requirements at any time — keep up via head-office communications, eLearning and awareness sessions.</span>
   </div>
 </footer>
 
@@ -519,7 +831,7 @@ var TYPES = {
 };
 
 var RULES = [
-  {t:'Ticking "customer agrees to the contract" on iLula replaces the customer signing the agreement.', a:false,
+  {t:'Ticking "customer agrees to the contract" on the ordering system replaces the customer signing the agreement.', a:false,
    why:'The tick-box only inserts the customer\u2019s name where they are supposed to sign. It is a call-centre option and must not be used in store.'},
   {t:'A manually signed agreement must have every page initialled, as well as signatures in the correct places.', a:true,
    why:'All pages initialled plus signatures in the right places — otherwise the agreement is not valid.'},
@@ -528,7 +840,7 @@ var RULES = [
   {t:'It is enough to upload the signed agreement — you do not need to link it to the order.', a:false,
    why:'It must be uploaded AND linked to the order before you finalise.'},
   {t:'The network can change these document requirements at any time, and it is your responsibility to keep up.', a:true,
-   why:'Changes come through BRC communications, eLearning and awareness sessions. Keeping current is on you as an individual.'},
+   why:'Changes come through head-office communications, eLearning and awareness sessions. Keeping current is on you as an individual.'},
   {t:'Not following the network\u2019s prescribed practices can lead to disciplinary charges and dismissal.', a:true,
    why:'Clause 31 of your employment contract, in support of the Dealer Agreement Cell Logic holds with the network.'},
   {t:'Proof of residence is always required, even when the address already appears on the bank statement.', a:false,
@@ -541,12 +853,147 @@ var RULES = [
    why:'Upgrades need ID or driver\u2019s licence plus the signed agreement. No bank statements, payslip or proof of residence.'},
   {t:'On a new line, a payslip from five months ago is acceptable.', a:false,
    why:'The payslip may not be older than three months.'},
-  {t:'The documents listed in the notice cover every possible order scenario on iLula.', a:false,
+  {t:'The documents listed in the notice cover every possible order scenario.', a:false,
    why:'The notice covers the most common scenarios only. Anything unusual goes to your Store Manager first.'},
   {t:'As a dealer, Cell Logic facilitates the contract between the customer and the network, so the network must hold a copy of the signed agreement.', a:true,
-   why:'That is exactly why the upload-and-link step exists in the iLula order process.'},
+   why:'That is exactly why the upload-and-link step exists in the order process.'},
   {t:'A self-employed customer taking a new line needs a payslip.', a:false,
    why:'Self-employed customers are assessed on the three months of bank statements instead.'}
+];
+
+var DEVICE_RULES = [
+  {t:'More RAM means more space for the customer’s photos and videos.', a:false,
+   why:'RAM is working memory — it keeps apps running smoothly. Photos live in storage (64/128/256/512GB). Closing apps frees RAM, not photo space.'},
+  {t:'A 5000mAh battery is the modern standard and gets most customers through a full day.', a:true,
+   why:'5000mAh is the baseline on most current phones; 6000mAh (like the Nova Y74) is the pick for heavy users far from a plug.'},
+  {t:'OIS on a camera means optical image stabilisation — sharper low-light shots and steadier video.', a:true,
+   why:'The lens physically compensates for hand shake. It matters more to photo quality than a bigger megapixel number.'},
+  {t:'A 108MP camera always takes better photos than a 12MP iPhone.', a:false,
+   why:'Sensor size and software matter as much as megapixels — a 12MP iPhone can out-shoot a 108MP budget phone.'},
+  {t:'New Huawei phones come with the Google Play Store preinstalled.', a:false,
+   why:'New Huawei devices run HMS with AppGallery — no Google Play, and not every Google app is supported. The Usage Limit form even makes the customer acknowledge this.'},
+  {t:'Apple iPhones carry a 12-month warranty, while most Android devices carry 24 months.', a:true,
+   why:'It’s a named line on the KIP checklist — explain it before the sale, especially against a 24-month Samsung.'},
+  {t:'IP67 means the phone is waterproof forever and water damage is covered by warranty.', a:false,
+   why:'IP67 is dust and splash protection. Seals age, and water damage is still typically excluded from warranty.'},
+  {t:'5G needs a 5G phone, a 5G-capable SIM and 5G coverage — otherwise the phone just uses 4G.', a:true,
+   why:'All three must line up. Where there’s no 5G signal, nothing breaks — the phone falls back to 4G/LTE.'},
+  {t:'If an iPhone runs out of storage you can add an SD card.', a:false,
+   why:'iPhones (and most new flagships) have no SD slot — the storage they buy is the storage they keep. Ask about photo habits first.'},
+  {t:'A 120Hz AMOLED screen scrolls smoother and shows richer colour than a basic 60Hz LCD.', a:true,
+   why:'AMOLED gives deep blacks and punchy colour; 120Hz doubles the smoothness. Together they make a phone feel expensive.'},
+  {t:'A phone priced at R9 000 falls in the Silver tier.', a:true,
+   why:'Silver runs from R8 000 to R14 999. Bronze is R4 000+, Gold R15 000+, Platinum R25 000+.'},
+  {t:'The Platinum tier starts at R15 000.', a:false,
+   why:'Platinum starts at R25 000. R15 000 is where Gold begins.'},
+  {t:'The Honor X7e ships as a bundle with a smartwatch and earbuds in the box.', a:true,
+   why:'One of the easiest value stories on the shelf — phone, watch and buds in one deal.'},
+  {t:'Oppo’s Reno line is the style-and-camera focused range.', a:true,
+   why:'Reno is Oppo’s slim, design-led line (Reno15 F, Reno15 Pro) for customers who care how the phone looks and shoots.'},
+  {t:'Honor phones can’t use Google apps because Honor still belongs to Huawei.', a:false,
+   why:'Honor split from Huawei in 2020 — its phones run full Android with Google Play.'},
+  {t:'A preowned iPhone is the cheapest way to put a customer into Apple.', a:true,
+   why:'Preowned iPhone 13/14 units undercut every new iPhone while keeping iOS updates.'},
+  {t:'The Galaxy Z Fold is the most premium device on the shelf.', a:true,
+   why:'The folding flagship tops the Platinum tier — the showpiece for customers who want the most phone money can buy.'},
+  {t:'Closing background apps frees up storage space for more photos.', a:false,
+   why:'Closing apps frees RAM (working memory). Storage only frees up when files or apps are deleted.'}
+];
+
+var FORM_RULES = [
+  {t:'The CPD counts as proof of purchase for a warranty claim.', a:false,
+   why:'The CPD only proves the customer received the device. The till slip or invoice is the proof of purchase — no slip, no warranty claim.'},
+  {t:'An out-of-box failure reported within 7 days can qualify for an exchange or refund.', a:true,
+   why:'OBF: a manufacturing defect flagged within the first 7 days, returned complete with box and accessories, can be exchanged or refunded after assessment.'},
+  {t:'Under the CPA, defective-goods rights run for 6 months from the date of purchase.', a:true,
+   why:'Section 55/56 of the Consumer Protection Act — repair, replacement or refund, subject to assessment. The proof of purchase is still required.'},
+  {t:'The KIP checklist is only needed for new contracts, not upgrades.', a:false,
+   why:'The questionnaire is mandatory for ALL contract types — upgrades included, which add their own section.'},
+  {t:'The R150 (excl VAT) upgrade fee must be explained to the customer before an upgrade.', a:true,
+   why:'It lands on their next bill and is a named tick-box on the KIP checklist.'},
+  {t:'If the customer never sets their usage limit, the store is liable for the extra charges.', a:false,
+   why:'Setting the limit is the customer’s responsibility — via the app or *136*5#. The form says the store and staff are not liable.'},
+  {t:'A usage limit also caps loaded bundles and in-app purchases.', a:false,
+   why:'The limit excludes loaded bundles, me-to-you transfers and in-app purchases — customers must know this or the first bill argument is coming.'},
+  {t:'Ticking “I want insurance” on the form means the device is insured.', a:false,
+   why:'It’s only an application. Cover starts once the insurance debit order is actually on the account — the customer must check it.'},
+  {t:'A customer who signs the insurance waiver can still take device insurance within 14 days of purchase.', a:true,
+   why:'The waiver itself says so: 14 days from the date of purchase, then the door closes.'},
+  {t:'On an N4L migration, unused prepaid airtime carries over to the new contract.', a:false,
+   why:'Anything unused is lost when the migration goes through — tell them to use it up first. It’s in the addendum they sign.'},
+  {t:'An N4L migration still goes through credit vetting and can be declined.', a:true,
+   why:'It’s an application like any other — normal credit vetting rules apply to the chosen package.'},
+  {t:'A lost or stolen SIM should be suspended immediately.', a:true,
+   why:'Point 1 on the SIM swap form — suspend first, swap after. Every hour un-suspended is fraud risk on the customer’s account.'},
+  {t:'A SIM swap activates within 2 to 24 hours.', a:true,
+   why:'Set that expectation at the counter so the customer doesn’t come back angry at hour three.'},
+  {t:'A copy of a certified copy of an ID is acceptable for a SIM swap.', a:false,
+   why:'Original ID / ID card / passport, or an ORIGINAL certified copy. A copy of a certified copy is explicitly not accepted.'},
+  {t:'A third party can do a SIM swap for the customer with just their own ID.', a:false,
+   why:'They need a delegation letter — dated, signed, naming exactly what they may do — plus the account holder’s ID details AND their own original ID.'},
+  {t:'An upgrade approval is valid for 30 days.', a:false,
+   why:'7 days from receipt, and subject to stock. After that the offer lapses.'},
+  {t:'On a contract transfer, the account holder’s name and the bank account holder’s name must match.', a:true,
+   why:'Printed in bold on the transfer form — mismatched names stall the whole transfer.'},
+  {t:'On a transfer, the existing client is liable for the account up to and including the day of transfer.', a:true,
+   why:'And every document must be in before the transfer processes — the transferee takes over the remainder of the term.'}
+];
+
+/* Stock snapshot — from the 20 Aug 2026 stock lookup (max RSP incl VAT). */
+var PHONES = [
+  {b:'Huawei', m:'Nova Y62 Plus', p:919, t:'Entry', f:'8GB RAM, 128GB, 5000mAh, dual SIM', n:'Cheapest phone in stock'},
+  {b:'Samsung', m:'Galaxy A25 5G', p:2539, t:'Entry', f:'5G, 50MP, Super AMOLED, 5000mAh', n:'Entry 5G with AMOLED'},
+  {b:'Huawei', m:'Nova Y63', p:2699, t:'Entry', f:'6GB RAM, 128GB, 50MP, large battery', n:'Budget everyday phone'},
+  {b:'Vivo', m:'Y04', p:2699, t:'Entry', f:'5000mAh, 50MP', n:'Cheap & sturdy basics'},
+  {b:'Huawei', m:'Nova 13', p:2859, t:'Entry', f:'50MP, sleek design', n:'Older-gen bargain'},
+  {b:'Honor', m:'X6C', p:2999, t:'Entry', f:'50MP, 5200mAh, durable', n:'Tough entry Honor'},
+  {b:'Huawei', m:'Nova Y74s', p:2999, t:'Entry', f:'Large battery, 50MP', n:'Value basics'},
+  {b:'Honor', m:'X6', p:3299, t:'Entry', f:'50MP, 5000mAh, big display', n:'Simple budget phone'},
+  {b:'Honor', m:'X6e', p:3999, t:'Entry', f:'50MP, slim design', n:'Newer entry Honor'},
+  {b:'Samsung', m:'Galaxy A17 5G', p:3999, t:'Entry', f:'5G, 50MP, AMOLED, long support', n:'Best-supported entry 5G ⭐'},
+  {b:'Huawei', m:'Nova 14i', p:4999, t:'Bronze', f:'High-MP cam, big battery, fast charge', n:'High-res camera on a budget'},
+  {b:'Huawei', m:'Nova Y74', p:4999, t:'Bronze', f:'6000mAh, 50MP', n:'Battery champ'},
+  {b:'Oppo', m:'A6K', p:4999, t:'Bronze', f:'50MP, big battery, durable', n:'Sturdy budget Oppo'},
+  {b:'Samsung', m:'Galaxy A26 5G', p:4999, t:'Bronze', f:'5G, 50MP OIS, AMOLED, IP67', n:'Water-resistant entry 5G'},
+  {b:'Honor', m:'X7e + Watch & Buds', p:5999, t:'Bronze', f:'Phone + smartwatch + earbuds', n:'Best bundle value ⭐'},
+  {b:'Samsung', m:'Galaxy A27 5G', p:6999, t:'Bronze', f:'5G, 50MP, 120Hz AMOLED', n:'Popular mid-budget ⭐'},
+  {b:'Honor', m:'400 Lite', p:7049, t:'Bronze', f:'108MP, AMOLED, slim', n:'Camera-focused budget'},
+  {b:'Samsung', m:'Galaxy A36 5G', p:7499, t:'Bronze', f:'5G, 50MP OIS, 120Hz AMOLED, IP67', n:'Strong mid-ranger'},
+  {b:'Oppo', m:'A6 (Blue / Gold)', p:8779, t:'Silver', f:'5G, 50MP, 120Hz, big battery', n:'Sleek mid Oppo'},
+  {b:'Samsung', m:'Galaxy A37 5G', p:8999, t:'Silver', f:'5G, 50MP, 120Hz AMOLED', n:'Top seller ⭐'},
+  {b:'Samsung', m:'Galaxy A56 5G', p:8999, t:'Silver', f:'5G, 50MP OIS, 120Hz, IP67', n:'Premium-feel A-series'},
+  {b:'Honor', m:'600 Lite', p:9489, t:'Silver', f:'High-MP cam, big battery, 5G', n:'Popular Honor value ⭐'},
+  {b:'Apple', m:'iPhone 13 128GB (preowned)', p:9499, t:'Silver', f:'A15, dual 12MP, iOS updates', n:'Cheapest way into iPhone ⭐'},
+  {b:'Samsung', m:'Galaxy A57 5G', p:10869, t:'Silver', f:'5G, 50MP OIS, 120Hz AMOLED', n:'Upper mid-range'},
+  {b:'Apple', m:'iPhone 14 128GB (preowned)', p:10999, t:'Silver', f:'A15, Crash Detection', n:'Affordable recent iPhone ⭐'},
+  {b:'Honor', m:'X9D 5G 256GB', p:11079, t:'Silver', f:'Huge battery, durable, 256GB', n:'Big storage + battery value'},
+  {b:'Oppo', m:'A6 Pro 5G', p:11409, t:'Silver', f:'5G, 50MP, 120Hz, fast charge', n:'Step-up Oppo'},
+  {b:'Huawei', m:'Nova 15 Max 256GB', p:11619, t:'Silver', f:'Large AMOLED, high-MP cam', n:'Big-screen Huawei'},
+  {b:'Apple', m:'iPhone 16e 128GB', p:11999, t:'Silver', f:'A18, 48MP, Face ID', n:'Cheapest new iPhone ⭐'},
+  {b:'Apple', m:'iPhone 15 128GB', p:13999, t:'Silver', f:'A16, 48MP, USB-C', n:'Popular new iPhone ⭐'},
+  {b:'Honor', m:'600 5G', p:14359, t:'Silver', f:'High-MP cam, AMOLED, big battery', n:'Camera value 5G'},
+  {b:'Apple', m:'iPhone 17e 256GB', p:14599, t:'Silver', f:'Latest A-chip, 48MP, 256GB', n:'Newest value iPhone'},
+  {b:'Samsung', m:'Galaxy S25 FE', p:14789, t:'Silver', f:'Triple cam, 120Hz, flagship chip', n:'Flagship features, mid price ⭐'},
+  {b:'Oppo', m:'Reno15 F 5G', p:14849, t:'Silver', f:'Slim, high-MP cam, AMOLED', n:'Style-focused mid'},
+  {b:'Oppo', m:'Reno10 + Enco Buds', p:17079, t:'Gold', f:'Phone + earbuds, 64MP, AMOLED', n:'Bundle deal'},
+  {b:'Honor', m:'600 Pro 5G', p:18939, t:'Gold', f:'High-MP cam, fast charge', n:'Camera flagship value'},
+  {b:'Samsung', m:'Galaxy S26 256GB', p:19489, t:'Gold', f:'Triple cam, 120Hz, flagship chip', n:'Latest flagship base'},
+  {b:'Apple', m:'iPhone 17 256GB', p:19999, t:'Gold', f:'Latest A-chip, 48MP, 256GB', n:'Latest standard iPhone ⭐'},
+  {b:'Oppo', m:'Reno15 Pro 5G', p:21869, t:'Gold', f:'Pro-grade cam, fast charge', n:'Premium Oppo'},
+  {b:'Samsung', m:'Galaxy S26 512GB', p:23199, t:'Gold', f:'Triple cam, 512GB', n:'Flagship w/ big storage'},
+  {b:'Huawei', m:'Pura 90S Pro', p:23899, t:'Gold', f:'Ultra camera system, premium build', n:'Camera-first flagship'},
+  {b:'Apple', m:'iPhone 17 512GB', p:25499, t:'Platinum', f:'Latest A-chip, 512GB', n:'Big-storage standard iPhone'},
+  {b:'Samsung', m:'Galaxy S25 Ultra 256GB', p:25889, t:'Platinum', f:'200MP, S-Pen, titanium', n:'Prev-gen Ultra flagship'},
+  {b:'Samsung', m:'Galaxy S26+ 512GB', p:27839, t:'Platinum', f:'Triple cam, large display, 512GB', n:'Big-screen flagship'},
+  {b:'Apple', m:'iPhone 17 Pro 256GB', p:27999, t:'Platinum', f:'Pro cameras, ProMotion 120Hz', n:'Pro iPhone'},
+  {b:'Apple', m:'iPhone 16 Pro 256GB', p:28629, t:'Platinum', f:'A18 Pro, 48MP triple, titanium', n:'Prev-gen Pro'},
+  {b:'Samsung', m:'Galaxy S26 Ultra 256GB', p:28769, t:'Platinum', f:'200MP, S-Pen, titanium, 120Hz', n:'Top Samsung flagship'},
+  {b:'Apple', m:'iPhone 17 Pro Max 256GB', p:30699, t:'Platinum', f:'Largest Pro display, best cameras', n:'Flagship Pro Max'},
+  {b:'Apple', m:'iPhone Air 512GB', p:32059, t:'Platinum', f:'Ultra-thin titanium, 512GB', n:'Thinnest premium iPhone'},
+  {b:'Samsung', m:'Galaxy S26 Ultra 512GB', p:32479, t:'Platinum', f:'200MP, S-Pen, 512GB', n:'Max-storage Ultra'},
+  {b:'Apple', m:'iPhone 17 Pro 512GB', p:32999, t:'Platinum', f:'Pro cameras, 512GB', n:'Big-storage Pro'},
+  {b:'Apple', m:'iPhone 17 Pro Max 512GB', p:35599, t:'Platinum', f:'Best cameras, largest battery', n:'Ultimate iPhone'},
+  {b:'Samsung', m:'Galaxy Z Fold8 Ultra 512GB', p:47329, t:'Platinum', f:'Folding display, flagship cam', n:'Most premium — foldable ⭐'}
 ];
 
 var NAMES = ['Thabo','Nomsa','Pieter','Ayanda','Riaan','Zanele','Sipho','Michelle','Lungile','Deon','Precious','Andile','Karin','Mandla','Farhana','Wesley','Nokuthula','Jaco'];
@@ -561,12 +1008,14 @@ var S = {
   weak:[], player:'', board:[]
 };
 
+var MODE_LABEL = {orders:'Order Desk', rules:'Rules Round', mixed:'Full Shift', devices:'Device Test', forms:'Forms Test'};
+
 var RANKS = [
   {min:0,   name:'Trainee'},
   {min:400, name:'Floor Ready'},
   {min:900, name:'Order Desk Pro'},
   {min:1500,name:'Compliance Champion'},
-  {min:2200,name:'iLula Legend'}
+  {min:2200,name:'Store Legend'}
 ];
 
 var ICONS = {
@@ -650,6 +1099,10 @@ function buildQueue(mode){
     for(var i=0;i<10;i++) q.push(buildScenario());
   } else if(mode === 'rules'){
     q = shuffle(RULES).slice(0,10).map(function(r){ return {kind:'rule', rule:r}; });
+  } else if(mode === 'devices'){
+    q = shuffle(DEVICE_RULES).slice(0,10).map(function(r){ return {kind:'rule', rule:r}; });
+  } else if(mode === 'forms'){
+    q = shuffle(FORM_RULES).slice(0,10).map(function(r){ return {kind:'rule', rule:r}; });
   } else {
     var r = shuffle(RULES).slice(0,7).map(function(x){ return {kind:'rule', rule:x}; });
     for(var j=0;j<7;j++) r.push(buildScenario());
@@ -663,7 +1116,7 @@ function buildQueue(mode){
    ══════════════════════════════════════════════════════════ */
 
 function show(id){
-  ['scHome','scGame','scResult','scSheet'].forEach(function(s){ $(s).classList.remove('active'); });
+  ['scHome','scGame','scResult','scSheet','scDevHub','scFormHub','scDevices','scForms','scSim'].forEach(function(s){ $(s).classList.remove('active'); });
   $(id).classList.add('active');
   $('hud').style.display = (id === 'scGame') ? 'block' : 'none';
   $('navSheet').setAttribute('aria-pressed', id === 'scSheet' ? 'true' : 'false');
@@ -863,7 +1316,7 @@ function gradeRule(answer){
           'The statement is <b>' + (q.rule.a ? 'true' : 'false') + '</b>.</p>' +
           '<div class="why"><strong>Why</strong>' + esc(q.rule.why) + '</div>';
 
-  finish(right, pts, h, 'Rules');
+  finish(right, pts, h, MODE_LABEL[S.mode] || 'Rules');
 }
 
 function finish(good, pts, bodyHtml, topic){
@@ -911,10 +1364,10 @@ function showResults(){
   $('resPerfect').textContent = S.perfect + '/' + S.queue.length;
   $('resStreak').textContent = S.bestStreak;
   $('resRounds').textContent = S.queue.length;
-  $('resMode').textContent = S.mode === 'orders' ? 'Order Desk' : (S.mode === 'rules' ? 'Rules Round' : 'Full Shift');
+  $('resMode').textContent = MODE_LABEL[S.mode] || 'Drill';
 
   var rank;
-  if(acc === 100) rank = 'iLula Legend';
+  if(acc === 100) rank = 'Store Legend';
   else if(acc >= 85) rank = 'Compliance Champion';
   else if(acc >= 70) rank = 'Order Desk Pro';
   else if(acc >= 50) rank = 'Floor Ready';
@@ -1040,10 +1493,157 @@ function renderRules(){
 }
 
 /* ══════════════════════════════════════════════════════════
+   7b. DEVICE LAB — stock table
+   ══════════════════════════════════════════════════════════ */
+
+var TIER_ICON = {Platinum:'💎 ', Gold:'🥇 ', Silver:'🥈 ', Bronze:'🥉 ', Entry:''};
+function rand(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+
+function renderStock(){
+  var h = '<thead><tr><th class="rowhead">Device</th><th>Price</th><th>Tier</th><th>Highlights</th><th>Why it sells</th></tr></thead><tbody>';
+  PHONES.forEach(function(p){
+    h += '<tr><td class="rowhead">' + esc(p.b + ' ' + p.m) + '</td>' +
+         '<td style="white-space:nowrap;font-family:Archivo;font-weight:800">R' + rand(p.p) + '</td>' +
+         '<td style="white-space:nowrap">' + (TIER_ICON[p.t] || '') + esc(p.t) + '</td>' +
+         '<td><span class="cond" style="max-width:190px">' + esc(p.f) + '</span></td>' +
+         '<td><span class="cond" style="max-width:170px">' + esc(p.n) + '</span></td></tr>';
+  });
+  h += '</tbody>';
+  $('mxStock').innerHTML = h;
+}
+
+/* ══════════════════════════════════════════════════════════
+   7c. SIMULATOR
+   ══════════════════════════════════════════════════════════ */
+
+var SIM = {order:null, emp:null, addr:null, port:false, nfl:false};
+
+var SIM_ORDERS = [
+  {k:'new',        l:'New contract',          s:'Brand-new line, standard term'},
+  {k:'newm2m',     l:'New Month-2-Month',     s:'New line, no fixed term'},
+  {k:'addsim',     l:'Add-SIM',               s:'Extra SIM on an existing account'},
+  {k:'addsimm2m',  l:'Add-SIM Month-2-Month', s:'Extra SIM, no fixed term'},
+  {k:'upgrade',    l:'Upgrade',               s:'Existing contract, new deal'},
+  {k:'upgradem2m', l:'Upgrade Month-2-Month', s:'Upgrade onto month-to-month'},
+  {k:'ecnew',      l:'New EC line',           s:'Employee / corporate line'},
+  {k:'ecaddsim',   l:'Add-SIM EC line',       s:'Extra SIM on an EC account'},
+  {k:'ecupgrade',  l:'EC upgrade',            s:'Upgrade on an EC line'}
+];
+
+function simChipHtml(val, label, sub){
+  return '<button class="chip" type="button" aria-pressed="false" data-val="' + val + '">' +
+    '<span class="cbox">' + ICONS.check.replace('currentColor','#2EE6C6') + '</span>' +
+    '<span class="lbl">' + esc(label) + (sub ? '<span class="sub">' + esc(sub) + '</span>' : '') + '</span></button>';
+}
+
+function simTypeKey(){
+  if(SIM.order === 'new') return SIM.emp === 'self' ? 'newselfemp' : (SIM.emp === 'perm' ? 'newline' : null);
+  return SIM.order;
+}
+
+function simSelect(containerId, multi, onPick){
+  var box = $(containerId);
+  Array.prototype.forEach.call(box.querySelectorAll('.chip'), function(c){
+    c.addEventListener('click', function(){
+      if(!multi){
+        Array.prototype.forEach.call(box.querySelectorAll('.chip'), function(o){ o.setAttribute('aria-pressed','false'); });
+        c.setAttribute('aria-pressed','true');
+      } else {
+        c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      }
+      onPick(c.getAttribute('data-val'), c.getAttribute('aria-pressed') === 'true');
+    });
+  });
+}
+
+function simRefresh(){
+  var isNew = SIM.order === 'new';
+  $('simEmpStep').style.display = isNew ? 'block' : 'none';
+  var key = simTypeKey();
+  var needAddr = SIM.order && (isNew ? true : (TYPES[key] && TYPES[key].docs.por === 'IFNOTBANK'));
+  $('simAddrStep').style.display = needAddr ? 'block' : 'none';
+  $('simExtraStep').style.display = SIM.order ? 'block' : 'none';
+  // N4L only applies to new-line groups
+  var nflChip = $('simExtras').querySelector('[data-val="nfl"]');
+  var nflOk = SIM.order && TYPES[key] ? TYPES[key].group === 'new' : (SIM.order === 'new' || SIM.order === 'newm2m');
+  nflChip.style.display = nflOk ? 'flex' : 'none';
+  if(!nflOk){ SIM.nfl = false; nflChip.setAttribute('aria-pressed','false'); }
+  var ready = SIM.order && (!isNew || SIM.emp) && (!needAddr || SIM.addr);
+  $('simGo').disabled = !ready;
+  $('simOut').classList.remove('show');
+}
+
+function simShow(){
+  var key = simTypeKey();
+  var type = TYPES[key];
+  if(!type) return;
+  var docs = [];
+  if(type.docs.id === 'EITHER'){
+    docs.push({l:"ID copy OR driver's licence", s:'Either one works on this order type'});
+  } else if(type.docs.id === 'Y'){
+    docs.push({l:'ID copy', s:'Certified copy of the customer ID'});
+  }
+  if(type.docs.bank === 'Y') docs.push({l:'3 months bank statements', s:key === 'newm2m' ? 'Serve as proof of bank account here' : 'Latest three months'});
+  if(type.docs.por === 'IFNOTBANK' && SIM.addr === 'no') docs.push({l:'Proof of residence', s:'Needed — the address is not on the statements'});
+  if(type.docs.payslip3 === 'Y') docs.push({l:'Payslip — not older than 3 months', s:'Dated within the last three months'});
+  if(type.docs.payslipL === 'Y') docs.push({l:'Latest payslip', s:'Most recent payslip'});
+  docs.push({l:'Signed subscriber agreement', s:'Uploaded AND linked to the order before you finalise — the tick-box is not a substitute'});
+  if(SIM.port) docs.push({l:'MNP form', s:'Porting the number in from another network'});
+  if(SIM.nfl) docs.push({l:'Number-for-life form', s:'Existing prepaid number carried onto the contract'});
+
+  var tick = '<span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg></span>';
+  $('simOutHead').textContent = 'Documents — ' + type.name;
+  $('simDocs').innerHTML = docs.map(function(d){
+    return '<li>' + tick + '<div><b>' + esc(d.l) + '</b><span>' + esc(d.s) + '</span></div></li>';
+  }).join('');
+
+  var notes = [];
+  if(type.docs.por === 'IFNOTBANK' && SIM.addr === 'yes') notes.push('<b>›</b><span>No separate proof of residence needed — the address already shows on the bank statements.</span>');
+  notes.push('<b>›</b><span><b>EasyForm pack:</b> print pages 1–3 — the KIP checklist plus the usage-limit &amp; insurance election — for every contract order.</span>');
+  if(SIM.nfl) notes.push('<b>›</b><span><b>N4L (page 4):</b> remind the customer to use up prepaid airtime first — it does not carry over.</span>');
+  if(type.group === 'up' || key === 'ecupgrade') notes.push('<b>›</b><span><b>Upgrade Approval (page 5):</b> valid 7 days, subject to stock — and explain the R150 (excl VAT) upgrade fee on the next bill.</span>');
+  notes.push('<b>›</b><span><b>Handing over a device?</b> CPD signed at pick-up — and tell them the till slip is the proof of purchase, not the CPD.</span>');
+  notes.push('<b>›</b><span><b>Declining insurance?</b> Insurance Waiver signed — they still have 14 days to change their mind.</span>');
+  notes.push('<b>›</b><span><b>Signatures:</b> manual agreement = every page initialled + signed in the right places; digital pad = three signatures, no initials needed.</span>');
+  notes.push('<b>›</b><span>Anything unusual not covered here — check with your Store Manager before finalising.</span>');
+  $('simNotes').innerHTML = '<h4>Don’t forget</h4><ul>' + notes.map(function(n){ return '<li>' + n + '</li>'; }).join('') + '</ul>';
+  $('simOut').classList.add('show');
+  $('simOut').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function simReset(){
+  SIM = {order:null, emp:null, addr:null, port:false, nfl:false};
+  ['simTypes','simEmp','simAddr','simExtras'].forEach(function(id){
+    Array.prototype.forEach.call($(id).querySelectorAll('.chip'), function(c){ c.setAttribute('aria-pressed','false'); });
+  });
+  simRefresh();
+}
+
+function initSim(){
+  $('simTypes').innerHTML = SIM_ORDERS.map(function(o){ return simChipHtml(o.k, o.l, o.s); }).join('');
+  $('simEmp').innerHTML = simChipHtml('perm', 'Permanently employed', 'Has payslips available') +
+                          simChipHtml('self', 'Self-employed', 'No payslip — assessed on bank statements');
+  $('simAddr').innerHTML = simChipHtml('yes', 'Yes — address is on the statements', '') +
+                           simChipHtml('no', 'No — address is not on the statements', '');
+  $('simExtras').innerHTML = simChipHtml('port', 'Porting their number in', 'Coming across from another network') +
+                             simChipHtml('nfl', 'Keeping their prepaid number', 'Existing prepaid number onto the contract');
+  simSelect('simTypes', false, function(v){ SIM.order = v; simRefresh(); });
+  simSelect('simEmp', false, function(v){ SIM.emp = v; simRefresh(); });
+  simSelect('simAddr', false, function(v){ SIM.addr = v; simRefresh(); });
+  simSelect('simExtras', true, function(v, on){ if(v === 'port') SIM.port = on; if(v === 'nfl') SIM.nfl = on; simRefresh(); });
+  $('simGo').addEventListener('click', simShow);
+  $('simReset').addEventListener('click', simReset);
+  $('simOpen').addEventListener('click', function(){ show('scSim'); });
+}
+
+/* ══════════════════════════════════════════════════════════
    8. WIRING
    ══════════════════════════════════════════════════════════ */
 
-Array.prototype.forEach.call(document.querySelectorAll('.mode'), function(b){
+Array.prototype.forEach.call(document.querySelectorAll('[data-go]'), function(b){
+  b.addEventListener('click', function(){ clearInterval(S.timer); show(b.getAttribute('data-go')); });
+});
+Array.prototype.forEach.call(document.querySelectorAll('[data-mode]'), function(b){
   b.addEventListener('click', function(){
     S.mode = b.getAttribute('data-mode');
     S.player = ($('playerName').value || '').trim().slice(0,22);
@@ -1082,6 +1682,8 @@ renderMatrix('mxNew','new');
 renderMatrix('mxUp','up');
 renderMatrix('mxEc','ec');
 renderRules();
+renderStock();
+initSim();
 updateHud();
 try{ var savedName = localStorage.getItem('drill-name'); if(savedName) $('playerName').value = savedName; }catch(e){}
 loadBoard();
