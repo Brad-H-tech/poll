@@ -2,7 +2,7 @@
    Deliberately network-first: the live book must never be served stale.
    The cache exists only so the app shell still opens when the phone has no signal.
    Bump CACHE to force every installed phone to refresh its shell. */
-const CACHE = 'chase-v1';
+const CACHE = 'chase-v2';
 const SHELL = ['/', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
