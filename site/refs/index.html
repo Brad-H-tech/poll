@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cell Logic — Reference Number System</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap');
+
+:root{
+  --mtn-yellow:#FFCB05;
+  --mtn-yellow-deep:#F0B800;
+  --ink:#111111;
+  --ink-soft:#2A2A2A;
+  --paper:#FBFAF6;
+  --paper-card:#FFFFFF;
+  --line:#E7E3D8;
+  --muted:#7A7566;
+  --green:#1E7A3D;
+  --red:#B3261E;
+  --shadow: 0 1px 0 rgba(17,17,17,0.04), 0 8px 24px -12px rgba(17,17,17,0.18);
+  color-scheme: light;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(255,203,5,0.15), transparent 60%),
+    var(--paper);
+  color:var(--ink);
+  font-family:'Barlow',sans-serif;
+  min-height:100vh;
+  padding:28px 20px 60px;
+}
+
+.wrap{max-width:960px;margin:0 auto;}
+.hidden{display:none !important;}
+
+/* header */
+.masthead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--ink);
+  border-radius:14px;
+  padding:22px 28px;
+  box-shadow:var(--shadow);
+  position:relative;
+  overflow:hidden;
+}
+.masthead::after{
+  content:"";
+  position:absolute;
+  right:-40px; top:-60px;
+  width:220px; height:220px;
+  background:var(--mtn-yellow);
+  border-radius:50%;
+  opacity:0.9;
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+}
+.masthead-text{position:relative; z-index:2;}
+.brand-tag{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;
+  letter-spacing:0.18em;
+  font-size:12px;
+  color:var(--mtn-yellow);
+  text-transform:uppercase;
+  margin:0 0 4px;
+}
+.brand-title{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:800;
+  font-size:34px;
+  color:#fff;
+  margin:0;
+  letter-spacing:0.01em;
+  line-height:1;
+}
+.brand-sub{
+  color:#C9C6BC;
+  font-size:13.5px;
+  margin:6px 0 0;
+}
+.mtn-mark{
+  position:relative; z-index:2;
+  width:56px;height:56px;
+  border-radius:50%;
+  background:var(--mtn-yellow);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:800;
+  color:var(--ink);
+  font-size:16px;
+  flex-shrink:0;
+  box-shadow:0 4px 14px rgba(0,0,0,0.35);
+}
+
+/* store gate */
+.gate-card{
+  background:var(--paper-card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:36px 28px;
+  box-shadow:var(--shadow);
+  margin-top:26px;
+  text-align:center;
+}
+.gate-title{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:800;
+  font-size:24px;
+  margin:0 0 6px;
+}
+.gate-hint{color:var(--muted); font-size:14px; margin:0 0 26px;}
+.store-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  max-width:640px;
+  margin:0 auto;
+}
+@media (max-width:640px){ .store-grid{grid-template-columns:1fr 1fr;} }
+.store-btn{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;
+  font-size:17px;
+  letter-spacing:0.01em;
+  background:#fff;
+  border:1.5px solid var(--line);
+  border-radius:11px;
+  padding:20px 10px;
+  cursor:pointer;
+  transition:all .15s ease;
+  color:var(--ink);
+}
+.store-btn:hover{
+  border-color:var(--mtn-yellow-deep);
+  background:rgba(255,203,5,0.10);
+  transform:translateY(-2px);
+}
+.store-btn .code{
+  display:block;
+  font-family:'Barlow',sans-serif;
+  font-weight:600;
+  font-size:11px;
+  color:var(--muted);
+  letter-spacing:0.06em;
+  margin-top:3px;
+}
+
+/* store banner (shown once a store is selected) */
+.store-banner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:#fff;
+  border:1.5px solid var(--mtn-yellow-deep);
+  border-radius:11px;
+  padding:12px 18px;
+  margin:18px 0 0;
+}
+.store-banner-left{display:flex; align-items:center; gap:10px;}
+.store-banner-badge{
+  background:var(--ink);
+  color:var(--mtn-yellow);
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:0.04em;
+  padding:5px 11px;
+  border-radius:99px;
+}
+.store-banner-text{font-size:13.5px; color:var(--ink-soft);}
+.switch-store{
+  font-family:'Barlow',sans-serif;
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--muted);
+  background:none;
+  border:none;
+  text-decoration:underline;
+  cursor:pointer;
+  padding:0;
+}
+.switch-store:hover{color:var(--ink);}
+
+/* tabs */
+.tabs{
+  display:flex;
+  gap:8px;
+  margin:22px 0 18px;
+  border-bottom:2px solid var(--line);
+}
+.tab{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;
+  font-size:16px;
+  letter-spacing:0.03em;
+  text-transform:uppercase;
+  padding:10px 4px 12px;
+  cursor:pointer;
+  color:var(--muted);
+  border-bottom:3px solid transparent;
+  margin-bottom:-2px;
+  transition:color .15s ease, border-color .15s ease;
+  user-select:none;
+}
+.tab + .tab{margin-left:22px;}
+.tab.active{color:var(--ink); border-color:var(--mtn-yellow);}
+.tab:hover{color:var(--ink);}
+
+/* card */
+.card{
+  background:var(--paper-card);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:26px;
+  box-shadow:var(--shadow);
+}
+
+.section-title{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;
+  font-size:20px;
+  margin:0 0 4px;
+  letter-spacing:0.01em;
+}
+.section-hint{
+  color:var(--muted);
+  font-size:13px;
+  margin:0 0 20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+@media (max-width:640px){ .grid{grid-template-columns:1fr;} }
+
+.field{display:flex; flex-direction:column; gap:6px;}
+.field.full{grid-column:1/-1;}
+label{
+  font-size:12px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.06em;
+  color:var(--ink-soft);
+}
+select, input, textarea{
+  font-family:'Barlow',sans-serif;
+  font-size:15px;
+  padding:11px 12px;
+  border:1.5px solid var(--line);
+  border-radius:9px;
+  background:#fff;
+  color:var(--ink);
+  outline:none;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+select:focus, input:focus, textarea:focus{
+  border-color:var(--mtn-yellow-deep);
+  box-shadow:0 0 0 3px rgba(255,203,5,0.28);
+}
+input[readonly]{
+  background:#F4F2EA;
+  color:var(--ink-soft);
+  font-weight:600;
+  cursor:not-allowed;
+}
+input[readonly]:focus{
+  box-shadow:none;
+  border-color:var(--line);
+}
+textarea{resize:vertical; min-height:64px;}
+.locked-field{
+  padding:11px 12px;
+  border:1.5px solid var(--line);
+  border-radius:9px;
+  background:#F4F2EA;
+  color:var(--ink-soft);
+  font-weight:600;
+  font-size:15px;
+}
+
+.btn{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;
+  font-size:16px;
+  letter-spacing:0.03em;
+  text-transform:uppercase;
+  border:none;
+  border-radius:9px;
+  padding:13px 22px;
+  cursor:pointer;
+  transition:transform .1s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.btn-primary{
+  background:var(--mtn-yellow);
+  color:var(--ink);
+  box-shadow:0 3px 0 var(--mtn-yellow-deep);
+}
+.btn-primary:hover{transform:translateY(-1px);}
+.btn-primary:active{transform:translateY(1px); box-shadow:0 1px 0 var(--mtn-yellow-deep);}
+.btn-primary:disabled{opacity:0.5; cursor:not-allowed; transform:none;}
+.btn-ghost{
+  background:transparent;
+  color:var(--ink);
+  border:1.5px solid var(--line);
+}
+.btn-ghost:hover{border-color:var(--ink);}
+
+.actions{display:flex; justify-content:flex-end; gap:10px; margin-top:22px;}
+
+/* result */
+.result{
+  margin-top:22px;
+  border:1.5px dashed var(--mtn-yellow-deep);
+  border-radius:12px;
+  padding:20px 22px;
+  background:linear-gradient(180deg, rgba(255,203,5,0.10), rgba(255,203,5,0.02));
+  display:none;
+}
+.result.show{display:block; animation:pop .28s ease;}
+@keyframes pop{from{opacity:0; transform:translateY(-6px);} to{opacity:1; transform:translateY(0);}}
+.result-label{font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); font-weight:600;}
+.result-ref{
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:800;
+  font-size:32px;
+  color:var(--ink);
+  letter-spacing:0.02em;
+  margin:4px 0 12px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+}
+.copy-btn{
+  font-family:'Barlow',sans-serif;
+  font-size:12.5px;
+  font-weight:600;
+  background:var(--ink);
+  color:#fff;
+  border:none;
+  border-radius:7px;
+  padding:7px 12px;
+  cursor:pointer;
+}
+.copy-btn:hover{background:var(--ink-soft);}
+
+/* table */
+.filters{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-bottom:18px;
+}
+@media (max-width:760px){ .filters{grid-template-columns:1fr 1fr;} }
+
+table{width:100%; border-collapse:collapse; font-size:14px;}
+thead th{
+  text-align:left;
+  font-family:'Barlow Condensed',sans-serif;
+  font-weight:700;
+  text-transform:uppercase;
+  font-size:11.5px;
+  letter-spacing:0.05em;
+  color:var(--muted);
+  border-bottom:2px solid var(--line);
+  padding:8px 10px;
+  white-space:nowrap;
+}
+tbody td{
+  padding:11px 10px;
+  border-bottom:1px solid var(--line);
+  vertical-align:top;
+}
+tbody tr:hover{background:rgba(255,203,5,0.08);}
+.ref-cell{font-family:'Barlow Condensed',sans-serif; font-weight:700; letter-spacing:0.02em;}
+.empty-state{
+  text-align:center;
+  padding:50px 20px;
+  color:var(--muted);
+}
+.empty-state .big{font-size:38px; margin-bottom:6px;}
+
+.status-row{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-top:16px; font-size:12.5px; color:var(--muted);
+}
+
+.badge-note{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:10px;
+}
+
+.loading{color:var(--muted); font-size:13.5px; padding:20px 0;}
+.error-banner{
+  background:#FBEAE9; border:1px solid #E9B7B3; color:var(--red);
+  padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:16px; display:none;
+}
+.error-banner.show{display:block;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="masthead-text">
+      <p class="brand-tag">Cell Logic (Pty) Ltd &nbsp;•&nbsp; MTN Connect KZN</p>
+      <h1 class="brand-title">Sales Reference Number System</h1>
+      <p class="brand-sub">Generate and track a unique reference for every sales transaction.</p>
+    </div>
+    <div class="mtn-mark">CL</div>
+  </div>
+
+  <!-- STORE GATE -->
+  <div id="store-gate" class="gate-card">
+    <p class="gate-title">Which store are you at?</p>
+    <p class="gate-hint">You'll only see and generate references for this store.</p>
+    <div class="store-grid" id="store-grid"><!-- filled by JS --></div>
+  </div>
+
+  <!-- MAIN APP (shown after store selected) -->
+  <div id="app-main" class="hidden">
+
+    <div class="store-banner">
+      <div class="store-banner-left">
+        <span class="store-banner-badge" id="banner-code">—</span>
+        <span class="store-banner-text" id="banner-name">—</span>
+      </div>
+      <button class="switch-store" id="switch-store-btn">Switch store</button>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="generate">Generate</div>
+      <div class="tab" data-tab="track">Track / Lookup</div>
+    </div>
+
+    <div id="error-banner" class="error-banner"></div>
+
+    <!-- GENERATE TAB -->
+    <div id="tab-generate" class="card">
+      <p class="section-title">New transaction reference</p>
+      <p class="section-hint">A reference is issued as <strong>CL&#8209;[STORE]&#8209;[YYMMDD]&#8209;[SEQ]</strong>, sequential per store, per day.</p>
+
+      <div class="grid">
+        <div class="field">
+          <label>Store</label>
+          <div class="locked-field" id="locked-store-display">—</div>
+        </div>
+        <div class="field">
+          <label for="txntype">Discount reason</label>
+          <select id="txntype">
+            <option>Staff discount</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="consultant">Consultant</label>
+          <select id="consultant">
+            <option value="">Select consultant…</option>
+            <option value="__add_new__">+ Add new consultant…</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="customer">Customer name</label>
+          <input id="customer" type="text" placeholder="e.g. J. Naidoo" />
+        </div>
+        <div class="field">
+          <label for="amount">Cost price incl VAT (R) <span style="text-transform:none;font-weight:400;color:var(--muted);">— optional</span></label>
+          <input id="amount" type="number" min="0" step="0.01" placeholder="0.00" />
+        </div>
+        <div class="field">
+          <label for="discount-total">Discount total (R) <span style="text-transform:none;font-weight:400;color:var(--muted);">— optional</span></label>
+          <input id="discount-total" type="number" min="0" step="0.01" placeholder="0.00" />
+        </div>
+        <div class="field">
+          <label for="sales-price">New sales price incl discount (R) <span style="text-transform:none;font-weight:400;color:var(--muted);">— auto-calculated</span></label>
+          <input id="sales-price" type="number" min="0" step="0.01" placeholder="0.00" readonly />
+        </div>
+        <div class="field">
+          <label for="txdate">Transaction date</label>
+          <input id="txdate" type="date" />
+        </div>
+        <div class="field full">
+          <label for="notes">Notes <span style="text-transform:none;font-weight:400;color:var(--muted);">— optional</span></label>
+          <textarea id="notes" placeholder="Any detail worth tracking against this reference..."></textarea>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-ghost" id="clear-form">Clear</button>
+        <button class="btn btn-primary" id="generate-btn">Generate Reference</button>
+      </div>
+
+      <div class="result" id="result">
+        <div class="result-label">Reference generated</div>
+        <div class="result-ref">
+          <span id="result-ref-text">—</span>
+          <button class="copy-btn" id="copy-btn">Copy</button>
+        </div>
+        <div style="font-size:13.5px; color:var(--ink-soft);" id="result-meta"></div>
+      </div>
+
+      <p class="badge-note">This log is scoped to your store only — other stores can't see or generate against your references, and you can't see theirs.</p>
+    </div>
+
+    <!-- TRACK TAB -->
+    <div id="tab-track" class="card" style="display:none;">
+      <p class="section-title">Search your store's transaction log</p>
+      <p class="section-hint">Filter by reference, customer, consultant, discount, or date.</p>
+
+      <div class="filters">
+        <div class="field">
+          <label for="f-search">Reference / customer / consultant</label>
+          <input id="f-search" type="text" placeholder="Search..." />
+        </div>
+        <div class="field">
+          <label for="f-type">Discount reason</label>
+          <select id="f-type">
+            <option value="">All</option>
+            <option>Staff discount</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="f-date">Date</label>
+          <input id="f-date" type="date" />
+        </div>
+      </div>
+
+      <div id="table-holder">
+        <div class="loading">Loading log…</div>
+      </div>
+
+      <div class="status-row">
+        <span id="result-count"></span>
+        <button class="btn btn-ghost" id="refresh-btn" style="padding:8px 16px; font-size:13px;">Refresh</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(function(){
+  /* =========================================================
+     Supabase backend — same project as Chase, own tables.
+     The page talks to PostgREST directly; the sequence number
+     comes from the next_ref_seq() database function so two
+     tills can never be issued the same reference.
+  ========================================================= */
+  const SB_URL = 'https://dzmqogwggompkwasiglq.supabase.co';
+  const SB_KEY = 'sb_publishable_fu6yXakyx-Egk6Jcb_9BMg_cwh2dZTX';
+
+  async function sb(path, opts){
+    opts = opts || {};
+    const headers = Object.assign({
+      'apikey': SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type': 'application/json',
+    }, opts.headers || {});
+    const res = await fetch(SB_URL + '/rest/v1/' + path, Object.assign({}, opts, { headers }));
+    if(!res.ok){
+      let msg = 'HTTP ' + res.status;
+      try{ const j = await res.json(); if(j && j.message) msg = j.message; }catch(e){}
+      const err = new Error(msg); err.status = res.status; throw err;
+    }
+    if(res.status === 204) return null;
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
+
+  const STORES = [
+    {code:'CAS', name:'Cascades (Pietermaritzburg)'},
+    {code:'HOW', name:'Howick'},
+    {code:'KOK', name:'Kokstad'},
+    {code:'SCO', name:'Scottburgh'},
+    {code:'SHB', name:'Shelly Beach'},
+    {code:'VRY', name:'Vryheid'},
+  ];
+  const STORE_NAMES = {};
+  STORES.forEach(s=> STORE_NAMES[s.code] = s.name);
+
+  let currentStore = null;
+
+  const els = {
+    storeGate: document.getElementById('store-gate'),
+    storeGrid: document.getElementById('store-grid'),
+    appMain: document.getElementById('app-main'),
+    bannerCode: document.getElementById('banner-code'),
+    bannerName: document.getElementById('banner-name'),
+    switchStoreBtn: document.getElementById('switch-store-btn'),
+    lockedStoreDisplay: document.getElementById('locked-store-display'),
+
+    tabs: document.querySelectorAll('.tab'),
+    tabGenerate: document.getElementById('tab-generate'),
+    tabTrack: document.getElementById('tab-track'),
+
+    txntype: document.getElementById('txntype'),
+    consultant: document.getElementById('consultant'),
+    customer: document.getElementById('customer'),
+    amount: document.getElementById('amount'),
+    discountTotal: document.getElementById('discount-total'),
+    salesPrice: document.getElementById('sales-price'),
+    txdate: document.getElementById('txdate'),
+    notes: document.getElementById('notes'),
+    generateBtn: document.getElementById('generate-btn'),
+    clearBtn: document.getElementById('clear-form'),
+    result: document.getElementById('result'),
+    resultRefText: document.getElementById('result-ref-text'),
+    resultMeta: document.getElementById('result-meta'),
+    copyBtn: document.getElementById('copy-btn'),
+    errorBanner: document.getElementById('error-banner'),
+    tableHolder: document.getElementById('table-holder'),
+    fSearch: document.getElementById('f-search'),
+    fType: document.getElementById('f-type'),
+    fDate: document.getElementById('f-date'),
+    resultCount: document.getElementById('result-count'),
+    refreshBtn: document.getElementById('refresh-btn'),
+  };
+
+  const todayStr = new Date().toISOString().slice(0,10);
+  els.txdate.value = todayStr;
+
+  function recalcSalesPrice(){
+    const cost = parseFloat(els.amount.value);
+    const discount = parseFloat(els.discountTotal.value);
+    if(!isNaN(cost)){
+      const net = cost - (isNaN(discount) ? 0 : discount);
+      els.salesPrice.value = net.toFixed(2);
+    } else {
+      els.salesPrice.value = '';
+    }
+  }
+  els.amount.addEventListener('input', recalcSalesPrice);
+  els.discountTotal.addEventListener('input', recalcSalesPrice);
+
+  function showError(msg){
+    els.errorBanner.textContent = msg;
+    els.errorBanner.classList.add('show');
+    setTimeout(()=> els.errorBanner.classList.remove('show'), 6000);
+  }
+  function friendly(e){
+    return (e && e.message === 'Failed to fetch')
+      ? 'No connection — check the internet and try again.'
+      : (e && e.message) || 'Something went wrong.';
+  }
+
+  // ---- Store gate ----
+  STORES.forEach(s=>{
+    const btn = document.createElement('button');
+    btn.className = 'store-btn';
+    btn.innerHTML = s.name.split(' (')[0] + '<span class="code">' + s.code + '</span>';
+    btn.addEventListener('click', ()=> selectStore(s.code));
+    els.storeGrid.appendChild(btn);
+  });
+
+  async function selectStore(code){
+    currentStore = code;
+    els.bannerCode.textContent = code;
+    els.bannerName.textContent = STORE_NAMES[code];
+    els.lockedStoreDisplay.textContent = STORE_NAMES[code];
+    els.storeGate.classList.add('hidden');
+    els.appMain.classList.remove('hidden');
+    try{ localStorage.setItem('clref:lastStore', code); }catch(e){ /* non-fatal */ }
+    await populateConsultants();
+    loadLog();
+  }
+
+  els.switchStoreBtn.addEventListener('click', ()=>{
+    currentStore = null;
+    els.appMain.classList.add('hidden');
+    els.storeGate.classList.remove('hidden');
+  });
+
+  // Remember the last store on this device
+  (function initGate(){
+    try{
+      const code = localStorage.getItem('clref:lastStore');
+      if(code && STORE_NAMES[code]){ selectStore(code); }
+    }catch(e){ /* no saved store yet — show gate */ }
+  })();
+
+  // ---- Tabs ----
+  els.tabs.forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      els.tabs.forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      const which = tab.dataset.tab;
+      els.tabGenerate.style.display = which === 'generate' ? 'block' : 'none';
+      els.tabTrack.style.display = which === 'track' ? 'block' : 'none';
+      if(which === 'track'){ loadLog(); }
+    });
+  });
+
+  // ---- Consultants (shared per store in Supabase) ----
+  async function getConsultantList(){
+    const rows = await sb('ref_consultants?store=eq.' + currentStore + '&select=name&order=name');
+    return (rows || []).map(r=> r.name);
+  }
+
+  async function addConsultant(name){
+    await sb('ref_consultants?on_conflict=store,name', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify({ store: currentStore, name: name }),
+    });
+  }
+
+  async function removeConsultant(name){
+    await sb('ref_consultants?store=eq.' + currentStore + '&name=eq.' + encodeURIComponent(name), {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' },
+    });
+  }
+
+  async function populateConsultants(){
+    let list = [];
+    try{
+      list = await getConsultantList();
+    }catch(e){
+      showError('Could not load the consultant list — ' + friendly(e));
+    }
+    els.consultant.innerHTML = '<option value="">Select consultant…</option>' +
+      list.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('') +
+      '<option value="__add_new__">+ Add new consultant…</option>' +
+      (list.length ? '<option value="__remove__">− Remove a consultant…</option>' : '');
+  }
+
+  els.consultant.addEventListener('change', async ()=>{
+    if(els.consultant.value === '__add_new__'){
+      const name = prompt('Consultant name to add for ' + STORE_NAMES[currentStore] + ':');
+      if(name && name.trim()){
+        const trimmed = name.trim();
+        try{
+          await addConsultant(trimmed);
+          await populateConsultants();
+          els.consultant.value = trimmed;
+        }catch(e){
+          els.consultant.value = '';
+          showError('Could not add the consultant — ' + friendly(e));
+        }
+      } else {
+        els.consultant.value = '';
+      }
+    } else if(els.consultant.value === '__remove__'){
+      els.consultant.value = '';
+      let list = [];
+      try{ list = await getConsultantList(); }
+      catch(e){ showError('Could not load the consultant list — ' + friendly(e)); return; }
+      const numbered = list.map((n,i)=> `${i+1}. ${n}`).join('\n');
+      const choice = prompt('Remove which consultant from ' + STORE_NAMES[currentStore] + '?\n\n' + numbered + '\n\nEnter the number:');
+      if(choice && choice.trim()){
+        const idx = parseInt(choice.trim(), 10) - 1;
+        if(idx >= 0 && idx < list.length){
+          const removedName = list[idx];
+          if(confirm('Remove "' + removedName + '" from the ' + STORE_NAMES[currentStore] + ' list?')){
+            try{
+              await removeConsultant(removedName);
+              await populateConsultants();
+            }catch(e){
+              showError('Could not remove the consultant — ' + friendly(e));
+            }
+          }
+        } else {
+          showError('Not a valid number — nothing removed.');
+        }
+      }
+    }
+  });
+
+  function ymd(dateStr){
+    const [y,m,d] = dateStr.split('-');
+    return y.slice(2) + m + d;
+  }
+
+  async function generateReference(){
+    if(!currentStore){ showError('No store selected.'); return; }
+    const store = currentStore;
+    const type = els.txntype.value;
+    const consultant = els.consultant.value === '__add_new__' ? '' : els.consultant.value;
+    const customer = els.customer.value.trim();
+    const amount = els.amount.value;
+    const discountTotal = els.discountTotal.value;
+    const salesPrice = els.salesPrice.value;
+    const dateStr = els.txdate.value || todayStr;
+    const notes = els.notes.value.trim();
+
+    if(!consultant){
+      showError('Please select a consultant.');
+      return;
+    }
+
+    els.generateBtn.disabled = true;
+    els.generateBtn.textContent = 'Generating…';
+
+    try{
+      // Atomic per-store per-day sequence from the database
+      const seq = await sb('rpc/next_ref_seq', {
+        method: 'POST',
+        body: JSON.stringify({ p_store: store, p_day: ymd(dateStr) }),
+      });
+      const seqPadded = String(seq).padStart(3,'0');
+      const ref = `CL-${store}-${ymd(dateStr)}-${seqPadded}`;
+
+      await sb('ref_transactions', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          ref: ref,
+          store: store,
+          reason: type,
+          consultant: consultant,
+          customer: customer,
+          cost_price: amount ? Number(amount) : null,
+          discount_total: discountTotal ? Number(discountTotal) : null,
+          sales_price: salesPrice ? Number(salesPrice) : null,
+          tx_date: dateStr,
+          notes: notes,
+        }),
+      });
+
+      els.resultRefText.textContent = ref;
+      const metaParts = [STORE_NAMES[store], type, dateStr];
+      if(customer) metaParts.push(customer);
+      if(amount) metaParts.push('R' + Number(amount).toFixed(2));
+      if(discountTotal) metaParts.push('Discount R' + Number(discountTotal).toFixed(2));
+      if(salesPrice) metaParts.push('New price R' + Number(salesPrice).toFixed(2));
+      els.resultMeta.textContent = metaParts.join('  •  ');
+      els.result.classList.add('show');
+
+    }catch(e){
+      showError('Could not generate reference — ' + friendly(e));
+      console.error(e);
+    }finally{
+      els.generateBtn.disabled = false;
+      els.generateBtn.textContent = 'Generate Reference';
+    }
+  }
+
+  els.generateBtn.addEventListener('click', generateReference);
+
+  els.clearBtn.addEventListener('click', ()=>{
+    els.consultant.value = '';
+    els.customer.value = '';
+    els.amount.value = '';
+    els.discountTotal.value = '';
+    els.salesPrice.value = '';
+    els.notes.value = '';
+    els.txdate.value = todayStr;
+    els.txntype.selectedIndex = 0;
+    els.result.classList.remove('show');
+  });
+
+  els.copyBtn.addEventListener('click', ()=>{
+    const text = els.resultRefText.textContent;
+    navigator.clipboard.writeText(text).then(()=>{
+      els.copyBtn.textContent = 'Copied!';
+      setTimeout(()=> els.copyBtn.textContent = 'Copy', 1500);
+    }).catch(()=>{ showError('Could not copy — select and copy manually.'); });
+  });
+
+  // ---- Track / Lookup (scoped to current store only) ----
+  let allRecords = [];
+
+  async function loadLog(){
+    if(!currentStore) return;
+    els.tableHolder.innerHTML = '<div class="loading">Loading log…</div>';
+    try{
+      const rows = await sb('ref_transactions?store=eq.' + currentStore +
+        '&select=*&order=created_at.desc&limit=1000');
+      allRecords = (rows || []).map(r=>({
+        ref: r.ref, store: r.store, type: r.reason, consultant: r.consultant,
+        customer: r.customer, amount: r.cost_price, discountTotal: r.discount_total,
+        salesPrice: r.sales_price, date: r.tx_date, notes: r.notes,
+        createdAt: r.created_at,
+      }));
+      renderTable();
+    }catch(e){
+      els.tableHolder.innerHTML = '';
+      showError('Could not load the log — ' + friendly(e));
+      console.error(e);
+    }
+  }
+
+  function renderTable(){
+    const search = els.fSearch.value.trim().toLowerCase();
+    const type = els.fType.value;
+    const date = els.fDate.value;
+
+    let filtered = allRecords.filter(r=>{
+      if(type && r.type !== type) return false;
+      if(date && r.date !== date) return false;
+      if(search){
+        const hay = [r.ref, r.customer, r.consultant, r.notes].join(' ').toLowerCase();
+        if(!hay.includes(search)) return false;
+      }
+      return true;
+    });
+
+    els.resultCount.textContent = `${filtered.length} reference${filtered.length===1?'':'s'} found`;
+
+    if(filtered.length === 0){
+      els.tableHolder.innerHTML = `
+        <div class="empty-state">
+          <div class="big">📋</div>
+          <div>No transactions match yet.</div>
+        </div>`;
+      return;
+    }
+
+    const rows = filtered.map(r=>`
+      <tr>
+        <td class="ref-cell">${escapeHtml(r.ref)}</td>
+        <td>${escapeHtml(r.date || '')}</td>
+        <td>${escapeHtml(r.type || '')}</td>
+        <td>${escapeHtml(r.consultant || '—')}</td>
+        <td>${escapeHtml(r.customer || '—')}</td>
+        <td>${r.amount != null ? 'R' + Number(r.amount).toFixed(2) : '—'}</td>
+        <td>${r.discountTotal != null ? 'R' + Number(r.discountTotal).toFixed(2) : '—'}</td>
+        <td>${r.salesPrice != null ? 'R' + Number(r.salesPrice).toFixed(2) : '—'}</td>
+        <td>${escapeHtml(r.notes || '')}</td>
+      </tr>
+    `).join('');
+
+    els.tableHolder.innerHTML = `
+      <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Reference</th><th>Date</th><th>Discount reason</th>
+            <th>Consultant</th><th>Customer</th><th>Cost price incl VAT</th><th>Discount total</th><th>New sales price</th><th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      </div>`;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[s]));
+  }
+
+  [els.fSearch, els.fType, els.fDate].forEach(el=>{
+    el.addEventListener('input', renderTable);
+    el.addEventListener('change', renderTable);
+  });
+  els.refreshBtn.addEventListener('click', loadLog);
+
+})();
+</script>
+</body>
+</html>
