@@ -1,16 +1,16 @@
 <meta charset="utf-8">
-<title>Chase</title>
+<title>Chase CRM</title>
 <link rel="icon" href="/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <script>try{document.documentElement.setAttribute("data-accent",localStorage.getItem("si-accent")||"pink")}catch(e){document.documentElement.setAttribute("data-accent","pink")}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Chase — upgrade chase & customer tracking for MTN dealer stores. Work your book, log every call, never let a lead go cold.">
+<meta name="description" content="Chase CRM — upgrade chase & customer tracking for MTN dealer stores. Work your book, log every call, never let a lead go cold.">
 <meta name="theme-color" content="#c2467c">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Chase">
+<meta name="apple-mobile-web-app-title" content="Chase CRM">
 <style>
   /* ============ Design tokens ============ */
   :root{
@@ -668,6 +668,46 @@
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
   .reveal{opacity:0;transform:translateY(14px)}
   .reveal.in{opacity:1;transform:none;transition:opacity .6s ease,transform .6s cubic-bezier(.22,1,.36,1)}
+  /* ============ Team — sortable, searchable, paged data table ============ */
+  .dtab{background:var(--surface-1);border:1px solid var(--line);border-radius:16px;overflow:hidden;font-size:14px}
+  .dtab .dt-bar{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .dtab .dt-search{position:relative;flex:1 1 240px;max-width:380px;display:block}
+  .dtab .dt-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ink-3);pointer-events:none}
+  .dtab .dt-search input{width:100%;font:inherit;font-size:14px;padding:10px 14px 10px 38px;border:1px solid var(--line-strong);border-radius:16px;background:var(--surface-2);color:var(--ink);outline:none;transition:box-shadow .15s,border-color .15s}
+  .dtab .dt-search input:focus{border-color:transparent;box-shadow:0 0 0 2px var(--brand-deep)}
+  .dtab .dt-count{margin-left:auto;font-size:12.5px;color:var(--ink-3);white-space:nowrap}
+  .dtab .dt-wrap{overflow-x:auto}
+  .dtab table{width:100%;min-width:960px;border-collapse:collapse}
+  .dtab thead th{text-align:left;padding:13px 16px;font-size:13px;font-weight:600;color:var(--ink-3);background:color-mix(in srgb,var(--surface-3) 60%,var(--surface-1));white-space:nowrap;user-select:none}
+  .dtab thead th.sort{cursor:pointer;transition:background .15s}
+  .dtab thead th.sort:hover{background:var(--surface-3)}
+  .dtab th .h{display:inline-flex;align-items:center;gap:8px}
+  .dtab th .chev{display:inline-flex;flex-direction:column;line-height:0}
+  .dtab th .chev svg{width:12px;height:12px;color:color-mix(in srgb,var(--ink-3) 40%,transparent)}
+  .dtab th .chev svg+svg{margin-top:-4px}
+  .dtab th .chev svg.on{color:var(--brand-deep)}
+  .dtab tbody td{padding:12px 16px;border-top:1px solid var(--line);color:var(--ink);white-space:nowrap;vertical-align:middle;font-variant-numeric:tabular-nums;background:var(--surface-1);transition:background .15s}
+  .dtab tbody tr:hover td{background:color-mix(in srgb,var(--surface-3) 45%,var(--surface-1))}
+  .dtab .who{display:inline-flex;align-items:center;gap:10px;font-weight:600;vertical-align:middle}
+  .dtab .who .av{display:inline-grid;place-items:center;margin:0;width:26px;height:26px;border-radius:999px;font-size:10px;font-weight:700;color:#fff;flex:none}
+  .dtab th:last-child,.dtab td.act{position:sticky;right:0;box-shadow:-8px 0 12px -10px rgba(0,0,0,.25)}
+  .dtab th:last-child{background:var(--surface-3)}
+  .dtab .mono{font-family:var(--mono);font-size:12.5px}
+  .dtab .mut{color:var(--ink-3)}
+  .dtab .role{display:inline-flex;align-items:center;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;border:1px solid var(--line-strong);color:var(--ink-2)}
+  .dtab .role.mgr{background:var(--ink);color:var(--surface-1);border-color:transparent}
+  .dtab td.act{text-align:right}
+  .dtab td.act .abtn{margin-left:6px}
+  .dtab .dt-empty{padding:56px 20px;text-align:center;color:var(--ink-3);white-space:normal}
+  .dtab .dt-empty .big{font-size:34px;margin-bottom:6px}
+  .dtab .dt-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-top:1px solid var(--line);font-size:13px;color:var(--ink-3)}
+  .dtab .dt-pages{display:flex;align-items:center;gap:6px}
+  .dtab .dt-pages button{appearance:none;font:inherit;font-size:13px;padding:8px 12px;border:1px solid var(--line-strong);border-radius:16px;background:var(--surface-1);color:var(--ink);cursor:pointer;transition:background .15s}
+  .dtab .dt-pages button:hover:not(:disabled){background:var(--surface-3)}
+  .dtab .dt-pages button:disabled{opacity:.5;cursor:not-allowed}
+  .dtab .dt-pages button.on{background:var(--ink);color:var(--surface-1);border-color:var(--ink)}
+  @media (max-width:640px){.dtab .dt-pages .pg{display:none}.dtab .dt-count{display:none}}
+
   /* ============ Dashboard (manager) — self-contained shadcn-style tokens ============ */
   .dash{
     --d-bg:hsl(0 0% 100%); --d-fg:hsl(0 0% 3.9%); --d-card:hsl(0 0% 100%);
@@ -771,7 +811,7 @@
 <header class="top">
   <div class="wrap top-in">
     <div class="logo">
-      <span class="mark" style="font-size:11px;letter-spacing:-.5px">C</span><b>Chase</b>
+      <span class="mark" style="font-size:11px;letter-spacing:-.5px">C</span><b>Chase CRM</b>
       <span class="sub" id="storeSub">MTN Dealer</span>
     </div>
     <div class="top-spacer"></div>
@@ -803,7 +843,7 @@
 
 <nav class="sidenav" id="sidenav" aria-label="Main navigation">
   <div class="sn-logo"><span class="mark">C</span>
-    <div><b>Chase</b><small id="snStore">MTN Dealer</small></div></div>
+    <div><b>Chase CRM</b><small id="snStore">MTN Dealer</small></div></div>
   <div class="sn-sec">Workspace</div>
   <button class="sn-item" data-nav="book" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.6A1.6 1.6 0 0 1 5.6 3H18a1 1 0 0 1 1 1v13.8a1 1 0 0 1-1 1H5.6A1.6 1.6 0 0 0 4 20.4Z"/><path d="M4 4.6A1.6 1.6 0 0 0 5.6 6.2H19"/></svg> The Book</button>
   <button class="sn-item" data-nav="day" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg> My Day <span class="cnt" id="snDayCnt"></span></button>
@@ -832,7 +872,7 @@
   <div class="wrap">
     <div class="herobanner">
       <div class="hb-left">
-        <span class="hb-eyebrow">Chase · <span id="heroStore">MTN Dealer</span></span>
+        <span class="hb-eyebrow">Chase CRM ·<span id="heroStore">MTN Dealer</span></span>
         <h1>Welcome back, <span id="heroName">there</span>.</h1>
         <p>Work your book, chase every callback, and never let a lead go cold.</p>
         <button class="hb-cta" id="heroCta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M12 6l6 6-6 6"/></svg> See today's callbacks</button>
@@ -1018,7 +1058,7 @@
     <section class="card pad-lg" id="teamCard" style="margin-top:16px" aria-label="Team">
       <div class="card-hd"><div><h3>Team</h3>
         <div class="h-desc">Logins for the floor — everyone works the same live book</div></div></div>
-      <div class="stat-list" id="teamList"></div>
+      <div class="dtab" id="teamList"></div>
       <div class="toolbar" style="margin-top:16px">
         <input class="ti" id="nuName" placeholder="Full name" autocomplete="off">
         <input class="ti" id="nuUser" placeholder="username" autocomplete="off">
@@ -1075,14 +1115,14 @@
   </div>
 
   <div class="note">
-    <b>Chase.</b> Everyone signs in to the same live book — outcomes, callbacks and notes
+    <b>Chase CRM.</b> Everyone signs in to the same live book — outcomes, callbacks and notes
     sync instantly between consultants and the manager. Six stores plus the Admin view,
     each with its own base; upload next month's file and the whole book updates.
   </div>
 </main>
 
 <footer><div class="wrap">
-  <div>Chase · MTN dealer console</div>
+  <div>Chase CRM · MTN dealer console</div>
   <div>Shared live book · trust check · base splits &amp; moves · manager-gated uploads</div>
 </div></footer>
 
@@ -1102,7 +1142,7 @@
 </div></div>
 
 <div class="login" id="login"><div class="l-card">
-  <div class="logo" style="justify-content:center;margin-bottom:6px"><span class="mark" style="font-size:11px;letter-spacing:-.5px">C</span><b style="font-size:17px">Chase</b></div>
+  <div class="logo" style="justify-content:center;margin-bottom:6px"><span class="mark" style="font-size:11px;letter-spacing:-.5px">C</span><b style="font-size:17px">Chase CRM</b></div>
   <p>Choose your store and sign in</p>
   <select class="ti" id="liStore" aria-label="Store"></select>
   <input class="ti" id="liU" placeholder="Username" autocomplete="username">
@@ -1892,7 +1932,7 @@ function exportCSV(){
   const csv=head.join(',')+'\n'+rows.join('\n');
   const a=document.createElement('a');
   a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download='chase-book-export.csv';document.body.appendChild(a);a.click();a.remove();
+  a.download='chase-crm-book-export.csv';document.body.appendChild(a);a.click();a.remove();
   toast(`Exported <b>${all.length}</b> accounts to CSV`);
 }
 
@@ -2934,6 +2974,7 @@ function renderAll(){
   renderStatus();syncFilterControls();renderExplorer();
   renderSubCount();renderHero();renderSubView(subView);
   renderClaims();renderReport();loadSettingsPanel();renderBase();renderDash();
+  if(ME&&ME.role==='manager')drawTeam();
 }
 /* ---------- auth, roles & live sync ---------- */
 function applyView(v){
@@ -3018,30 +3059,80 @@ function connectSSE(){
   es.addEventListener('settings',()=>refreshState().catch(()=>{}));
   es.addEventListener('team',()=>{AGENTS_CACHE=null;if(ME&&ME.role==='manager')renderTeam();});
 }
+/* ---- Team: a sortable, searchable, paged data table over the store's logins ---- */
+let TEAM_USERS=[],teamQ='',teamSort={key:'name',dir:1},teamPage=1;
+const TEAM_PER=10;
+const TEAM_COLS=[['name','Name',1],['u','Username',1],['role','Role',1],['agent','CSR code',1],['store','Store',1],
+  ['accts','Accounts',1],['contacts','Contacts (7d)',1],['last','Last active',1],['act','',0]];
+function teamRows(){
+  let stats=null;
+  try{const d=DS();if(d&&d.customers&&d.customers.length)stats=dashStats();}catch(e){}
+  const by={};(stats?stats.team:[]).forEach(p=>by[p.key]=p);
+  const storeName=id=>id?((STORES.find(s=>s[0]===id)||[])[1]||id):'All stores';
+  return TEAM_USERS.map(u=>{const p=by[String(u.agent||'').toUpperCase()];
+    return {...u,name:u.name||'',agent:u.agent||'',store:storeName(u.store_id),
+      accts:p?p.accts:0,contacts:p?p.contacts:0,last:p&&p.last?p.last:''};});
+}
+function drawTeam(){
+  const box=$('#teamList');if(!box||!ME)return;
+  let rows=teamRows();
+  const q=teamQ.trim().toLowerCase();
+  if(q)rows=rows.filter(r=>['name','u','role','agent','store'].some(k=>String(r[k]).toLowerCase().includes(q)));
+  const {key,dir}=teamSort;
+  rows.sort((a,b)=>{const x=a[key],y=b[key];
+    if(typeof x==='number'&&typeof y==='number')return (x-y)*dir;
+    return String(x).localeCompare(String(y),undefined,{sensitivity:'base'})*dir;});
+  const total=rows.length,pages=Math.max(1,Math.ceil(total/TEAM_PER));
+  if(teamPage>pages)teamPage=pages;
+  const start=(teamPage-1)*TEAM_PER,page=rows.slice(start,start+TEAM_PER);
+  const arrow=(d,on)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="${on?'on':''}"><path d="${d}"/></svg>`;
+  const chev=k=>`<span class="chev">${arrow('m6 15 6-6 6 6',key===k&&dir===1)}${arrow('m6 9 6 6 6-6',key===k&&dir===-1)}</span>`;
+  const cell=(r,k)=>{
+    if(k==='name')return `<td><span class="who"><span class="av" style="background:${agentColor((r.name||'?').toUpperCase())}">${esc((r.name||'?')[0].toUpperCase())}</span>${esc(r.name)}</span></td>`;
+    if(k==='u')return `<td class="mono mut">@${esc(r.u)}</td>`;
+    if(k==='role')return `<td><span class="role ${r.role==='manager'?'mgr':''}">${r.role==='manager'?'Manager':'Consultant'}</span></td>`;
+    if(k==='agent')return `<td class="mono">${r.agent?esc(r.agent):'<span class="mut">—</span>'}</td>`;
+    if(k==='store')return `<td>${esc(r.store)}</td>`;
+    if(k==='accts'||k==='contacts')return `<td>${r[k]?r[k]:'<span class="mut">0</span>'}</td>`;
+    if(k==='last')return `<td class="${r.last?'':'mut'}">${r.last||'—'}</td>`;
+    return `<td class="act"><button class="abtn" data-pw="${esc(r.u)}">Reset PW</button>${r.u!==ME.u?`<button class="abtn" data-rm="${esc(r.u)}">Remove</button>`:''}</td>`;
+  };
+  let pageBtns='';
+  for(let i=0;i<Math.min(pages,5);i++){
+    const pn=teamPage<=3?i+1:teamPage>=pages-2?pages-4+i:teamPage-2+i;
+    if(pn<1||pn>pages)continue;
+    pageBtns+=`<button class="pg ${pn===teamPage?'on':''}" data-pg="${pn}">${pn}</button>`;
+  }
+  box.innerHTML=`<div class="dt-bar"><label class="dt-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" id="teamQ" placeholder="Search people…" value="${esc(teamQ)}" autocomplete="off"></label>
+      <span class="dt-count">${total} ${total===1?'person':'people'}</span></div>
+    <div class="dt-wrap"><table><thead><tr>${TEAM_COLS.map(([k,h,s])=>`<th class="${s?'sort':''}"${s?` data-sort="${k}"`:''}><span class="h">${h}${s?chev(k):''}</span></th>`).join('')}</tr></thead>
+    <tbody>${page.length?page.map(r=>`<tr>${TEAM_COLS.map(([k])=>cell(r,k)).join('')}</tr>`).join('')
+      :`<tr><td colspan="${TEAM_COLS.length}"><div class="dt-empty"><div class="big">📊</div><div>${q?'Nobody matches that search':'No logins yet — add the first one below'}</div></div></td></tr>`}</tbody></table></div>
+    ${pages>1?`<div class="dt-foot"><div>Showing ${start+1} to ${Math.min(start+TEAM_PER,total)} of ${total} results</div>
+      <div class="dt-pages"><button data-pg="${teamPage-1}"${teamPage===1?' disabled':''}>Previous</button>${pageBtns}<button data-pg="${teamPage+1}"${teamPage===pages?' disabled':''}>Next</button></div></div>`:''}`;
+  const inp=$('#teamQ');
+  inp.oninput=()=>{teamQ=inp.value;teamPage=1;const pos=inp.selectionStart;drawTeam();
+    const n=$('#teamQ');n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}};
+  $$('th[data-sort]',box).forEach(th=>th.onclick=()=>{const k=th.dataset.sort;
+    teamSort=teamSort.key===k?{key:k,dir:-teamSort.dir}:{key:k,dir:1};drawTeam();});
+  $$('[data-pg]',box).forEach(b=>b.onclick=()=>{teamPage=+b.dataset.pg;drawTeam();});
+  $$('[data-pw]',box).forEach(b=>b.onclick=()=>{
+    const p=prompt('New password for @'+b.dataset.pw+' (6+ characters):');
+    if(!p)return;
+    api('/api/users/'+b.dataset.pw+'/password',{method:'PUT',body:JSON.stringify({p})})
+      .then(()=>toast('Password updated for @'+esc(b.dataset.pw)))
+      .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
+  });
+  $$('[data-rm]',box).forEach(b=>b.onclick=()=>{
+    if(!confirm('Remove @'+b.dataset.rm+'? Their login stops working immediately.'))return;
+    api('/api/users/'+b.dataset.rm,{method:'DELETE'})
+      .then(()=>{toast('Removed @'+esc(b.dataset.rm));renderTeam();})
+      .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
+  });
+}
 async function renderTeam(){
-  try{
-    const users=await api('/api/users');
-    $('#teamList').innerHTML=users.map(u=>`
-      <div class="stat-line" style="cursor:default">
-        <span class="av" style="background:${agentColor((u.name||'?').toUpperCase())};margin:0;width:24px;height:24px;font-size:10px">${esc((u.name||'?')[0])}</span>
-        <span class="nm">${esc(u.name)} <small style="color:var(--ink-3);font-weight:500">@${esc(u.u)} · ${u.role}${u.agent?' · book: '+esc(u.agent):''}</small></span>
-        <button class="abtn" data-pw="${esc(u.u)}">Reset PW</button>
-        ${u.u!==ME.u?`<button class="abtn" data-rm="${esc(u.u)}">Remove</button>`:''}
-      </div>`).join('');
-    $$('#teamList [data-pw]').forEach(b=>b.onclick=()=>{
-      const p=prompt('New password for @'+b.dataset.pw+' (6+ characters):');
-      if(!p)return;
-      api('/api/users/'+b.dataset.pw+'/password',{method:'PUT',body:JSON.stringify({p})})
-        .then(()=>toast('Password updated for @'+esc(b.dataset.pw)))
-        .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
-    });
-    $$('#teamList [data-rm]').forEach(b=>b.onclick=()=>{
-      if(!confirm('Remove @'+b.dataset.rm+'? Their login stops working immediately.'))return;
-      api('/api/users/'+b.dataset.rm,{method:'DELETE'})
-        .then(()=>{toast('Removed @'+esc(b.dataset.rm));renderTeam();})
-        .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
-    });
-  }catch(e){}
+  try{TEAM_USERS=await api('/api/users');drawTeam();}catch(e){}
 }
 
 async function populateStores(){

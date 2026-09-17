@@ -145,7 +145,7 @@
       const me = await loadProfile();
       if (!me) {
         await sb.auth.signOut();
-        return ERR('That login has no Chase profile yet — ask your manager to finish setting it up', 403);
+        return ERR('That login has no Chase CRM profile yet — ask your manager to finish setting it up', 403);
       }
       if (!me.store_id) STORE = STORE_NAMES[body.store] ? body.store : STORE;   // head office picks
       await loadStores();
@@ -409,7 +409,7 @@
       if (!headOffice()) q = q.eq('store_id', STORE);
       const { data, error } = await q;
       if (error) return ERR(error);
-      return J((data || []).map(u => ({ u: u.username, name: u.name, role: u.role, agent: u.agent || '' })));
+      return J((data || []).map(u => ({ u: u.username, name: u.name, role: u.role, agent: u.agent || '', store_id: u.store_id || null })));
     }],
 
     ['POST', /^\/api\/users$/, async (m, body) => {
