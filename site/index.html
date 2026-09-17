@@ -668,6 +668,104 @@
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
   .reveal{opacity:0;transform:translateY(14px)}
   .reveal.in{opacity:1;transform:none;transition:opacity .6s ease,transform .6s cubic-bezier(.22,1,.36,1)}
+  /* ============ Dashboard (manager) — self-contained shadcn-style tokens ============ */
+  .dash{
+    --d-bg:hsl(0 0% 100%); --d-fg:hsl(0 0% 3.9%); --d-card:hsl(0 0% 100%);
+    --d-muted:hsl(0 0% 96%); --d-muted-fg:hsl(0 0% 45.1%); --d-border:hsl(0 0% 90%);
+    --d-primary:hsl(0 0% 9%); --d-primary-fg:hsl(0 0% 98%); --d-radius:8px;
+    --d-c1:hsl(12 76% 61%); --d-c2:hsl(173 58% 39%); --d-c3:hsl(197 37% 24%); --d-c4:hsl(43 74% 66%); --d-c5:hsl(27 87% 67%);
+    --d-pos:hsl(142 71% 35%); --d-neg:hsl(0 84.2% 60.2%); --d-warn:hsl(38 92% 50%);
+    font-family:"Inter",var(--sans); color:var(--d-fg); margin-top:18px;
+  }
+  :root[data-theme="dark"] .dash{
+    --d-bg:hsl(240 10% 3.9%); --d-fg:hsl(0 0% 98%); --d-card:hsl(240 10% 3.9%);
+    --d-muted:hsl(240 3.7% 15.9%); --d-muted-fg:hsl(240 5% 64.9%); --d-border:hsl(240 3.7% 15.9%);
+    --d-primary:hsl(0 0% 98%); --d-primary-fg:hsl(240 5.9% 10%);
+    --d-c1:hsl(220 70% 50%); --d-c2:hsl(160 60% 45%); --d-c3:hsl(30 80% 55%); --d-c4:hsl(280 65% 60%); --d-c5:hsl(340 75% 55%);
+    --d-pos:hsl(142 60% 45%); --d-neg:hsl(0 62.8% 55%); --d-warn:hsl(38 92% 55%);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme]) .dash{
+      --d-bg:hsl(240 10% 3.9%); --d-fg:hsl(0 0% 98%); --d-card:hsl(240 10% 3.9%);
+      --d-muted:hsl(240 3.7% 15.9%); --d-muted-fg:hsl(240 5% 64.9%); --d-border:hsl(240 3.7% 15.9%);
+      --d-primary:hsl(0 0% 98%); --d-primary-fg:hsl(240 5.9% 10%);
+      --d-c1:hsl(220 70% 50%); --d-c2:hsl(160 60% 45%); --d-c3:hsl(30 80% 55%); --d-c4:hsl(280 65% 60%); --d-c5:hsl(340 75% 55%);
+      --d-pos:hsl(142 60% 45%); --d-neg:hsl(0 62.8% 55%); --d-warn:hsl(38 92% 55%);
+    }
+  }
+  /* tabs — shadcn Tabs: muted strip, active trigger lifts to background */
+  .dash-tabs{display:inline-flex;height:40px;align-items:center;border-radius:6px;background:var(--d-muted);padding:4px;color:var(--d-muted-fg);gap:2px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+  .dash-tabs::-webkit-scrollbar{display:none}
+  .dash-tabs button{all:unset;cursor:pointer;display:inline-flex;align-items:center;white-space:nowrap;border-radius:4px;padding:6px 12px;font:500 14px/1.4 inherit;color:inherit;transition:background .15s,color .15s,box-shadow .15s}
+  .dash-tabs button[aria-pressed="true"]{background:var(--d-bg);color:var(--d-fg);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .dash-tabs button:focus-visible{outline:2px solid var(--d-fg);outline-offset:2px}
+  /* cards */
+  .dash-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin-top:12px}
+  .dash .dc{position:relative;grid-column:span 12;border-radius:var(--d-radius);border:1px solid var(--d-border);background:var(--d-card);color:var(--d-fg);box-shadow:0 1px 2px rgba(0,0,0,.05);overflow:hidden;min-width:0}
+  .dash .dc.s3{grid-column:span 3}.dash .dc.s4{grid-column:span 4}.dash .dc.s6{grid-column:span 6}.dash .dc.s8{grid-column:span 8}
+  .dash .dc-h{display:flex;flex-direction:column;gap:6px;padding:24px 24px 0}
+  .dash .dc-t{font-size:22px;font-weight:600;line-height:1;letter-spacing:-.025em;margin:0}
+  .dash .dc-d{font-size:14px;color:var(--d-muted-fg);margin:0}
+  .dash .dc-b{padding:20px 24px 24px}
+  .dash .dc.stat .dc-h{flex-direction:row;align-items:center;justify-content:space-between;padding:20px 24px 6px}
+  .dash .dc.stat .dc-t{font-size:14px;font-weight:500;letter-spacing:0}
+  .dash .dc.stat .dc-b{padding:0 24px 20px}
+  .dash .dc.stat .big{font-size:28px;font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+  .dash .dc.stat .sub{font-size:12px;color:var(--d-muted-fg);margin-top:4px}
+  .dash .ic{width:16px;height:16px;color:var(--d-muted-fg);flex:none}
+  .dash [data-dgo]{cursor:pointer}
+  .dash .dc.stat[data-dgo]:hover{border-color:var(--d-muted-fg)}
+  /* border beam — a gradient light running around the card edge */
+  .dash .beam{pointer-events:none;position:absolute;inset:0;border-radius:inherit;border:1.5px solid transparent;
+    -webkit-mask:linear-gradient(transparent,transparent),linear-gradient(#fff,#fff);mask:linear-gradient(transparent,transparent),linear-gradient(#fff,#fff);
+    -webkit-mask-clip:padding-box,border-box;mask-clip:padding-box,border-box;-webkit-mask-composite:source-in;mask-composite:intersect}
+  .dash .beam::after{content:"";position:absolute;aspect-ratio:1;width:200px;
+    background:linear-gradient(to left,#ffaa40,#9c40ff,transparent);
+    offset-anchor:90% 50%;offset-path:rect(0 auto auto 0 round 200px);
+    animation:dashBeam 15s linear infinite;animation-delay:var(--delay,0s)}
+  @keyframes dashBeam{to{offset-distance:100%}}
+  @media (prefers-reduced-motion:reduce){.dash .beam::after{animation:none}}
+  /* bars, tables, lists, pills, buttons */
+  .dash .rows{display:flex;flex-direction:column;gap:12px}
+  .dash .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;font-size:14px;align-items:center;border-radius:4px}
+  .dash .row[data-dgo]:hover .nm{text-decoration:underline}
+  .dash .row .nm{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:8px}
+  .dash .row .nm small{color:var(--d-muted-fg);font-weight:400}
+  .dash .row .v{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .dash .row .bar{grid-column:1/-1;height:8px;border-radius:999px;background:var(--d-muted);overflow:hidden}
+  .dash .row .bar i{display:block;height:100%;border-radius:inherit;background:var(--d-primary);transition:width .5s cubic-bezier(.2,.7,.2,1)}
+  .dash .dot{width:8px;height:8px;border-radius:999px;flex:none;display:inline-block}
+  .dash .tw{overflow-x:auto}
+  .dash table{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+  .dash th{text-align:left;font-weight:500;color:var(--d-muted-fg);padding:8px 12px;border-bottom:1px solid var(--d-border);font-size:13px;white-space:nowrap}
+  .dash td{padding:12px;border-bottom:1px solid var(--d-border);vertical-align:middle;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .dash tr:last-child td{border-bottom:0}
+  .dash tr[data-dgo]:hover td{background:var(--d-muted)}
+  .dash td.r,.dash th.r{text-align:right}
+  .dash td.who{display:flex;align-items:center;gap:10px;font-weight:500}
+  .dash .pill{display:inline-flex;align-items:center;border-radius:999px;border:1px solid var(--d-border);padding:2px 10px;font-size:12px;font-weight:600;line-height:1.5;white-space:nowrap}
+  .dash .pill.ok{background:var(--d-primary);color:var(--d-primary-fg);border-color:transparent}
+  .dash .pill.bad{background:var(--d-neg);color:#fff;border-color:transparent}
+  .dash .pill.warn{background:var(--d-warn);color:#111;border-color:transparent}
+  .dash .pill.mut{background:var(--d-muted);color:var(--d-muted-fg)}
+  .dash .av{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;flex:none}
+  .dash .dbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;border-radius:6px;font:500 14px/1 inherit;height:40px;padding:0 16px;background:var(--d-primary);color:var(--d-primary-fg);border:0;cursor:pointer;transition:opacity .15s,background .15s}
+  .dash .dbtn:hover{opacity:.9}
+  .dash .dbtn.outline{background:var(--d-bg);color:var(--d-fg);border:1px solid var(--d-border)}
+  .dash .dbtn.outline:hover{background:var(--d-muted);opacity:1}
+  .dash .dbtn.sm{height:34px;padding:0 12px;font-size:13px}
+  .dash .empty{font-size:14px;color:var(--d-muted-fg);padding:8px 0}
+  .dash .lst{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+  .dash .lst li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--d-border);font-size:14px}
+  .dash .lst li:last-child{border-bottom:0}
+  .dash .lst li>div{min-width:0}
+  .dash .lst b{font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dash .lst small{display:block;color:var(--d-muted-fg);font-size:12px;margin-top:2px}
+  .dash .lst .rt{display:flex;align-items:center;gap:8px;flex:none}
+  .dash .dash-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--d-muted-fg);margin-top:14px}
+  .dash .dash-foot .dot{background:var(--d-pos);margin-right:6px}
+  @media (max-width:980px){.dash .dc.s3,.dash .dc.s4{grid-column:span 6}.dash .dc.s6,.dash .dc.s8{grid-column:span 12}}
+  @media (max-width:560px){.dash .dc.s3,.dash .dc.s4{grid-column:span 12}.dash .dc-h{padding:18px 18px 0}.dash .dc-b{padding:16px 18px 18px}.dash .dc.stat .dc-h{padding:16px 18px 4px}.dash .dc.stat .dc-b{padding:0 18px 16px}.dash .dc-t{font-size:19px}}
 </style>
 
 <header class="top">
@@ -711,6 +809,7 @@
   <button class="sn-item" data-nav="day" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg> My Day <span class="cnt" id="snDayCnt"></span></button>
   <button class="sn-item" data-nav="hot" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.6 2c.5 2.4-.9 3.7-2.2 5C10 8.4 8.6 9.8 8.6 12.2a5.4 5.4 0 0 0 10.8 0c0-1.7-.8-3.2-1.7-4.4-.2 1-.9 1.6-1.7 1.6-.9 0-1.5-.7-1.5-1.8 0-2 1-3.5-1.3-5.6Z"/></svg> Hot List</button>
   <div class="sn-sec mgr-only" style="display:none">Manager</div>
+  <button class="sn-item mgr-only" data-nav="dash" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/><rect x="3" y="14" width="8" height="7" rx="2"/></svg> Dashboard</button>
   <button class="sn-item mgr-only" data-nav="centre" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg> Command centre</button>
   <button class="sn-item mgr-only" data-nav="upload" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 20h14"/></svg> Load base</button>
   <button class="sn-item mgr-only" data-nav="base" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.2 13.5v7.5M13.5 17.2H21"/></svg> Base &amp; splits</button>
@@ -836,6 +935,18 @@
   </section>
 
   <div class="mgr-only">
+    <div class="section-hd">
+      <div>
+        <span class="lbln">Manager only</span>
+        <h2>Dashboard</h2>
+        <p>Five views of the floor, computed live from the active base. Pick a dashboard to switch.</p>
+      </div>
+    </div>
+    <section class="dash" id="dashCard" aria-label="Dashboard">
+      <div class="dash-tabs" id="dashTabs" role="tablist"></div>
+      <div id="dashBody"></div>
+    </section>
+
     <div class="section-hd">
       <div>
         <span class="lbln">Manager only</span>
@@ -2904,6 +3015,209 @@ function updateMoveBar(){
   $('#mvGo').disabled=!moveSel.size;
 }
 
+/* ---- Dashboard (manager): five tabbed views over the live book ---- */
+const DASH_TABS=[['overview','Overview'],['money','Money & wins'],['team','Team activity'],['pipeline','Pipeline'],['base','Base health']];
+let dashTab='overview';
+try{const s=localStorage.getItem('chase-dash-tab');if(DASH_TABS.some(t=>t[0]===s))dashTab=s;}catch(e){}
+const DASH_ICON={
+  trophy:'M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3',
+  users:'M16 11a4 4 0 1 0-8 0M3 20a7 7 0 0 1 14 0M16 3.1a4 4 0 0 1 0 7.8M21 20a7 7 0 0 0-4-6.3',
+  clock:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2',
+  ghost:'M4 21V11a8 8 0 0 1 16 0v10l-2.7-2-2.6 2-2.7-2-2.7 2-2.6-2zM9 12h.01M15 12h.01',
+  money:'M2 7h20v10H2zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM6 12h.01M18 12h.01',
+  trend:'M3 17l6-6 4 4 8-8M15 7h6v6',
+  funnel:'M3 4h18l-7 8v6l-4 2v-8z',
+  target:'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
+  phone:'M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8.1 9.7a16 16 0 0 0 6.2 6.2l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z',
+  chat:'M21 12a8 8 0 0 1-8 8H8l-5 3 1.2-4.5A8 8 0 1 1 21 12z',
+  alert:'M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z',
+  fire:'M12 22c4.4 0 7-2.8 7-6.5 0-3-2-5.2-3.5-6.5 0 2-1 3-2 3.5 0-3-1.5-6-4.5-8 .5 3-1 4.5-2.5 6.5S5 14 5 15.5C5 19.2 7.6 22 12 22z',
+  base:'M12 2 3 7l9 5 9-5-9-5zM3 12l9 5 9-5M3 17l9 5 9-5',
+  pool:'M3 5h18v14H3zM3 10h18M8 10v9',
+  hand:'M9 11V4.6a1.6 1.6 0 1 1 3.2 0V11m0-1.4a1.6 1.6 0 1 1 3.2 0V12m0-1a1.6 1.6 0 1 1 3.2 0v4.5a5.5 5.5 0 0 1-5.5 5.5h-1.4a5.5 5.5 0 0 1-4.4-2.2L5 15.5a1.6 1.6 0 0 1 2.4-2.1L9 15',
+  check:'M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
+};
+const dIcon=n=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${DASH_ICON[n]||''}"/></svg>`;
+const dNum=n=>Math.round(n).toLocaleString('en-ZA');
+const dR=n=>'R'+Math.round(n).toLocaleString('en-ZA');
+const dAv=name=>`<span class="av" style="background:${agentColor(String(name||'?').toUpperCase())}">${esc(String(name||'?').slice(0,2).toUpperCase())}</span>`;
+function dashStats(){
+  const d=DS(),today=TODAY();
+  const since=new Date(Date.now()-7*864e5).toISOString().slice(0,10);
+  const in7=new Date(Date.now()+7*864e5).toISOString().slice(0,10);
+  const per={};
+  const P=who=>{const k=String(who||'').trim().toUpperCase();
+    return per[k]=per[k]||{key:k,name:k?titleCase(String(who).trim()):'Unassigned',accts:0,value:0,won:0,wonVal:0,outcomes:0,noev:0,
+      touched:new Set(),calls:0,na:0,wa:0,msg:0,last:'',pipeVal:0,overdue:0,due:0};};
+  d.csr.forEach(x=>P(x.name));
+  Object.values(ASSIGN).forEach(a=>{if(a)P(a);});
+  const s={won:0,wonVal:0,verified:0,contacted:0,untouched:0,noev:0,overdue:0,dueToday:0,upcoming:0,
+    quotes:0,visits:0,cbs:0,pipeVal:0,pool:0,poolVal:0,hot:0,won7:0,contacts7:new Set(),
+    accounts:d.customers.length,ooc:d.upgrades,offerVal:d.totalRSP,lines:d.lineItems,
+    offers:d.rows.filter(r=>+r[8]>0).length,
+    claims:CLAIMS.filter(c=>c.status==='pending').length,
+    st:{},overdueList:[],todayList:[],deals:{},label:d.label||'',period:d.sub||''};
+  TRACK_OPTS.forEach(([k])=>s.st[k]=0);
+  d.customers.forEach(c=>{
+    const owner=assignedTo(c),p=P(owner);
+    p.accts++;p.value+=c.rsp;
+    if(!owner){s.pool++;s.poolVal+=c.rsp;}
+    const t=tracking[c.acct]||{},k=t.st||'',acts=t.acts||[];
+    s.st[k]=(s.st[k]||0)+1;
+    if(!k&&!acts.length)s.untouched++;
+    if(k){s.contacted++;p.outcomes++;if(noEvidence(t)){s.noev++;p.noev++;}}
+    if(k==='won'){s.won++;s.wonVal+=c.rsp;p.won++;p.wonVal+=c.rsp;if(t.ver)s.verified++;
+      s.deals[c.deal]=(s.deals[c.deal]||0)+1;
+      if(String(t.at||'').slice(0,10)>=since)s.won7++;}
+    if(k==='quote')s.quotes++;if(k==='visit')s.visits++;if(k==='cb')s.cbs++;
+    if(['quote','visit','cb','fu'].includes(k)){s.pipeVal+=c.rsp;p.pipeVal+=c.rsp;}
+    if(t.next&&!CLOSED_ST.includes(k)){
+      if(t.next<today){s.overdue++;p.overdue++;s.overdueList.push({c,t,owner});}
+      else if(t.next===today){s.dueToday++;p.due++;s.todayList.push({c,t,owner});}
+      else if(t.next<=in7)s.upcoming++;
+    }
+    const touch=(who,at)=>{const q=P(who||owner);at=String(at||'').slice(0,10);
+      if(at>=since){q.touched.add(c.acct);s.contacts7.add(c.acct);}
+      if(at>q.last)q.last=at;return q;};
+    acts.forEach(a=>{const q=touch(a.by,a.at);if(String(a.at||'').slice(0,10)<since)return;
+      if(a.t==='call'||a.t==='na')q.calls++;if(a.t==='na')q.na++;if(a.t==='wa')q.wa++;if(a.t==='sms'||a.t==='em')q.msg++;});
+    if(t.at)touch(t.by,t.at);
+    if(hotScore(c).score>=72)s.hot++;
+  });
+  s.overdueList.sort((a,b)=>a.t.next<b.t.next?-1:1);
+  s.todayList.sort((a,b)=>b.c.rsp-a.c.rsp);
+  s.team=Object.values(per).filter(p=>p.key).map(p=>({...p,contacts:p.touched.size,
+    conv:p.outcomes?Math.round(p.won/p.outcomes*100):0}));
+  s.contacts=s.contacts7.size;
+  s.active=s.team.filter(p=>p.contacts>0).length;
+  s.conv=s.contacted?Math.round(s.won/s.contacted*100):0;
+  return s;
+}
+/* card primitives — the shadcn Card / stat tile / bar list / table, as markup */
+function dCard(o){
+  return `<div class="dc${o.stat?' stat':''} s${o.span||12}"${o.go?` data-dgo="${o.go}"`:''}>
+    ${o.beam?`<span class="beam" style="--delay:${o.delay||0}s"></span>`:''}
+    <div class="dc-h"><h4 class="dc-t">${o.t}</h4>${o.stat?dIcon(o.icon):(o.d?`<p class="dc-d">${o.d}</p>`:'')}</div>
+    <div class="dc-b">${o.body}</div></div>`;
+}
+const dStat=(t,val,sub,icon,go)=>dCard({t,stat:true,span:3,icon,go,body:`<div class="big">${val}</div><div class="sub">${sub}</div>`});
+function dBars(rows,fmt,go){
+  if(!rows.length)return '<div class="empty">Nothing here yet.</div>';
+  const mx=Math.max(...rows.map(r=>r.v),1);
+  return `<div class="rows">${rows.map(r=>`<div class="row"${go&&r.key!==undefined?` data-dgo="${go}:${esc(r.key)}"`:''}>
+    <div class="nm">${r.dot?`<span class="dot" style="background:${r.dot}"></span>`:''}${esc(r.n)}${r.s?`<small>${esc(r.s)}</small>`:''}</div>
+    <div class="v">${fmt?fmt(r.v):dNum(r.v)}</div>
+    <div class="bar"><i style="width:${Math.round(r.v/mx*100)}%;${r.dot?'background:'+r.dot:''}"></i></div></div>`).join('')}</div>`;
+}
+function dTable(cols,rows,go){
+  if(!rows.length)return '<div class="empty">No consultants in this base yet.</div>';
+  return `<div class="tw"><table><thead><tr>${cols.map(c=>`<th${c.r?' class="r"':''}>${c.h}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r=>`<tr${go&&r.key!==undefined?` data-dgo="${go}:${esc(r.key)}"`:''}>${r.cells.map((v,i)=>`<td class="${cols[i].r?'r':''}${i===0?' who':''}">${v}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+const dPill=(txt,cls)=>`<span class="pill ${cls||''}">${txt}</span>`;
+const dDays=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5);
+function dashOverview(s){
+  const team=s.team.slice().sort((a,b)=>b.contacts-a.contacts||b.won-a.won).slice(0,8);
+  const eyes=[
+    [s.overdue,'Overdue callbacks','date passed, still open','track:cb',s.overdue?'bad':'mut'],
+    [s.claims,'Claims waiting','consultants asking for customers','nav:claims',s.claims?'warn':'mut'],
+    [s.pool,'Unassigned pool',dR(s.poolVal)+' per month sitting idle','nav:base',s.pool?'warn':'mut'],
+    [s.noev,'Outcomes with no call logged','trust check — worth a look','nav:report',s.noev?'warn':'mut'],
+  ];
+  return dStat('Won',dNum(s.won),`${dR(s.wonVal)} per month · ${s.verified} MTN-verified`,'trophy','track:won')
+    +dStat('Contacts this week',dNum(s.contacts),`${s.won7} won in the last 7 days`,'users')
+    +dStat('Callbacks due today',dNum(s.dueToday),`${s.overdue} overdue · ${s.upcoming} in the next 7 days`,'clock','track:cb')
+    +dStat('Untouched',dNum(s.untouched),`of ${dNum(s.accounts)} accounts — never contacted`,'ghost','track:')
+    +dCard({t:'Team this week',d:'Contacts in the last 7 days · click a name to open their book',span:6,beam:true,
+      body:dTable([{h:'Consultant'},{h:'Contacts',r:1},{h:'Won',r:1},{h:'Status',r:1}],
+        team.map((p,i)=>({key:p.key,cells:[dAv(p.name)+esc(p.name),dNum(p.contacts),dNum(p.won),
+          p.contacts===0?dPill('Idle','bad'):i===0?dPill('Top','ok'):dPill('Active','mut')]})),'agent')})
+    +dCard({t:'Needs your eyes',d:'The things only a manager can clear',span:6,beam:true,delay:-7,
+      body:`<ul class="lst">${eyes.map(([n,t,sub,go,cls])=>`<li data-dgo="${go}"><div><b>${t}</b><small>${sub}</small></div><div class="rt">${dPill(dNum(n),cls)}</div></li>`).join('')}</ul>`});
+}
+function dashMoney(s){
+  const byAgent=s.team.filter(p=>p.won||p.pipeVal).sort((a,b)=>b.wonVal-a.wonVal||b.pipeVal-a.pipeVal)
+    .map((p,i)=>({key:p.key,n:p.name,s:`${p.won} won · ${p.conv}% of outcomes`,v:p.wonVal,dot:agentColor(p.key)}));
+  const deals=Object.entries(s.deals).sort((a,b)=>b[1]-a[1]).map(([n,v],i)=>({n,v,dot:`var(--d-c${(i%5)+1})`}));
+  return dStat('Won value',dR(s.wonVal),`${dNum(s.won)} deals closed in this base`,'money','track:won')
+    +dStat('Offer value / month',zark(s.offerVal),`across ${dNum(s.lines)} lines · what the base is worth`,'trend')
+    +dStat('In the pipeline',dR(s.pipeVal),`${s.quotes} quotes · ${s.visits} coming in · ${s.cbs} callbacks`,'funnel','track:quote')
+    +dStat('Conversion',s.conv+'%',`${dNum(s.won)} won of ${dNum(s.contacted)} with an outcome`,'target')
+    +dCard({t:'Revenue by consultant',d:'Monthly value of what each person has closed · click to open their wins',span:8,beam:true,
+      body:dBars(byAgent,dR,'won')})
+    +dCard({t:'Wins by deal type',d:'What is actually selling',span:4,beam:true,delay:-5,body:dBars(deals)});
+}
+function dashTeam(s){
+  const rows=s.team.slice().sort((a,b)=>b.contacts-a.contacts||b.won-a.won);
+  const sum=k=>rows.reduce((a,p)=>a+p[k],0);
+  return dStat('Active this week',`${s.active} / ${rows.length}`,`consultants who touched a customer`,'users')
+    +dStat('Calls made',dNum(sum('calls')),`${dNum(sum('na'))} of them went unanswered`,'phone')
+    +dStat('WhatsApps sent',dNum(sum('wa')),`${dNum(sum('msg'))} SMS / emails on top`,'chat')
+    +dStat('No call behind it',dNum(s.noev),`outcomes set with nothing logged`,'alert','nav:report')
+    +dCard({t:'Who did what',d:'Last 7 days · click a row to open that consultant\'s book',span:12,beam:true,
+      body:dTable([{h:'Consultant'},{h:'Accounts',r:1},{h:'Contacts',r:1},{h:'Calls',r:1},{h:'WhatsApps',r:1},{h:'Won',r:1},{h:'Overdue',r:1},{h:'Last active',r:1},{h:'',r:1}],
+        rows.map((p,i)=>({key:p.key,cells:[dAv(p.name)+esc(p.name),dNum(p.accts),dNum(p.contacts),dNum(p.calls),dNum(p.wa),dNum(p.won),
+          p.overdue?dPill(dNum(p.overdue),'bad'):'0',p.last||'—',
+          p.contacts===0?dPill('Idle','bad'):i===0?dPill('Top','ok'):p.noev?dPill(p.noev+' unproven','warn'):dPill('Active','mut')]})),'agent')});
+}
+function dashPipeline(s){
+  const today=TODAY();
+  const li=x=>`<li data-dgo="acct:${esc(x.c.acct)}"><div><b>${esc(titleCase(x.c.name))}</b><small>${esc(titleCase(x.owner||'unassigned'))} · ${TRACK_LBL[x.t.st]||'no outcome'} · ${dR(x.c.rsp)} pm</small></div>
+    <div class="rt">${x.t.next<today?dPill(dDays(x.t.next,today)+'d late','bad'):dPill('today','ok')}</div></li>`;
+  const stages=[['fu','Contacted — follow up'],['cb','Callback booked'],['quote','Quote sent'],['visit','Coming to store'],['won','Won']]
+    .map(([k,n])=>({key:k,n,v:s.st[k]||0,dot:TRACK_COL[k]}));
+  return dStat('Due today',dNum(s.dueToday),`callbacks promised for today`,'clock','track:cb')
+    +dStat('Overdue',dNum(s.overdue),`promised, date passed, still open`,'alert','track:cb')
+    +dStat('Next 7 days',dNum(s.upcoming),`callbacks already booked ahead`,'target')
+    +dStat('Hot leads',dNum(s.hot),`scored hot by the Hot List`,'fire','nav:hot')
+    +dCard({t:'Overdue callbacks',d:'Oldest first · click to open the customer',span:6,beam:true,
+      body:s.overdueList.length?`<ul class="lst">${s.overdueList.slice(0,10).map(li).join('')}</ul>`:'<div class="empty">Nothing overdue. Nice.</div>'})
+    +dCard({t:'Due today',d:'Biggest value first',span:6,beam:true,delay:-7,
+      body:s.todayList.length?`<ul class="lst">${s.todayList.slice(0,10).map(li).join('')}</ul>`:'<div class="empty">No callbacks booked for today.</div>'})
+    +dCard({t:'Stage funnel',d:'How many customers sit at each stage · click a stage to filter the book',span:12,beam:true,delay:-3,body:dBars(stages,null,'track')});
+}
+function dashBase(s){
+  const outcomes=TRACK_OPTS.map(([k,l])=>({key:k,n:k?l:'No outcome yet',v:s.st[k]||0,dot:TRACK_COL[k]})).filter(r=>r.v);
+  const cover=s.accounts?Math.round(s.contacted/s.accounts*100):0;
+  const facts=[
+    ['Active base',esc(s.label||'—'),esc(s.period||'')],
+    ['Coverage',cover+'%',`${dNum(s.contacted)} of ${dNum(s.accounts)} accounts have an outcome`],
+    ['Offers on file',dNum(s.offers),'pre-priced deals ready to pitch'],
+    ['MTN-verified wins',dNum(s.verified),`of ${dNum(s.won)} won · confirmed by the activations file`],
+    ['Hot leads',dNum(s.hot),'worth a call today'],
+  ];
+  return dStat('Accounts',dNum(s.accounts),`${dNum(s.lines)} lines in the base`,'base')
+    +dStat('Out of contract',dNum(s.ooc),`ready to upgrade right now`,'trend')
+    +dStat('Unassigned pool',dNum(s.pool),`${dR(s.poolVal)} per month nobody is working`,'pool','nav:base')
+    +dStat('Claims waiting',dNum(s.claims),`consultants asking for customers`,'hand','nav:claims')
+    +dCard({t:'Outcome breakdown',d:'Every account by its current outcome · click to filter the book',span:8,beam:true,body:dBars(outcomes,null,'track')})
+    +dCard({t:'Base facts',d:'The numbers behind the numbers',span:4,beam:true,delay:-5,
+      body:`<ul class="lst">${facts.map(([t,v,sub])=>`<li><div><b>${t}</b><small>${sub}</small></div><div class="rt"><b>${v}</b></div></li>`).join('')}</ul>`});
+}
+function dashGo(go){
+  const i=go.indexOf(':'),kind=go.slice(0,i),val=go.slice(i+1);
+  if(kind==='agent')return crossFilter({agent:val});
+  if(kind==='track')return crossFilter({track:val});
+  if(kind==='won')return crossFilter({agent:val,track:'won'});
+  if(kind==='acct'){const c=DS().customers.find(x=>x.acct===val);if(c)return crossFilter({q:c.acct});}
+  if(kind==='nav')return navTo(val);
+}
+function renderDash(){
+  const tabs=$('#dashTabs'),box=$('#dashBody');if(!tabs||!box)return;
+  if(!ME||ME.role!=='manager'){box.innerHTML='';return;}
+  tabs.innerHTML=DASH_TABS.map(([k,l])=>`<button role="tab" data-dt="${k}" aria-pressed="${k===dashTab}">${l}</button>`).join('');
+  $$('button',tabs).forEach(b=>b.onclick=()=>{dashTab=b.dataset.dt;try{localStorage.setItem('chase-dash-tab',dashTab);}catch(e){}renderDash();});
+  const d=DS();
+  if(!d||!d.customers||!d.customers.length){box.innerHTML='<div class="empty" style="padding:18px 0">Load this month\'s base and the dashboards light up.</div>';return;}
+  const s=dashStats();
+  const view={overview:dashOverview,money:dashMoney,team:dashTeam,pipeline:dashPipeline,base:dashBase}[dashTab]||dashOverview;
+  const store=($('#storeSub')&&$('#storeSub').textContent)||'';
+  box.innerHTML=`<div class="dash-grid">${view(s)}</div>
+    <div class="dash-foot"><div><span class="dot"></span>Live · ${esc(store)} · ${esc(s.label)} · updated ${new Date().toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'})}</div>
+      <div style="display:flex;gap:8px"><button class="dbtn outline sm" data-dgo="nav:report">Weekly report</button><button class="dbtn sm" data-dgo="nav:centre">Command centre</button></div></div>`;
+  $$('[data-dgo]',box).forEach(el=>el.onclick=e=>{e.stopPropagation();dashGo(el.dataset.dgo);});
+}
+
 /* ---- Weekly report ---- */
 function buildReport(){
   const td=new Date(),since=new Date(td.getTime()-7*864e5).toISOString().slice(0,10);
@@ -3107,6 +3421,7 @@ function renderSubView(v){
 }
 /* manager tools sheet (mobile — the sidebar is hidden below 980px) */
 const MM_ITEMS=[
+  ['dash','Dashboard','<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/><rect x="3" y="14" width="8" height="7" rx="2"/>'],
   ['centre','Command centre','<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>'],
   ['base','Base &amp; splits','<rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.2 13.5v7.5M13.5 17.2H21"/>'],
   ['upload','Load base','<path d="M12 15.5V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 20h14"/>'],
@@ -3135,6 +3450,7 @@ function navTo(k){
   if(ME&&ME.role!=='manager')return;
   applyView('mgr');
   $$('#sidenav .sn-item').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.nav===k)));
+  if(k==='dash'){renderDash();const el=$('#dashCard');if(el)el.scrollIntoView({behavior:'smooth'});}
   if(k==='centre'){const el=$('#kpis');if(el)el.scrollIntoView({behavior:'smooth'});}
   if(k==='base'){renderBase();const el=$('#baseCard');if(el)el.scrollIntoView({behavior:'smooth'});}
   if(k==='team'){const el=$('#teamCard');if(el)el.scrollIntoView({behavior:'smooth'});}
@@ -3153,7 +3469,7 @@ function renderAll(){
   renderBars('#brands',DS().brands,'brand');
   renderStatus();syncFilterControls();renderExplorer();
   renderSubCount();renderHero();renderSubView(subView);
-  renderClaims();renderReport();loadSettingsPanel();renderBase();
+  renderClaims();renderReport();loadSettingsPanel();renderBase();renderDash();
 }
 /* ---------- auth, roles & live sync ---------- */
 function applyView(v){
