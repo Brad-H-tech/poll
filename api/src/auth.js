@@ -24,15 +24,20 @@ export function bearer(request) {
   return k ? k.trim() : '';
 }
 
-/** returns an actor or throws HttpError(401/429/503) */
-export async function authenticate(request, env, db, isWrite) {
+/** returns an actor or throws HttpError(401/429/503).
+    `allowUserToken` is true only for the few routes the Chase app itself calls (see routes.js);
+    everything else is API keys only, to keep the attack surface small. */
+export async function authenticate(request, env, db, isWrite, allowUserToken) {
   const token = bearer(request);
-  if (!token) throw new HttpError(401, 'unauthenticated', 'Send an API key or user token: Authorization: Bearer …');
+  if (!token) throw new HttpError(401, 'unauthenticated', 'Send an API key: Authorization: Bearer chk_…');
 
   const m = KEY_RE.exec(token);
   if (m) return keyActor(m[1], m[2], env, db, isWrite);
-  if (token.split('.').length === 3) return userActor(token, db);
-  throw new HttpError(401, 'unauthenticated', 'That does not look like a Chase API key or a user token');
+  if (token.split('.').length === 3) {
+    if (!allowUserToken) throw new HttpError(401, 'keys_only', 'This endpoint accepts API keys only, not user logins');
+    return userActor(token, db);
+  }
+  throw new HttpError(401, 'unauthenticated', 'That does not look like a Chase API key');
 }
 
 async function keyActor(idHex, secret, env, db, isWrite) {

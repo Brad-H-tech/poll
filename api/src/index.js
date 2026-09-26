@@ -52,7 +52,7 @@ export function createApp({ env, fetchImpl, limiter, now } = {}) {
       if (!ipHit.ok) throw new HttpError(429, 'rate_limited', 'Too many requests from this address', { retryAfter: ipHit.retryAfter });
 
       if (route.auth !== false) {
-        actor = await authenticate(request, env, db, isWrite);
+        actor = await authenticate(request, env, db, isWrite, route.userTokens === true);
         const hit = rl.hit(actor.id, Number(env.RATE_PER_MINUTE) || 120);
         if (!hit.ok) throw new HttpError(429, 'rate_limited', 'Too many requests — slow down', { retryAfter: hit.retryAfter });
         if (env.RL && typeof env.RL.limit === 'function') {          // Cloudflare's global rate-limit binding, if configured
@@ -61,6 +61,8 @@ export function createApp({ env, fetchImpl, limiter, now } = {}) {
         }
         if (!actor.scopes.has(route.scope))
           throw new HttpError(403, 'forbidden', `This needs the ${route.scope} scope; your key has: ${[...actor.scopes].join(', ') || 'none'}`);
+        if (route.headOffice && actor.store_id)
+          throw new HttpError(403, 'forbidden', 'Only a head-office key may do this');
       }
 
       const body = isWrite ? await readJson(request, route.maxBody) : {};

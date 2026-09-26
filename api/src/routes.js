@@ -23,7 +23,10 @@ const KB = 1024, MB = 1024 * KB;
 function route(method, path, meta, handler) {
   const keys = [];
   const re = new RegExp('^' + path.replace(/:(\w+)/g, (_, k) => { keys.push(k); return '([^/]+)'; }) + '$');
-  return { method, path, re, keys, handler, auth: true, scope: 'read', store: 'required', maxBody: 256 * KB, ...meta };
+  // userTokens: the Chase app may call this with a manager's login token (everything else is keys only)
+  // headOffice: only a head-office key (no store) may call this
+  return { method, path, re, keys, handler, auth: true, scope: 'read', store: 'required', maxBody: 256 * KB,
+           userTokens: false, headOffice: false, ...meta };
 }
 
 /* ---- shared schema fragments for the docs ---- */
@@ -231,12 +234,12 @@ export const ROUTES = [
       return c.db.rpc('usage_report', { p_key: all ? null : c.actor.key_id, p_days: intIn(c.query.get('days'), 1, 365, 30) });
     }),
 
-  route('GET', '/v1/keys', { scope: 'manage', store: 'none', tag: 'Admin', summary: 'List API keys (never the secrets)',
+  route('GET', '/v1/keys', { scope: 'manage', store: 'none', headOffice: true, tag: 'Admin', summary: 'List API keys (never the secrets) — head office only',
     example: [{ id: 'uuid', name: 'Excel report', store_id: 's1', scopes: ['read'], daily_limit: 500, active: true, expires_at: '2027-09-26T00:00:00Z', last_used_at: null }] },
     async c => c.db.select('keys', { select: 'id,name,store_id,scopes,daily_limit,active,expires_at,created_by,created_at,last_used_at',
       order: 'created_at.desc', ...(c.actor.store_id ? { store_id: 'eq.' + c.actor.store_id } : {}) }, 'api')),
 
-  route('POST', '/v1/keys', { scope: 'manage', store: 'none', tag: 'Admin', summary: 'Create an API key. The secret is shown ONCE in this reply.',
+  route('POST', '/v1/keys', { scope: 'manage', store: 'none', headOffice: true, tag: 'Admin', summary: 'Create an API key (head office only). The secret is shown ONCE in this reply.',
     body: { name: 'Excel report', store: 's1', scopes: ['read'], daily_limit: 500, expires_days: 365 },
     example: { id: 'uuid', key: 'chk_9f3…​.Xy…', name: 'Excel report', store_id: 's1', scopes: ['read'], daily_limit: 500, note: 'Store this now — it cannot be shown again' } },
     async c => {
@@ -262,7 +265,7 @@ export const ROUTES = [
         note: 'Store this now — it cannot be shown again' });
     }),
 
-  route('DELETE', '/v1/keys/:id', { scope: 'manage', store: 'none', tag: 'Admin', summary: 'Revoke an API key immediately',
+  route('DELETE', '/v1/keys/:id', { scope: 'manage', store: 'none', headOffice: true, tag: 'Admin', summary: 'Revoke an API key immediately (head office only)',
     example: { id: 'uuid', active: false } },
     async c => {
       if (!isUuid(c.params.id)) throw new HttpError(400, 'invalid', 'Bad key id');
@@ -279,7 +282,8 @@ export const ROUTES = [
     async c => c.db.select('audit', { select: 'at,key_id,actor,method,path,store_id,status,ms,ip,detail', order: 'at.desc',
       limit: intIn(c.query.get('limit'), 1, 200, 50), ...(c.actor.store_id ? { store_id: 'eq.' + c.actor.store_id } : {}) }, 'api')),
 
-  route('POST', '/v1/users', { scope: 'manage', tag: 'Admin', summary: 'Create a consultant or manager login (manager) — works with public sign-ups turned OFF',
+  route('POST', '/v1/users', { scope: 'manage', userTokens: true, tag: 'Admin',
+    summary: 'Create a consultant or manager login — works with public sign-ups turned OFF. The Chase app’s Team tab calls this with the manager’s own login token.',
     params: [S.storeParam], body: { username: 'thandi', name: 'Thandi Ndlovu', password: 'at least 10 characters', role: 'consultant', agent: 'THANDI' },
     example: { id: 'uuid', username: 'thandi', name: 'Thandi Ndlovu', role: 'consultant', agent: 'THANDI', store_id: 's1' } },
     async c => {

@@ -47,8 +47,10 @@ An API key looks like `chk_9f3a…​.Xy7…` — an id, a dot, a secret. Keep i
 | a **daily budget** | e.g. 500 calls/day. Then `429` until tomorrow. |
 | an **expiry** | default one year |
 
-Users of the app can also call the API with their normal Supabase login token; they get the rights
-of their role (consultant = read+write, manager = all three) and row-level security still applies.
+Keys are created by **head office only** (a key with no store). Store managers ask head office
+for a key for their store. The API is keys-only with one exception: the Chase app's Team tab
+creates logins through `POST /v1/users` using the manager's own login token, so no API key ever
+sits inside the web page and public sign-ups can be switched off.
 
 ## Your first call
 
@@ -92,9 +94,10 @@ Every endpoint, with a copy-paste curl, is on the live docs page: `https://…/v
 **Head-office morning report** — a script loops stores `s1`…`s6` and calls
 `/v1/reports/summary?store=sN` with a head-office read key, then emails one table.
 
-**Onboarding a consultant without sign-ups enabled** —
+**Onboarding a consultant without sign-ups enabled** — the Team tab does this for you once the
+app is built with `CHASE_API_URL` set (see `supabase/build_site.py`). From a script:
 `POST /v1/users?store=s1` `{"username":"thandi","name":"Thandi N","password":"…","agent":"THANDI"}`
-(manage key). Then turn *off* "Allow new users to sign up" in Supabase.
+with a manage key. Then turn *off* "Allow new users to sign up" in Supabase.
 
 ## When something goes wrong
 
@@ -134,6 +137,8 @@ Quote the `request_id` when asking for help; it appears in the audit table and t
 6. **Allowed origin** — in `api/wrangler.jsonc` set `CHASE_ALLOWED_ORIGINS` to the app's real address.
 7. **First key** — `select * from api.mint_key('Head office', null, '{read,write,manage}', 2000, 365, 'bradley');`
    then `curl …/v1/me`. Green.
+8. **Point the app at the API** — `CHASE_API_URL=https://chase-api.<sub>.workers.dev python3 supabase/build_site.py`,
+   commit `site/`, merge. The Team tab now creates logins through the API; turn public sign-ups **off**.
 
 ## FAQ
 

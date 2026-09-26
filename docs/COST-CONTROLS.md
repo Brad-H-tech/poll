@@ -35,7 +35,12 @@ Supabase → Reports → API / Database for egress and size.
 
 ## 3. What the app does about it (after this change)
 
-- **Fewer queries per state load**: 4 instead of 5 (settings ride on the store row, owners on
+- **Only two bases are ever downloaded**: the active one and the one before it (for the KPI
+  deltas). Older bases arrive as a label and a row count; tapping one loads it. This was the
+  single largest egress item.
+- **Old bases are deleted after 12 months** by a nightly database job (`chase-prune-old-bases`),
+  which also keeps personal information from piling up.
+- **Fewer queries per state load** for everything else (settings ride on the store row, owners on
   the tracking row — two tables gone).
 - **Smaller live-sync surface**: 4 subscriptions per phone instead of 5, and the `stores`
   subscription only fires on `UPDATE`.
@@ -44,15 +49,12 @@ Supabase → Reports → API / Database for egress and size.
 
 ## 4. Recommended next (not done, in order of payoff)
 
-1. **Only load the active base's rows in the app.** `loadState()` in `supabase/chase-supabase.js`
-   selects `rows` for every base of the store. Fetch `id,label,active` for all and `rows` only for
-   the active one (the Bases screen can fetch an old base on demand). This is the single largest
-   egress saving available — often 5–10×.
-2. **Delete old bases** from the Bases screen once the month is closed (each is up to 25 MB).
-3. **Set Supabase spend cap** (Organization → Billing → Spend cap) so the project pauses rather
+1. **Set Supabase spend cap** (Organization → Billing → Spend cap) so the project pauses rather
    than bills if a free limit is crossed.
-4. **Realtime**: if the team grows past ~30 phones, move the `bases` subscription to a manual
+2. **Realtime**: if the team grows past ~30 phones, move the `bases` subscription to a manual
    refresh — a base upload is rare and every phone re-downloading it at once is the spike.
+3. **Shorten retention** to 3 or 6 months if a year of history is never looked at: one number in
+   the `chase-prune-old-bases` job.
 
 ## 5. Development credits (AI/tooling)
 

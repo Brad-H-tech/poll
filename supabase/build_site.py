@@ -10,6 +10,7 @@ Everything the build needs is in the repo: supabase-js is vendored under
 supabase/vendor/, so no network and no node_modules are required.
 """
 import sys, shutil, os
+from urllib.parse import urlsplit
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 APP  = os.path.join(ROOT, 'shelly-app', 'public')
@@ -19,9 +20,15 @@ SBJS = os.path.join(ROOT, 'supabase', 'vendor', 'supabase-js.umd.js')
 SB_URL = 'https://dzmqogwggompkwasiglq.supabase.co'
 SB_KEY = 'sb_publishable_fu6yXakyx-Egk6Jcb_9BMg_cwh2dZTX'   # publishable: safe in the page, RLS does the guarding
 
+# The Chase API (api/). Blank until it is deployed; then put its address here, e.g.
+# 'https://chase-api.<your-subdomain>.workers.dev'. With it set, the Team tab creates logins
+# through the API and Supabase public sign-ups can be turned OFF.
+API_URL = os.environ.get('CHASE_API_URL', '')
+
 mock = '--mock' in sys.argv
 if mock:
     OUT = os.path.join(os.environ.get('CHASE_BUILD_DIR') or os.path.join(ROOT, '.build'), 'site-mock')
+    API_URL = os.environ.get('CHASE_API_URL', 'https://chase-api.mock')   # the browser test intercepts this
 
 def read(p):
     with open(p, encoding='utf-8') as f:
@@ -29,7 +36,7 @@ def read(p):
 
 app = read(os.path.join(APP, 'index.html'))
 adapter = read(os.path.join(ROOT, 'supabase', 'chase-supabase.js'))
-adapter = adapter.replace('__SB_URL__', SB_URL).replace('__SB_KEY__', SB_KEY)
+adapter = adapter.replace('__SB_URL__', SB_URL).replace('__SB_KEY__', SB_KEY).replace('__API_URL__', API_URL.rstrip('/'))
 
 if mock:
     lib = read(os.path.join(ROOT, 'supabase', 'mock-supabase.js'))
@@ -56,7 +63,17 @@ with open(os.path.join(OUT, 'index.html'), 'w', encoding='utf-8') as f:
 for name in ['manifest.webmanifest', 'sw.js', 'icon-192.png', 'icon-512.png',
              'icon-maskable-512.png', 'apple-touch-icon.png', 'favicon-32.png', '_headers']:
     src = os.path.join(APP, name)
-    if os.path.exists(src):
-        shutil.copy2(src, os.path.join(OUT, name))
+    if not os.path.exists(src):
+        continue
+    if name == '_headers':
+        # the Content-Security-Policy may only allow the API's origin, nothing wider
+        u = urlsplit(API_URL)
+        origin = f'{u.scheme}://{u.netloc}' if u.scheme and u.netloc else ''
+        with open(src, encoding='utf-8') as f:
+            hdr = f.read().replace(' __API_ORIGIN__', (' ' + origin) if origin else '')
+        with open(os.path.join(OUT, name), 'w', encoding='utf-8') as f:
+            f.write(hdr)
+        continue
+    shutil.copy2(src, os.path.join(OUT, name))
 
 print(('MOCK ' if mock else '') + 'build -> ' + os.path.join(OUT, 'index.html') + '  (%s KB)' % (len(site) // 1024))

@@ -56,7 +56,9 @@ Run against project `dzmqogwggompkwasiglq` with Supabase's own advisors plus a r
 | 5 | Nothing stopped two pending claims or two active bases per store except app code | Low | **Fixed**: partial unique indexes |
 | 6 | `profiles.store_id` foreign key unindexed; RLS policies re-evaluated `auth.uid()` per row (advisors) | Low (performance) | **Fixed**: index added; `(select auth.uid())` form |
 | 7 | Leaked-password protection off (advisor) | Medium | **Open** — dashboard toggle, see §6 |
-| 8 | Public sign-ups must stay on because the Team tab creates users by signing up; a stranger can create a (profile-less) login | Medium | **Mitigated** (no profile = no data); **fix path built**: `POST /v1/users` creates logins without sign-ups, see §6 |
+| 8 | Public sign-ups must stay on because the Team tab creates users by signing up; a stranger can create a (profile-less) login | Medium | **Fixed in code**: the Team tab calls `POST /v1/users` with the manager's own token once the app is built with `CHASE_API_URL`; then sign-ups go off, see §6 |
+| 13 | Any consultant could re-assign or verify via the API if it accepted app logins everywhere | Medium | **Designed out**: the API is keys-only; a login token works on `POST /v1/users` alone, and only a head-office key manages keys |
+| 14 | Customer bases (personal information) kept forever; every phone downloaded every base on every open | Medium (POPIA + cost) | **Fixed**: nightly job removes inactive bases after 12 months; the app downloads rows for the active base and the previous one only |
 | 9 | One auth user (`simone@chase.local`) has no profile — a half-created person | Info | Open — decide: finish in Team tab or delete in Authentication → Users |
 | 10 | App page served without security headers (framing, CSP) | Medium | **Fixed**: `site/_headers` |
 | 11 | `report_to` (a manager's phone number) and templates would be readable by `anon` once folded into `stores` | Medium | **Fixed before it shipped**: column-level grant, `anon` sees only `id,name,sort` |
@@ -80,8 +82,8 @@ Run against project `dzmqogwggompkwasiglq` with Supabase's own advisors plus a r
 ## 6. Still yours to click (dashboard settings SQL cannot change)
 
 1. **Supabase → Authentication → Providers → Email → "Prevent use of leaked passwords"**: on.
-2. **After the API is deployed**: Supabase → Authentication → Sign In / Providers → "Allow new
-   users to sign up": **off**, and create people through `POST /v1/users` (or point the Team tab at it).
+2. **After the API is deployed and the app rebuilt with `CHASE_API_URL`**: Supabase → Authentication →
+   Sign In / Providers → "Allow new users to sign up": **off**. The Team tab keeps working through the API.
 3. **Supabase → Project Settings → Data API → Exposed schemas**: add `api` (needed by the worker).
 4. **Supabase → Authentication → Users**: decide what to do with `simone@chase.local` (no profile).
 5. **Supabase dashboard account**: turn on two-factor authentication. It is the master key.

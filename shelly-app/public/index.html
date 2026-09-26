@@ -1062,7 +1062,7 @@
       <div class="toolbar" style="margin-top:16px">
         <input class="ti" id="nuName" placeholder="Full name" autocomplete="off">
         <input class="ti" id="nuUser" placeholder="username" autocomplete="off">
-        <input class="ti" id="nuPass" placeholder="password (6+)" type="password" autocomplete="new-password">
+        <input class="ti" id="nuPass" placeholder="password (10+)" type="password" autocomplete="new-password">
         <input class="ti" id="nuAgent" placeholder="CSR name in base (e.g. SIMONE)" autocomplete="off" style="max-width:210px">
         <select class="sel" id="nuRole"><option value="consultant">Consultant</option><option value="manager">Manager</option></select>
         <button class="abtn" id="nuAdd">Add user</button>
@@ -1575,7 +1575,7 @@ const agentColor=(()=>{let extra=0;const cache={...AGENT_COLORS};
 function renderPills(){
   $('#basePills').innerHTML=datasets.map((d,i)=>`
     <button class="bpill" data-i="${i}" aria-pressed="${i===activeIdx}">
-      ${esc(d.label)} <small>${esc(d.sub)}</small>${datasets.length>1?'<span class="x" data-del="'+i+'" title="Remove base">×</span>':''}
+      ${esc(d.label)} <small>${esc(d.lazy?(d.count||0).toLocaleString('en-ZA')+' rows · tap to load':d.sub)}</small>${datasets.length>1?'<span class="x" data-del="'+i+'" title="Remove base">×</span>':''}
     </button>`).join('');
   $$('#basePills .bpill').forEach(b=>b.onclick=e=>{
     const del=e.target.dataset.del;
@@ -3009,7 +3009,7 @@ async function refreshState(){
   ME=st.me;tracking=st.tracking||{};
   SETTINGS=st.settings||{};CLAIMS=st.claims||[];ASSIGN=st.assign||{};
   $('#storeSub').textContent=st.storeName||'MTN Dealer';
-  datasets=st.bases.map(b=>Object.assign(buildDataset(b.rows,b.label),{id:b.id}));
+  datasets=st.bases.map(b=>Object.assign(buildDataset(b.rows,b.label),{id:b.id,lazy:!!b.lazy,count:b.count}));
   if(!datasets.length)datasets=[Object.assign(buildDataset([],'No base loaded yet'),{id:null})];
   const ai=datasets.findIndex(d=>d.id===st.active);
   activeIdx=ai<0?0:ai;

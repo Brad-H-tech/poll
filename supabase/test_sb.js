@@ -31,6 +31,8 @@ const SEED = {
       { id: 'u-nol',   username: 'nolwazi', name: 'Nolwazi', role: 'consultant', agent: 'NOLWAZI', store_id: 's6' },
     ],
     bases: [
+      { id: 'b-s1-jun', store_id: 's1', label: 'Upgrade base · Jun 2026', rows: seed.s1.slice(0, 30), active: false, created_at: '2026-06-01', rows_count: 30 },
+      { id: 'b-s1-jul', store_id: 's1', label: 'Upgrade base · Jul 2026', rows: seed.s1.slice(0, 60), active: false, created_at: '2026-07-01', rows_count: 60 },
       { id: 'b-s1', store_id: 's1', label: 'Upgrade base · Aug 2026', rows: seed.s1, active: true,  created_at: '2026-08-01' },
       { id: 'b-s6', store_id: 's6', label: 'Upgrade base · Aug 2026', rows: seed.s6, active: true,  created_at: '2026-08-01' },
     ],
@@ -79,6 +81,11 @@ const SEED = {
   ok(await p.$eval('#storeSub', e => /Montrose/.test(e.textContent)), 'head office signed in at Montrose');
   const rc = await p.$eval('#rowCount', e => e.textContent);
   ok(/of 382 accounts/.test(rc), 'Montrose base loaded from Supabase (' + rc.trim() + ')');
+  // only the active base and the one before it (KPI deltas) were downloaded; older bases are listed by count only
+  const lazy = await p.evaluate(() => datasets.map(d => ({ label: d.label, rows: d.rows.length, lazy: !!d.lazy, count: d.count })));
+  ok(lazy.length === 3 && lazy[2].rows > 300 && lazy[1].rows === 60 && lazy[0].rows === 0 && lazy[0].lazy && lazy[0].count === 30,
+     'older base listed without downloading its rows: ' + JSON.stringify(lazy));
+  ok(await p.$eval('#basePills', e => /30 rows · tap to load/.test(e.textContent)), 'lazy base pill shows its row count');
   ok(await p.$eval('#whoami', e => /Bradley/.test(e.textContent) && /manager/.test(e.textContent)), 'signed in as manager');
 
   // ---- set an outcome; it must persist to the database with history
@@ -184,15 +191,41 @@ const SEED = {
     .find(t => t.store_id === 's6' && t.acct === a) || {}).agent, decided && decided.acct);
   ok(owner === 'NOLWAZI', 'approval made Nolwazi the owner on the tracking row (' + owner + ')');
 
-  // ---- creating a consultant makes a real login
+  // ---- creating a consultant goes through the Chase API (no public sign-up), with the manager's own token
+  const apiCalls = [];
+  await ctx.route('https://chase-api.mock/**', async route => {
+    const req = route.request();
+    const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+                   'Access-Control-Allow-Methods': 'POST, OPTIONS' };
+    if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
+    const body = req.postDataJSON();
+    apiCalls.push({ url: req.url(), auth: req.headers()['authorization'], body });
+    // what the real API does server-side: create the login and the profile
+    await p.evaluate(({ u, name, agent, store, pw }) => {
+      const db = JSON.parse(localStorage.getItem('chase-mockdb'));
+      db.users.push({ id: 'u-' + u, email: u + '@chase.local', password: pw });
+      db.tables.profiles.push({ id: 'u-' + u, username: u, name, role: 'consultant', agent, store_id: store });
+      localStorage.setItem('chase-mockdb', JSON.stringify(db));
+    }, { u: body.username, name: body.name, agent: body.agent, store: new URL(req.url()).searchParams.get('store'), pw: body.password });
+    await route.fulfill({ status: 201, headers: { ...cors, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: 'u-' + body.username, username: body.username }) });
+  });
   await p.evaluate(() => navTo('team')); await p.waitForTimeout(700);
   await p.fill('#nuName', 'Busi'); await p.fill('#nuUser', 'busi');
-  await p.fill('#nuPass', 'busi12345'); await p.fill('#nuAgent', 'BUSI');
+  await p.fill('#nuPass', 'short'); await p.fill('#nuAgent', 'BUSI');
+  await p.click('#nuAdd'); await p.waitForTimeout(600);
+  ok(apiCalls.length === 0, 'a 5-character password is refused before anything is sent');
+  await p.fill('#nuPass', 'busi-123456');
   await p.click('#nuAdd'); await p.waitForTimeout(1400);
   const newUser = await p.evaluate(() => ({
     auth: JSON.parse(localStorage.getItem('chase-mockdb')).users.some(u => u.email === 'busi@chase.local'),
     prof: (JSON.parse(localStorage.getItem('chase-mockdb')).tables.profiles || []).find(x => x.username === 'busi'),
   }));
+  ok(apiCalls.length === 1 && /\/v1\/users\?store=s6$/.test(apiCalls[0].url),
+     'Team tab called the Chase API for this store (' + (apiCalls[0] || {}).url + ')');
+  ok(apiCalls[0] && apiCalls[0].auth === 'Bearer mock-jwt-u-brad', "…with the manager's own login token, no API key in the page");
+  ok(apiCalls[0] && apiCalls[0].body.username === 'busi' && apiCalls[0].body.agent === 'BUSI' && !('u' in apiCalls[0].body),
+     'request body uses the API contract (username/name/password/role/agent)');
   ok(newUser.auth && newUser.prof && newUser.prof.store_id === 's6' && newUser.prof.agent === 'BUSI',
      'manager created a consultant: login + profile, scoped to this store');
   const stillMgr = await p.$eval('#whoami', e => /Bradley/.test(e.textContent));
@@ -200,7 +233,7 @@ const SEED = {
 
   // that new consultant can actually sign in
   const p3 = await open(ctx);
-  await login(p3, 's6', 'busi', 'busi12345');
+  await login(p3, 's6', 'busi', 'busi-123456');
   ok(await p3.$eval('#whoami', e => /Busi/.test(e.textContent)).catch(() => false),
      'the brand-new consultant can sign in');
   await p3.close();

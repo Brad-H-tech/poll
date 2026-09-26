@@ -42,7 +42,8 @@ third party: named keys, per-store limits, budgets, an audit trail and a stable,
 | F9 | Store settings (WhatsApp template, quotes, report number) read and write | `/v1/settings` on the `stores` row | `settings: read for read scope, write for manage only…` | Met |
 | F10 | KPI summary per store computed server-side | `api.summary()`; `GET /v1/reports/summary` | `summary report comes from the database` | Met |
 | F11 | Create logins for consultants/managers *without* public sign-ups | `POST /v1/users` uses the Auth admin endpoint and inserts the profile, rolling back on failure | `create a login without public sign-ups…` | Met |
-| F12 | Both kinds of caller: API keys for systems, Supabase user tokens for the app | `api/src/auth.js` | `a Supabase user token is accepted…` | Met |
+| F12 | API keys for systems; the Chase app's Team tab may call **one** endpoint (`POST /v1/users`) with the manager's own login token | `api/src/auth.js`, `userTokens` flag in `api/src/routes.js`; adapter `POST /api/users` in `supabase/chase-supabase.js` | `POST /v1/users with a manager token…`; browser: `Team tab called the Chase API…` | Met |
+| F15 | Old bases are removed automatically after 12 months; the app lists old bases by row count and downloads rows only for the active base and the one before it | pg_cron job + `rows_count` column (`supabase/schema.sql`); `loadState()` in the adapter; pills in the app | browser: `older base listed without downloading its rows` | Met |
 | F13 | Machine-readable spec and human docs that cannot drift from the code | `api/src/openapi.js` generates both from `ROUTES` | `openapi.json lists every route…`, `docs page is HTML…` | Met |
 | F14 | Work with the simplified 5-table database (settings on `stores`, owner on `tracking`) | `supabase/schema.sql`, `supabase/migrations/2026-09-26_simplify.sql`, adapter `supabase/chase-supabase.js` | browser suite: 30/30 pass on the new layout | Met |
 
@@ -55,7 +56,10 @@ third party: named keys, per-store limits, budgets, an audit trail and a stable,
 | S3 | Keys can be revoked instantly and can expire | `active` / `expires_at` checked on every call | `revoked and expired keys → 401 with a reason`, `revoke a key: takes effect at once…` | Met |
 | S4 | Least privilege: read / write / manage scopes; a key can never grant more than its creator has | `route.scope` check; `POST /v1/keys` intersects scopes with the caller's | `a read key cannot write`, `a write key cannot manage`, `create a key: … scopes cannot exceed` | Met |
 | S5 | Store isolation: a store key can only ever touch its own store; head office must name a store | store resolution in the dispatcher | `a store key cannot look at another store`, `a store key is pinned…`, `a head-office key must name the store` | Met |
-| S6 | App users keep row-level security: their profile is read under *their* token, never the service key | `db.profileFromJwt()` | `a Supabase user token is accepted…` (asserts the token used) | Met |
+| S6 | When the app calls with a login token, the profile is read under *that* token, never the service key, so row-level security decides | `db.profileFromJwt()` | `POST /v1/users with a manager token: profile read under THEIR token` | Met |
+| S20 | Keys only: login tokens are refused on every endpoint except `POST /v1/users`, and Supabase Auth is not even consulted for them | `allowUserToken` in `api/src/auth.js` | `user login tokens are refused everywhere except…` | Met |
+| S21 | Only a head-office key can create, list or revoke API keys | `headOffice` flag; dispatcher check in `api/src/index.js` | `a store manager key cannot mint, list or revoke keys` | Met |
+| S22 | Passwords for new logins are at least 10 characters, in the app and the API | adapter + `POST /v1/users` | browser: `a 5-character password is refused…`; API: `create a login…` | Met |
 | S7 | All input validated and clamped before the database is touched (codes, dates, lengths, ids) | helpers in `api/src/security.js` used by every route | `outcome codes, dates and activity types are checked…`, `ids must be UUIDs`, `over-long text is trimmed…` | Met |
 | S8 | The database itself refuses bad data even if the worker or app is bypassed | CHECK constraints, partial unique indexes and the `tracking_guard` trigger in `supabase/schema.sql` | migration dry-run on the live project; `a database rule violation → 422…` | Met |
 | S9 | Only managers can change who owns a customer or mark a Won as MTN-verified, even via direct REST calls | `chase.guard_tracking()` trigger (previously any consultant could) | migration dry-run; adapter omits those columns from consultant saves | Met (manual) |
@@ -68,7 +72,7 @@ third party: named keys, per-store limits, budgets, an audit trail and a stable,
 | S16 | Audit trail of every write and every refusal (who, what, where from, how long) | `api.audit` table; dispatcher writes via `ctx.waitUntil` | `audit lists writes and refusals…`, `no key → 401 and it is audited` | Met |
 | S17 | The static app sends security headers (CSP restricted to our Supabase project, no framing, HSTS) | `shelly-app/public/_headers` → `site/_headers` | build output | Met (manual) |
 | S18 | Leaked-password protection on Supabase Auth | Dashboard setting (cannot be set from SQL) | — | Open: Supabase → Authentication → Providers → Email → enable |
-| S19 | Public sign-ups disabled once the API creates logins | Dashboard setting; the adapter's Team tab still uses sign-up until pointed at the API | — | Open: after deploying the API, turn off "Allow new users to sign up" |
+| S19 | Public sign-ups disabled once the API creates logins | The Team tab calls `POST /v1/users` as soon as `CHASE_API_URL` is set at build time (until then it falls back to sign-up) | browser suite | Open: deploy the API, set the URL, rebuild, then turn off "Allow new users to sign up" |
 
 ## 4. Cost ("credits") requirements
 
@@ -115,4 +119,4 @@ third party: named keys, per-store limits, budgets, an audit trail and a stable,
 
 - Webhooks / push notifications to callers (the app already gets live sync from Supabase Realtime).
 - Per-key IP allow-lists and mutual TLS.
-- Moving the app's Team tab onto `POST /v1/users` so sign-ups can be switched off (S19).
+- Per-store key management by store managers (deliberately head-office only for now).

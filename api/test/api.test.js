@@ -104,18 +104,23 @@ describe('authentication', () => {
     assert.deepEqual(r.json.actor.scopes, ['read']); assert.equal(r.json.actor.store_id, 's1');
     assert.equal(r.json.usage.calls_today, 1); assert.equal(r.json.usage.daily_limit, 1000);
   });
-  test('a Supabase user token is accepted: manager gets manage, consultant does not', async () => {
-    const m = await call('GET', '/v1/me', { jwt: 'h.manager.sig' });
-    assert.equal(m.status, 200); assert.deepEqual(m.json.actor.scopes, ['read', 'write', 'manage']); assert.equal(m.json.actor.store_id, null);
-    const c = await call('GET', '/v1/me', { jwt: 'h.consultant.sig' });
-    assert.deepEqual(c.json.actor.scopes, ['read', 'write']); assert.equal(c.json.actor.store_id, 's1'); assert.equal(c.json.actor.agent, 'SIPHO');
-    // the profile was read under the USER's token, so row-level security applied — not the service key
-    const prof = fake.state.calls.find(x => x.path === '/rest/v1/profiles');
-    assert.equal(prof.headers.Authorization, 'Bearer h.manager.sig');
+  test('user login tokens are refused everywhere except the one endpoint the app needs', async () => {
+    for (const path of ['/v1/me', '/v1/customers?store=s1', '/v1/reports/summary?store=s1', '/v1/keys']) {
+      const r = await call('GET', path, { jwt: 'h.manager.sig' });
+      assert.equal(r.status, 401, path); assert.equal(r.json.error.code, 'keys_only', path);
+    }
+    assert.equal((await call('POST', '/v1/assignments?store=s1', { jwt: 'h.manager.sig', body: { accts: ['X'], agent: 'Y' } })).json.error.code, 'keys_only');
+    assert.ok(!fake.state.calls.some(c => c.path === '/auth/v1/user'), 'Supabase Auth never even consulted');
   });
-  test('a login with no profile → 403, an invalid token → 401', async () => {
-    assert.equal((await call('GET', '/v1/me', { jwt: 'h.noprofile.sig' })).status, 403);
-    assert.equal((await call('GET', '/v1/me', { jwt: 'h.bogus.sig' })).status, 401);
+  test('POST /v1/users with a manager token: profile read under THEIR token (RLS), consultant refused', async () => {
+    const r = await call('POST', '/v1/users?store=s1', { jwt: 'h.manager.sig', body: { username: 'newbie', name: 'New B', password: 'longenough-pass' } });
+    assert.equal(r.status, 201); assert.equal(r.json.store_id, 's1');
+    const prof = fake.state.calls.find(x => x.path === '/rest/v1/profiles' && x.method === 'GET');
+    assert.equal(prof.headers.Authorization, 'Bearer h.manager.sig', 'row-level security applied, not the service key');
+    const c = await call('POST', '/v1/users', { jwt: 'h.consultant.sig', body: { username: 'x2', name: 'X', password: 'longenough-pass' } });
+    assert.equal(c.status, 403);
+    assert.equal((await call('POST', '/v1/users?store=s1', { jwt: 'h.noprofile.sig', body: {} })).status, 403);
+    assert.equal((await call('POST', '/v1/users?store=s1', { jwt: 'h.bogus.sig', body: {} })).status, 401);
   });
 });
 
@@ -145,10 +150,11 @@ describe('authorisation: scopes and stores', () => {
     assert.equal((await call('GET', '/v1/customers?store=s2', { key: HEAD })).json.total, 1);
     assert.equal((await call('GET', '/v1/customers?store=bogus', { key: HEAD })).status, 400);
   });
-  test('a consultant token cannot assign customers; a manager token can', async () => {
-    assert.equal((await call('POST', '/v1/assignments', { jwt: 'h.consultant.sig', body: { accts: ['SB10252'], agent: 'SIPHO' } })).status, 403);
-    const r = await call('POST', '/v1/assignments?store=s1', { jwt: 'h.manager.sig', body: { accts: ['SB10252'], agent: 'sipho' } });
-    assert.equal(r.status, 200); assert.equal(r.json.assigned, 1); assert.equal(r.json.agent, 'SIPHO');
+  test('a store manager key cannot mint, list or revoke keys — head office only', async () => {
+    assert.equal((await call('POST', '/v1/keys', { key: MGR, body: { name: 'x' } })).status, 403);
+    assert.equal((await call('GET', '/v1/keys', { key: MGR })).status, 403);
+    assert.equal((await call('DELETE', '/v1/keys/' + fake.state.keys[1].id, { key: MGR })).status, 403);
+    assert.equal((await call('GET', '/v1/keys', { key: HEAD })).status, 200);
   });
   test('stores list is filtered to the key’s store', async () => {
     assert.deepEqual((await call('GET', '/v1/stores', { key: READ })).json.map(s => s.id), ['s1']);
@@ -328,24 +334,24 @@ describe('the business calls', () => {
 
 describe('keys, usage, audit, users', () => {
   beforeEach(() => fresh());
-  test('create a key: secret shown once, scopes cannot exceed the creator’s, store pinned', async () => {
-    const r = await call('POST', '/v1/keys', { key: MGR, body: { name: 'Excel', scopes: ['read'], daily_limit: 50, store: 's2' } });
+  test('create a key: secret shown once, scopes cannot exceed the creator’s, store as asked', async () => {
+    const r = await call('POST', '/v1/keys', { key: HEAD, body: { name: 'Excel', scopes: ['read'], daily_limit: 50, store: 's2' } });
     assert.equal(r.status, 201); assert.match(r.json.key, /^chk_[0-9a-f]{32}\.[A-Za-z0-9_-]{40,}$/);
-    assert.equal(r.json.store_id, 's1', 'a store manager can only mint keys for their own store');
-    const list = await call('GET', '/v1/keys', { key: MGR });
+    assert.equal(r.json.store_id, 's2');
+    const list = await call('GET', '/v1/keys', { key: HEAD });
     assert.ok(list.json.every(k => !('key_hash' in k) && !('key' in k)), 'secrets and hashes never listed');
-    assert.equal((await call('POST', '/v1/keys', { key: MGR, body: { name: 'x', scopes: ['root'] } })).status, 400);
+    assert.equal((await call('POST', '/v1/keys', { key: HEAD, body: { name: 'x', scopes: ['root'] } })).status, 400);
     assert.equal((await call('POST', '/v1/keys', { key: HEAD, body: { name: 'x', store: 'nope' } })).status, 400);
     const ho = await call('POST', '/v1/keys', { key: HEAD, body: { name: 'HQ bot' } });
     assert.equal(ho.json.store_id, null);
-    // the new key works immediately and inherits its budget
+    // the new key works immediately, inherits its budget, and is pinned to its store
     const me = await call('GET', '/v1/me', { key: r.json.key });
     assert.equal(me.status, 200); assert.equal(me.json.usage.daily_limit, 50);
+    assert.equal((await call('GET', '/v1/customers?store=s1', { key: r.json.key })).status, 403);
   });
-  test('revoke a key: takes effect at once; cannot revoke the key in use; store managers only their own', async () => {
+  test('revoke a key: takes effect at once; cannot revoke the key in use', async () => {
     const created = await call('POST', '/v1/keys', { key: HEAD, body: { name: 'temp', store: 's2' } });
     const id = created.json.id;
-    assert.equal((await call('DELETE', '/v1/keys/' + id, { key: MGR })).status, 404, 'Montrose manager cannot touch a Kokstad key');
     assert.equal((await call('DELETE', '/v1/keys/' + id, { key: HEAD })).json.active, false);
     assert.equal((await call('GET', '/v1/me', { key: created.json.key })).json.error.code, 'revoked');
     const self = await call('DELETE', '/v1/keys/' + fake.state.keys[0].id, { key: HEAD });

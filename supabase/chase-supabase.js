@@ -15,6 +15,7 @@
   const SB_URL = '__SB_URL__';
   const SB_KEY = '__SB_KEY__';
   const EMAIL_DOMAIN = 'chase.local';
+  const API_URL = '__API_URL__';   // the Chase API (api/); '' until it is deployed — see build_site.py
 
   const sb = supabase.createClient(SB_URL, SB_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, storageKey: 'chase-auth' },
@@ -66,16 +67,35 @@
   /* ---------- read the whole working set for one store ---------- */
   async function loadState() {
     const sid = STORE;
-    const [bases, tracking, claims, store] = await Promise.all([
-      sb.from('bases').select('id,label,rows,active,created_at').eq('store_id', sid).order('created_at'),
+    // Bases are the big thing (up to 50 000 rows each). Only the ACTIVE base's rows — plus the
+    // one before it, which the KPI deltas compare against — are downloaded. Older bases arrive
+    // as label + row count only; tapping one in the app activates it, which loads it.
+    const [metas, activeRows, tracking, claims, store] = await Promise.all([
+      sb.from('bases').select('id,label,active,created_at,rows_count').eq('store_id', sid).order('created_at'),
+      sb.from('bases').select('id,rows').eq('store_id', sid).eq('active', true).order('created_at', { ascending: false }).limit(1),
       sb.from('tracking').select('*').eq('store_id', sid),
       sb.from('claims').select('*').eq('store_id', sid).order('created_at', { ascending: false }),
       sb.from('stores').select('wa_tpl,quotes,report_to,verify_at').eq('id', sid).maybeSingle(),
     ]);
 
-    cache.bases = (bases.data || []).map(b => ({ id: b.id, label: b.label, rows: b.rows || [] }));
-    const act = (bases.data || []).find(b => b.active);
-    cache.active = act ? act.id : (cache.bases.length ? cache.bases[cache.bases.length - 1].id : null);
+    const list = metas.data || [];
+    const rowsById = {};
+    (activeRows.data || []).forEach(b => { rowsById[b.id] = b.rows || []; });
+    const actId = (list.find(b => b.active) || list[list.length - 1] || {}).id || null;
+    const actIdx = list.findIndex(b => b.id === actId);
+    const need = [];
+    if (actId && !rowsById[actId]) need.push(actId);           // nothing flagged active: the newest stands in
+    if (actIdx > 0) need.push(list[actIdx - 1].id);              // the previous base, for the KPI deltas
+    if (need.length) {
+      const { data } = await sb.from('bases').select('id,rows').in('id', need);
+      (data || []).forEach(b => { rowsById[b.id] = b.rows || []; });
+    }
+    cache.bases = list.map(b => {
+      const rows = rowsById[b.id];
+      return { id: b.id, label: b.label, rows: rows || [], lazy: !rows,
+               count: b.rows_count != null ? b.rows_count : (rows ? rows.length : 0) };
+    });
+    cache.active = actId;
 
     cache.tracking = {};
     cache.assign = {};
@@ -421,8 +441,32 @@
     ['POST', /^\/api\/users$/, async (m, body) => {
       if (!isMgr()) return ERR('Manager only', 403);
       const u = String(body.u || '').toLowerCase().replace(/[^a-z0-9._-]/g, '');
-      if (!u || !body.name) return ERR('Name and username are required');
-      if (String(body.p || '').length < 6) return ERR('Password must be at least 6 characters');
+      const name = String(body.name || '').trim().slice(0, 60);
+      if (!u || !name) return ERR('Name and username are required');
+      if (String(body.p || '').length < 10) return ERR('Password must be at least 10 characters');
+      const role = body.role === 'manager' ? 'manager' : 'consultant';
+      const agent = String(body.agent || '').toUpperCase().trim().slice(0, 40);
+
+      if (API_URL) {
+        // The Chase API creates the login with its admin rights, so Supabase public sign-ups
+        // can be OFF. It is called with the manager's own login token — no API key in this page.
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) return ERR('Not signed in', 401);
+        let r;
+        try {
+          r = await realFetch(API_URL + '/v1/users?store=' + encodeURIComponent(STORE), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+            body: JSON.stringify({ username: u, name, password: body.p, role, agent }),
+          });
+        } catch (e) { return ERR('Could not reach the Chase API', 502); }
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) return ERR((j.error && j.error.message) || 'Could not create the login', r.status);
+        emit('team', {});
+        return J({ ok: true });
+      }
+
+      // Until the API is deployed: sign the person up directly (needs public sign-ups ON).
       const { data, error } = await sbSignup.auth.signUp({ email: emailFor(u), password: body.p });
       if (error) {
         return ERR(/already/i.test(error.message) ? 'Username already exists' : error.message,
@@ -430,11 +474,7 @@
       }
       const id = data && data.user && data.user.id;
       if (!id) return ERR('Supabase did not return the new user — check that email confirmation is turned off in Authentication → Providers → Email');
-      const { error: pe } = await sb.from('profiles').insert({
-        id, username: u, name: String(body.name).slice(0, 60),
-        role: body.role === 'manager' ? 'manager' : 'consultant',
-        agent: String(body.agent || '').toUpperCase().trim(), store_id: STORE,
-      });
+      const { error: pe } = await sb.from('profiles').insert({ id, username: u, name, role, agent, store_id: STORE });
       if (pe) return ERR(pe);
       emit('team', {});
       return J({ ok: true });

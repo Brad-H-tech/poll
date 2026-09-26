@@ -251,6 +251,20 @@ do $$ begin alter publication supabase_realtime add table public.claims;   excep
 do $$ begin alter publication supabase_realtime add table public.bases;    exception when duplicate_object then null; end $$;
 do $$ begin alter publication supabase_realtime add table public.stores;   exception when duplicate_object then null; end $$;
 
+-- ---------- housekeeping: old bases go after 12 months ----------
+-- A base is personal information (POPIA) and the biggest thing in the database.
+-- Inactive bases older than 12 months are removed every night at 02:17 UTC.
+-- rows_count lets the app list bases without downloading their rows.
+alter table public.bases add column if not exists rows_count int
+  generated always as (jsonb_array_length(rows)) stored;
+do $$ begin
+  create extension if not exists pg_cron;
+  perform cron.schedule('chase-prune-old-bases', '17 2 * * *',
+    $job$ delete from public.bases where not active and created_at < now() - interval '12 months' $job$);
+exception when others then
+  raise notice 'pg_cron not available (%). Enable it under Database -> Extensions and re-run this file.', sqlerrm;
+end $$;
+
 -- ============================================================
 --  Done. Next: create your first manager in Authentication -> Users,
 --  then run make-manager.sql to give that person head-office access.

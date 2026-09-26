@@ -30,6 +30,7 @@
   function match(row, filters) {
     return filters.every(f => {
       if (f.op === 'eq') return String(row[f.col]) === String(f.val);
+      if (f.op === 'in') return f.vals.map(String).includes(String(row[f.col]));
       return true;
     });
   }
@@ -46,6 +47,7 @@
                          return this; }
     delete() { this._op = 'delete'; return this; }
     eq(col, val) { this.filters.push({ op: 'eq', col, val }); return this; }
+    in(col, vals) { this.filters.push({ op: 'in', col, vals: vals || [] }); return this; }
     order(col, o) { this._orderBy = col; this._asc = !o || o.ascending !== false; return this; }
     limit(n) { this._limit = n; return this; }
     single() { this._one = true; return this; }
@@ -162,6 +164,9 @@
       },
       async signOut() { current = null; save(); return { error: null }; },
       async getUser() { return { data: { user: current ? clone(current) : null } }; },
+      async getSession() {
+        return { data: { session: current ? { access_token: 'mock-jwt-' + current.id, user: clone(current) } : null } };
+      },
     };
   }
 

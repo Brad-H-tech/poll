@@ -8,7 +8,6 @@ Everything in this repo deploys from `main` to Cloudflare. The parts that matter
 | **Chase API** | A safe, metered API on the same data for spreadsheets, bots and scripts | `api/` | `chase-api` worker (`api/wrangler.jsonc`) |
 | **Database** | Supabase: five tables + row-level security + rules | `supabase/` | run in Supabase → SQL Editor |
 | **CL Academy** | The training / drill site | `site/drill/` | `cl-academy` worker (`drill.wrangler.jsonc`) |
-| **Team server (legacy)** | The original single-server edition with a JSON file store | `shelly-app/server.js` | Railway / Render / Docker |
 
 ## Start here
 
