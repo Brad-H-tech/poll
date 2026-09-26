@@ -1,88 +1,50 @@
 -- ============================================================
---  Chase — Supabase schema + security rules   (fresh project)
---  Run this ONCE in Supabase -> SQL Editor -> New query -> Run.
---  Safe to re-run: everything is create-if-not-exists / replace.
---
---  Five tables, nothing more:
---    stores    the six shops + Admin, and each shop's settings
---    profiles  one row per person who can sign in
---    bases     each monthly upload (the customer list)
---    tracking  the working state of each customer, incl. who owns it
---    claims    "can I have this customer?" requests
---
---  Already have the older 7-table layout? Run migrations/2026-09-26_simplify.sql instead.
+--  Chase — simplify the database
+--  7 tables -> 5, 4 helper functions -> 2, plus database-side guards.
+--  Run ONCE in Supabase -> SQL Editor -> New query -> Run.
+--  Safe to re-run. Keeps every row:
+--    settings  -> four columns on the store row
+--    assign    -> the `agent` column on the tracking row
 -- ============================================================
 
--- ---------- tables ----------
+-- ---------- 1. a store's settings live on the store row ----------
+alter table public.stores
+  add column if not exists wa_tpl    text not null default '',   -- WhatsApp template
+  add column if not exists quotes    text not null default '',   -- mission quotes, one per line
+  add column if not exists report_to text not null default '',   -- number the daily report goes to
+  add column if not exists verify_at text;                       -- last MTN activations check
+do $$ begin
+  if to_regclass('public.settings') is not null then
+    update public.stores s
+       set wa_tpl = coalesce(x.wa_tpl, ''), quotes = coalesce(x.quotes, ''),
+           report_to = coalesce(x.report_to, ''), verify_at = x.verify_at
+      from public.settings x where x.store_id = s.id;
+    drop table public.settings;
+  end if;
+end $$;
 
-create table if not exists public.stores (
-  id        text primary key,               -- 's1' … 's7'
-  name      text not null,
-  sort      int  not null default 0,
-  wa_tpl    text not null default '',       -- WhatsApp message template
-  quotes    text not null default '',       -- mission quotes, one per line
-  report_to text not null default '',       -- number the daily report goes to
-  verify_at text                            -- last MTN activations check ('YYYY-MM-DD')
-);
+-- ---------- 2. who owns a customer lives on the tracking row ----------
+-- null = the base file decides, '' = deliberately nobody, 'SIMONE' = a manager override
+alter table public.tracking add column if not exists agent text;
+do $$ begin
+  if to_regclass('public.assign') is not null then
+    insert into public.tracking (store_id, acct, agent)
+      select store_id, acct, coalesce(agent, '') from public.assign
+      on conflict (store_id, acct) do update set agent = excluded.agent;
+    drop table public.assign;
+  end if;
+end $$;
 
--- one row per person who can sign in. Linked to Supabase's own auth users.
--- store_id NULL + role 'manager'  =  head office: sees every store.
-create table if not exists public.profiles (
-  id         uuid primary key references auth.users on delete cascade,
-  username   text unique not null,
-  name       text not null,
-  role       text not null default 'consultant',   -- 'manager' | 'consultant'
-  agent      text default '',                      -- their name as it appears in the base file
-  store_id   text references public.stores(id) on delete set null,
-  created_at timestamptz default now()
-);
-
--- each monthly upload
-create table if not exists public.bases (
-  id         uuid primary key default gen_random_uuid(),
-  store_id   text not null references public.stores(id) on delete cascade,
-  label      text not null default 'Uploaded base',
-  rows       jsonb not null default '[]'::jsonb,
-  active     boolean not null default false,
-  created_at timestamptz default now()
-);
-
--- the working state of each customer: outcome, callback, notes, history, owner
-create table if not exists public.tracking (
-  store_id   text not null references public.stores(id) on delete cascade,
-  acct       text not null,
-  st         text not null default '',      -- outcome code
-  next       text not null default '',      -- callback 'YYYY-MM-DD'
-  note       text not null default '',
-  by_name    text not null default '',
-  at         text not null default '',
-  ver        text,                          -- date confirmed by the MTN activations file (manager only)
-  agent      text,                          -- owner override (manager only): null = base decides, '' = nobody
-  acts       jsonb not null default '[]'::jsonb,
-  hist       jsonb not null default '[]'::jsonb,
-  updated_at timestamptz default now(),
-  primary key (store_id, acct)
-);
-
-create table if not exists public.claims (
-  id         uuid primary key default gen_random_uuid(),
-  store_id   text not null references public.stores(id) on delete cascade,
-  acct       text not null,
-  customer   text not null default '',
-  by_name    text not null default '',
-  agent      text not null default '',
-  status     text not null default 'pending',   -- pending | approved | rejected
-  at         text not null default '',
-  decided    text,
-  created_at timestamptz default now()
-);
-
--- ---------- the six stores + Admin ----------
-insert into public.stores (id, name, sort) values
-  ('s1','Montrose',1), ('s2','Kokstad',2), ('s3','Scottburgh',3),
-  ('s4','Shelly Beach',4), ('s5','Howick',5), ('s6','Vryheid',6),
-  ('s7','Admin',7)
-on conflict (id) do update set name = excluded.name, sort = excluded.sort;
+-- ---------- 3. the old public helpers go (policies that used them are recreated below) ----------
+do $$ declare r record; begin
+  for r in select policyname, tablename from pg_policies where schemaname = 'public' loop
+    execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename);
+  end loop;
+end $$;
+drop function if exists public.my_role();
+drop function if exists public.my_store();
+drop function if exists public.is_manager();
+drop function if exists public.can_see(text);
 
 -- ---------- helpers: live in a private schema, not the public API ----------
 -- Supabase exposes every function in `public` at /rest/v1/rpc/…; these two
@@ -251,7 +213,13 @@ do $$ begin alter publication supabase_realtime add table public.claims;   excep
 do $$ begin alter publication supabase_realtime add table public.bases;    exception when duplicate_object then null; end $$;
 do $$ begin alter publication supabase_realtime add table public.stores;   exception when duplicate_object then null; end $$;
 
--- ============================================================
---  Done. Next: create your first manager in Authentication -> Users,
---  then run make-manager.sql to give that person head-office access.
--- ============================================================
+-- ---------- sanity check ----------
+-- Expect 5 tables, 2 functions in `chase`, and no function left in `public`.
+select 'tables' as what, string_agg(tablename, ', ' order by tablename) as detail
+  from pg_tables where schemaname = 'public'
+union all
+select 'chase helpers', string_agg(proname, ', ' order by proname)
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'chase'
+union all
+select 'public functions', coalesce(string_agg(proname, ', '), '(none)')
+  from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public';

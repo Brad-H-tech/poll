@@ -1239,6 +1239,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
    The app cannot tell the difference.
 
    Also swaps EventSource (live sync) for Supabase Realtime.
+
+   Database shape (5 tables): stores (incl. settings), profiles,
+   bases, tracking (incl. who owns each customer), claims.
 ========================================================= */
 (function () {
   const SB_URL = 'https://dzmqogwggompkwasiglq.supabase.co';
@@ -1295,12 +1298,11 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   /* ---------- read the whole working set for one store ---------- */
   async function loadState() {
     const sid = STORE;
-    const [bases, tracking, claims, assign, settings] = await Promise.all([
+    const [bases, tracking, claims, store] = await Promise.all([
       sb.from('bases').select('id,label,rows,active,created_at').eq('store_id', sid).order('created_at'),
       sb.from('tracking').select('*').eq('store_id', sid),
       sb.from('claims').select('*').eq('store_id', sid).order('created_at', { ascending: false }),
-      sb.from('assign').select('acct,agent').eq('store_id', sid),
-      sb.from('settings').select('*').eq('store_id', sid).maybeSingle(),
+      sb.from('stores').select('wa_tpl,quotes,report_to,verify_at').eq('id', sid).maybeSingle(),
     ]);
 
     cache.bases = (bases.data || []).map(b => ({ id: b.id, label: b.label, rows: b.rows || [] }));
@@ -1308,12 +1310,15 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     cache.active = act ? act.id : (cache.bases.length ? cache.bases[cache.bases.length - 1].id : null);
 
     cache.tracking = {};
+    cache.assign = {};
     (tracking.data || []).forEach(t => {
       const rec = { st: t.st || '', next: t.next || '', note: t.note || '',
                     by: t.by_name || '', at: t.at || '',
                     acts: t.acts || [], hist: t.hist || [] };
       if (t.ver) rec.ver = t.ver;
       cache.tracking[t.acct] = rec;
+      // agent null = the base file decides; '' = deliberately nobody; 'NAME' = manager override
+      if (t.agent !== null && t.agent !== undefined) cache.assign[t.acct] = t.agent;
     });
 
     cache.claims = (claims.data || []).map(c => ({
@@ -1321,10 +1326,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       status: c.status, at: c.at || '', decided: c.decided || undefined,
     }));
 
-    cache.assign = {};
-    (assign.data || []).forEach(a => { cache.assign[a.acct] = a.agent || ''; });
-
-    const s = settings.data || {};
+    const s = store.data || {};
     cache.settings = {};
     ['wa_tpl', 'quotes', 'report_to', 'verify_at'].forEach(k => { if (s[k]) cache.settings[k] = s[k]; });
 
@@ -1347,12 +1349,14 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         .concat(rec.hist).slice(0, 25);
     }
     cache.tracking[acct] = rec;
+    // agent (owner) and ver (MTN-confirmed) are manager-only columns, written by the
+    // assign and verify routes. An upsert only touches the columns it names, so
+    // leaving them out here means a consultant's save can never clobber them.
     const { error } = await sb.from('tracking').upsert({
       store_id: STORE, acct,
       st: rec.st || '', next: rec.next || '', note: rec.note || '',
       by_name: rec.by || ME.name, at: rec.at || today(),
-      ver: rec.ver || null, acts: rec.acts, hist: rec.hist,
-      updated_at: new Date().toISOString(),
+      acts: rec.acts, hist: rec.hist,
     }, { onConflict: 'store_id,acct' });
     if (error) throw error;
     return rec;
@@ -1450,8 +1454,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if (!isMgr()) return ERR('Manager only', 403);
       const key = String(body.key || '').replace(/[^a-z_]/gi, '');
       if (!['wa_tpl', 'quotes', 'report_to'].includes(key)) return ERR('Unknown setting');
-      const patch = { store_id: STORE }; patch[key] = String(body.value || '').slice(0, 8000);
-      const { error } = await sb.from('settings').upsert(patch, { onConflict: 'store_id' });
+      const patch = {}; patch[key] = String(body.value || '').slice(0, 8000);
+      const { error } = await sb.from('stores').update(patch).eq('id', STORE);
       if (error) return ERR(error);
       cache.settings[key] = patch[key];
       emit('settings', {});
@@ -1485,7 +1489,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if (error) return ERR(error);
       if (verdict === 'approved') {
         const agent = cl.agent || cl.by_name;
-        await sb.from('assign').upsert({ store_id: STORE, acct, agent }, { onConflict: 'store_id,acct' });
+        await sb.from('tracking').upsert({ store_id: STORE, acct, agent }, { onConflict: 'store_id,acct' });
         cache.assign[acct] = agent;
       }
       emit('claims', {}); emit('bases', {});
@@ -1501,13 +1505,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const rows = accts.map(acct => {
         const prev = cache.tracking[acct] || {};
         cache.tracking[acct] = Object.assign({}, prev, { ver: d });
-        return { store_id: STORE, acct, st: prev.st || '', next: prev.next || '', note: prev.note || '',
-                 by_name: prev.by || ME.name, at: prev.at || d, ver: d,
-                 acts: prev.acts || [], hist: prev.hist || [] };
+        return { store_id: STORE, acct, ver: d };
       });
-      const { error } = await sb.from('tracking').upsert(rows, { onConflict: 'store_id,acct' });
-      if (error) return ERR(error);
-      await sb.from('settings').upsert({ store_id: STORE, verify_at: d }, { onConflict: 'store_id' });
+      for (let i = 0; i < rows.length; i += 500) {
+        const { error } = await sb.from('tracking').upsert(rows.slice(i, i + 500), { onConflict: 'store_id,acct' });
+        if (error) return ERR(error);
+      }
+      await sb.from('stores').update({ verify_at: d }).eq('id', STORE);
       cache.settings.verify_at = d;
       emit('tracking', {}); emit('settings', {});
       return J({ ok: true, verified: accts.length });
@@ -1520,8 +1524,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if (!accts.length) return ERR('No accounts given');
       const agent = String(body.agent || '').toUpperCase().trim().slice(0, 40);
       const rows = accts.map(acct => ({ store_id: STORE, acct, agent }));
-      const { error } = await sb.from('assign').upsert(rows, { onConflict: 'store_id,acct' });
-      if (error) return ERR(error);
+      for (let i = 0; i < rows.length; i += 500) {
+        const { error } = await sb.from('tracking').upsert(rows.slice(i, i + 500), { onConflict: 'store_id,acct' });
+        if (error) return ERR(error);
+      }
       accts.forEach(a => { cache.assign[a] = agent; });
       emit('bases', {});
       return J({ ok: true, moved: accts.length, agent });
@@ -1572,7 +1578,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         pool.forEach(([acct], idx) => put(acct, agents[idx % agents.length]));
       }
       for (let i = 0; i < writes.length; i += 500) {
-        const { error } = await sb.from('assign').upsert(writes.slice(i, i + 500), { onConflict: 'store_id,acct' });
+        const { error } = await sb.from('tracking').upsert(writes.slice(i, i + 500), { onConflict: 'store_id,acct' });
         if (error) return ERR(error);
       }
       emit('bases', {});
@@ -1735,12 +1741,16 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
                       by: r.by_name || '', at: r.at || '', acts: r.acts || [], hist: r.hist || [] };
         if (r.ver) rec.ver = r.ver;
         cache.tracking[r.acct] = rec;
+        // the owner rides on the same row: tell the app when it changed
+        const hadOwner = r.acct in cache.assign, prevOwner = cache.assign[r.acct];
+        if (r.agent === null || r.agent === undefined) delete cache.assign[r.acct];
+        else cache.assign[r.acct] = r.agent;
         emit('tracking', { acct: r.acct, rec });
+        if (hadOwner !== (r.acct in cache.assign) || prevOwner !== cache.assign[r.acct]) emit('bases', {});
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'claims', filter: flt }, () => emit('claims', {}))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'assign', filter: flt }, () => emit('bases', {}))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bases', filter: flt }, () => emit('bases', {}))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'settings', filter: flt }, () => emit('settings', {}))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'stores', filter: 'id=eq.' + STORE }, () => emit('settings', {}))
       .subscribe();
   }
   function unsubscribeLive() {

@@ -3,8 +3,12 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
 
-const SC = '/tmp/claude-0/-home-user-poll/9568d26a-bb99-556f-bb65-a5bb50270263/scratchpad';
-const seed = JSON.parse(fs.readFileSync('/home/user/poll/shelly-app/seed-stores.json', 'utf8'));
+const path = require('path');
+const ROOT = path.resolve(__dirname, '..');
+// where the --mock build landed (see build_site.py) and where proof files go
+const SC = process.env.CHASE_BUILD_DIR || path.join(ROOT, '.build');
+const CHROME = process.env.PW_CHROMIUM || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
+const seed = JSON.parse(fs.readFileSync(path.join(ROOT, 'shelly-app', 'seed-stores.json'), 'utf8'));
 
 // what the database looks like right after Bradley ran schema.sql + make-manager.sql,
 // plus two consultants and a loaded base for Montrose and Vryheid.
@@ -38,7 +42,7 @@ const SEED = {
   const fails = [];
   const ok = (c, m) => { console.log((c ? 'PASS' : 'FAIL') + ' — ' + m); if (!c) fails.push(m); };
   const browser = await chromium.launch({
-    executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-proxy-server'] });
+    executablePath: fs.existsSync(CHROME) ? CHROME : undefined, args: ['--no-proxy-server'] });
 
   async function open(ctx) {
     const p = await ctx.newPage();
@@ -107,15 +111,21 @@ const SEED = {
   await p.evaluate(() => navTo('settings')); await p.waitForTimeout(500);
   await p.fill('#tplBox', 'Hi {name}, {agent} here from {store}.');
   await p.click('#tplSave'); await p.waitForTimeout(900);
-  const st = await p.evaluate(() => (JSON.parse(localStorage.getItem('chase-mockdb')).tables.settings || [])[0]);
-  ok(st && /Hi \{name\}/.test(st.wa_tpl || ''), 'WhatsApp template saved for the store');
+  // settings live on the store row now (no separate settings table)
+  const st = await p.evaluate(() => JSON.parse(localStorage.getItem('chase-mockdb')).tables.stores.find(s => s.id === 's1'));
+  ok(st && /Hi \{name\}/.test(st.wa_tpl || ''), 'WhatsApp template saved on the store row');
 
   // ---- MTN activations verify
   fs.writeFileSync(SC + '/act.csv', 'MSISDN,Account\n27000000000,' + acct + '\n');
+  const before = await p.evaluate(a => (JSON.parse(localStorage.getItem('chase-mockdb')).tables.tracking || []).find(t => t.acct === a), acct);
   await p.evaluate(() => navTo('report')); await p.waitForTimeout(600);
   await p.setInputFiles('#verInp', SC + '/act.csv'); await p.waitForTimeout(1500);
   row = await p.evaluate(a => (JSON.parse(localStorage.getItem('chase-mockdb')).tables.tracking || []).find(t => t.acct === a), acct);
   ok(row && !!row.ver, 'MTN activations file confirmed the Won (ver stamped)');
+  ok(row && row.st === before.st && JSON.stringify(row.hist) === JSON.stringify(before.hist) && JSON.stringify(row.acts) === JSON.stringify(before.acts),
+     'verify only touched ver: outcome, history and activities untouched');
+  const verAt = await p.evaluate(() => JSON.parse(localStorage.getItem('chase-mockdb')).tables.stores.find(s => s.id === 's1').verify_at);
+  ok(!!verAt, 'verify date stamped on the store row');
 
   // ---- splits on Vryheid: switch store by re-login (head office)
   // sign out without reloading — a reload would re-seed the stand-in database
@@ -126,8 +136,10 @@ const SEED = {
   await p.evaluate(() => navTo('base')); await p.waitForTimeout(800);
   await p.evaluate(() => api('/api/assign/split', { method: 'POST', body: JSON.stringify({ mode: 'even', agents: ['STEVEN', 'NOLWAZI'] }) }));
   await p.waitForTimeout(1600);
-  const assigned = await p.evaluate(() => (JSON.parse(localStorage.getItem('chase-mockdb')).tables.assign || []).length);
-  ok(assigned > 400, 'even split wrote ' + assigned + ' assignments to the database');
+  // who owns a customer is the `agent` column on the tracking row (no separate assign table)
+  const assigned = await p.evaluate(() => (JSON.parse(localStorage.getItem('chase-mockdb')).tables.tracking || [])
+    .filter(t => t.store_id === 's6' && t.agent !== null && t.agent !== undefined).length);
+  ok(assigned > 400, 'even split wrote ' + assigned + ' owners onto tracking rows');
 
   // put one customer back in the pool so the claims flow has something to claim
   const backAcct = await p.evaluate(() => Object.keys(ASSIGN)[0]);
@@ -168,6 +180,9 @@ const SEED = {
   if (okBtn) { await okBtn.click(); await p.waitForTimeout(1200); }
   const decided = await p.evaluate(() => (JSON.parse(localStorage.getItem('chase-mockdb')).tables.claims || [])[0]);
   ok(decided && decided.status === 'approved', 'manager approved it');
+  const owner = await p.evaluate(a => ((JSON.parse(localStorage.getItem('chase-mockdb')).tables.tracking || [])
+    .find(t => t.store_id === 's6' && t.acct === a) || {}).agent, decided && decided.acct);
+  ok(owner === 'NOLWAZI', 'approval made Nolwazi the owner on the tracking row (' + owner + ')');
 
   // ---- creating a consultant makes a real login
   await p.evaluate(() => navTo('team')); await p.waitForTimeout(700);
