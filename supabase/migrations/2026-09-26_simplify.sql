@@ -36,8 +36,11 @@ do $$ begin
 end $$;
 
 -- ---------- 3. the old public helpers go (policies that used them are recreated below) ----------
+-- Only Chase's own tables: anything else in public (e.g. drill_scores for CL Academy) is left alone.
 do $$ declare r record; begin
-  for r in select policyname, tablename from pg_policies where schemaname = 'public' loop
+  for r in select policyname, tablename from pg_policies
+           where schemaname = 'public'
+             and tablename in ('stores', 'profiles', 'bases', 'tracking', 'claims', 'assign', 'settings') loop
     execute format('drop policy if exists %I on public.%I', r.policyname, r.tablename);
   end loop;
 end $$;
