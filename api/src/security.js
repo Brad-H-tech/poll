@@ -63,22 +63,56 @@ export class RateLimiter {
   prune(t) { for (const [k, b] of this.buckets) if (b.reset <= t) this.buckets.delete(k); }
 }
 
-/* ---- body reading with a hard size cap and safe JSON ---- */
+/* ---- body reading: byte-accurate cap enforced while streaming, safe JSON, bounded depth ---- */
+export const MAX_DEPTH = 6;   // {rows:[[cell]]} is depth 3; nothing legitimate goes deeper
 export async function readJson(request, maxBytes) {
+  const tooBig = () => new HttpError(413, 'too_large', `Body larger than ${maxBytes} bytes`);
   const declared = Number(request.headers.get('Content-Length') || 0);
-  if (declared > maxBytes) throw new HttpError(413, 'too_large', `Body larger than ${maxBytes} bytes`);
-  const text = await request.text();
-  if (text.length > maxBytes) throw new HttpError(413, 'too_large', `Body larger than ${maxBytes} bytes`);
+  if (declared > maxBytes) throw tooBig();
+  let text;
+  if (request.body && typeof request.body.getReader === 'function') {
+    const reader = request.body.getReader();
+    const chunks = []; let size = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > maxBytes) { try { await reader.cancel(); } catch (e) { /* already closed */ } throw tooBig(); }
+      chunks.push(value);
+    }
+    const buf = new Uint8Array(size); let o = 0;
+    for (const c of chunks) { buf.set(c, o); o += c.byteLength; }
+    text = new TextDecoder().decode(buf);
+  } else {
+    text = await request.text();
+    if (new TextEncoder().encode(text).byteLength > maxBytes) throw tooBig();
+  }
   if (!text.trim()) return {};
-  try {
-    const v = JSON.parse(text);
-    if (!v || typeof v !== 'object' || Array.isArray(v)) throw new Error('not an object');
-    return v;
-  } catch (e) { throw new HttpError(400, 'bad_json', 'Body must be a JSON object'); }
+  let v;
+  try { v = JSON.parse(text); } catch (e) { throw new HttpError(400, 'bad_json', 'Body must be a JSON object'); }
+  if (!v || typeof v !== 'object' || Array.isArray(v)) throw new HttpError(400, 'bad_json', 'Body must be a JSON object');
+  if (depthOf(v) > MAX_DEPTH) throw new HttpError(400, 'bad_json', `JSON nested deeper than ${MAX_DEPTH} levels`);
+  return v;
+}
+function depthOf(v) {
+  // iterative so a hostile body cannot blow the stack here either
+  let max = 0; const stack = [[v, 1]];
+  while (stack.length) {
+    const [node, d] = stack.pop();
+    if (d > max) max = d;
+    if (d > MAX_DEPTH) return d;
+    if (node && typeof node === 'object') for (const k in node) { const c = node[k]; if (c && typeof c === 'object') stack.push([c, d + 1]); }
+  }
+  return max;
 }
 
 /* ---- input helpers: every field is clamped before it goes anywhere ---- */
-export const str = (v, max) => String(v == null ? '' : v).slice(0, max);
+export function str(v, max) {
+  if (v == null) return '';
+  if (typeof v === 'object') throw new HttpError(400, 'invalid', 'Expected text, got an object or array');
+  return String(v).slice(0, max);
+}
+export const isScalar = v => v === null || ['string', 'number', 'boolean'].includes(typeof v);
 export function requireStr(v, max, field) {
   const s = str(v, max).trim();
   if (!s) throw new HttpError(400, 'missing', `${field} is required`);

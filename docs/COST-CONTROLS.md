@@ -26,7 +26,8 @@ not. 6 stores × 10 consultants × 20 opens a day × 400 rows is fine. 6 stores 
 | **Work in the database** | every business route = one `api.*` function | One round trip per call; the worker stays under its CPU budget |
 | **Input caps** | 256 KB bodies (8 MB for a base), 50 000 rows, text lengths | Nobody can grow the database by accident |
 | **Database growth caps** | CHECK constraints: notes ≤ 5 000 chars, activities ≤ 30, history ≤ 25, base ≤ 25 MB | Even a bypass of the worker cannot inflate rows |
-| **Audit is cheap** | one small insert per write or refusal, fire-and-forget; reads are not audited | Audit does not double the write load |
+| **Audit is cheap** | one small insert per write or refusal of an identified caller, fire-and-forget; reads and credential-less requests are not audited; rows older than 18 months are pruned nightly | Audit does not double the write load and cannot be inflated by strangers |
+| **Throttle before the database** | per-key and per-IP limits are decided from the token itself, before `api.authenticate` runs | A flood of 429s costs Supabase nothing and burns no budget |
 | **Metering is free** | usage counter rides on the authentication query | No extra round trip |
 | **No dependencies** | `api/package.json` has none | Nothing to pay for, nothing to update |
 

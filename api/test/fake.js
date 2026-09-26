@@ -96,6 +96,7 @@ export async function fakeSupabase() {
       return { acct, base_id: b.id };
     },
     assign({ p_store, p_accts, p_agent }) {
+      if (new Set(p_accts).size !== p_accts.length) fail('21000', 'ON CONFLICT DO UPDATE command cannot affect row a second time');
       for (const a of p_accts) {
         let t = state.tracking.find(x => x.store_id === p_store && x.acct === a);
         if (!t) { t = { store_id: p_store, acct: a, acts: [], hist: [] }; state.tracking.push(t); }
@@ -166,7 +167,9 @@ export async function fakeSupabase() {
     }
     if (u.pathname === '/auth/v1/admin/users' && method === 'POST') {
       if (!isService) return json(401, { message: 'service role required' });
-      if (state.users.some(x => x.email === body.email)) return json(422, { code: 422, message: 'A user with this email address has already been registered' });
+      // GoTrue's real shape: { code, error_code, msg }
+      if (state.users.some(x => x.email === body.email)) return json(422, { code: 422, error_code: 'email_exists', msg: 'A user with this email address has already been registered' });
+      if (/^weak/.test(body.password)) return json(422, { code: 422, error_code: 'weak_password', msg: 'Password should contain at least one symbol' });
       const id = 'u-new-' + (state.users.length + 1);
       state.users.push({ id, email: body.email, jwt: 'h.' + id + '.sig' });
       return json(200, { id, email: body.email });

@@ -75,14 +75,16 @@ describe('system', () => {
 
 describe('authentication', () => {
   beforeEach(() => fresh());
-  test('no key → 401 and it is audited', async () => {
+  test('no key → 401; not audited (nothing to attribute) and the database is not asked', async () => {
     const r = await call('GET', '/v1/me');
     assert.equal(r.status, 401); assert.equal(r.json.error.code, 'unauthenticated');
-    assert.equal(audits().length, 1); assert.equal(audits()[0].status, 401);
+    assert.equal(audits().length, 0); assert.equal(fake.state.calls.length, 0);
   });
-  test('wrong secret → 401 (hash compared, secret never sent to the database)', async () => {
+  test('wrong secret → 401 (hash compared, secret never sent to the database) and it IS audited with the request id', async () => {
     const r = await call('GET', '/v1/me', { key: keyString(2).replace(/\.S3/, '.X3') });
     assert.equal(r.status, 401);
+    assert.equal(audits().length, 1); assert.equal(audits()[0].status, 401);
+    assert.equal(audits()[0].request_id, r.headers.get('X-Request-Id'));
     const authCall = fake.state.calls.find(c => c.path.endsWith('/rpc/authenticate'));
     assert.ok(authCall, 'authenticate rpc called');
     assert.match(authCall.body.p_hash, /^[0-9a-f]{64}$/);
@@ -178,12 +180,31 @@ describe('limits and budgets (the credits)', () => {
     const r = await call('GET', '/v1/me', { key: HEAD });
     assert.equal(r.status, 503); assert.equal(r.json.error.code, 'budget');
   });
-  test('burst rate limit per caller → 429', async () => {
+  test('burst rate limit per caller → 429, decided BEFORE the database is asked (no budget burned)', async () => {
     await fresh({ RATE_PER_MINUTE: '3' });
     for (let i = 0; i < 3; i++) assert.equal((await call('GET', '/v1/me', { key: READ })).status, 200);
+    const before = fake.state.calls.filter(c => c.path.endsWith('/rpc/authenticate')).length;
     const r = await call('GET', '/v1/me', { key: READ });
     assert.equal(r.status, 429); assert.equal(r.json.error.code, 'rate_limited'); assert.ok(Number(r.headers.get('Retry-After')) > 0);
+    assert.equal(fake.state.calls.filter(c => c.path.endsWith('/rpc/authenticate')).length, before, 'throttled call never reached Supabase');
     assert.equal((await call('GET', '/v1/me', { key: WRITE })).status, 200, 'another caller is unaffected');
+  });
+  test('bodies: byte-accurate cap, bounded nesting, objects where text is expected → 4xx not 500', async () => {
+    await fresh();
+    const multibyte = 'é'.repeat(200 * 1024);   // 200k chars = 400 KB
+    assert.equal((await call('PUT', '/v1/settings', { key: MGR, body: { wa_tpl: multibyte } })).status, 413);
+    let deep = 'x'; for (let i = 0; i < 2000; i++) deep = '[' + deep + ']';
+    const nested = await call('PUT', '/v1/settings', { key: MGR, body: '{"wa_tpl":' + deep.replace('x', '1') + '}' });
+    assert.equal(nested.status, 400);
+    const obj = await call('PUT', '/v1/settings', { key: MGR, body: { wa_tpl: { hello: 'world' } } });
+    assert.equal(obj.status, 400);
+    const cells = await call('POST', '/v1/bases', { key: MGR, body: { rows: [['ok', { nested: true }]] } });
+    assert.equal(cells.status, 400);
+  });
+  test('a malformed percent-encoded path parameter → 400, not 500', async () => {
+    await fresh();
+    const r = await call('GET', '/v1/customers/%E0%A4%A', { key: READ });
+    assert.equal(r.status, 400); assert.equal(r.json.error.code, 'invalid');
   });
   test('per-IP floor applies before authentication', async () => {
     await fresh({ RATE_IP_PER_MINUTE: '2' });
@@ -305,6 +326,8 @@ describe('the business calls', () => {
     assert.equal(fake.state.tracking[0].agent, '');
     await call('POST', '/v1/assignments', { key: MGR, body: { accts: ['SB10251'], agent: null } });
     assert.equal(fake.state.tracking[0].agent, null);
+    const dup = await call('POST', '/v1/assignments', { key: MGR, body: { accts: ['SB10251', 'SB10251', 'SB10252'], agent: 'X' } });
+    assert.equal(dup.status, 200); assert.equal(dup.json.assigned, 2, 'duplicates collapsed before the database');
     assert.equal((await call('POST', '/v1/assignments', { key: MGR, body: { accts: [], agent: 'X' } })).status, 400);
   });
   test('bases: metadata only, then paged rows, then a new upload becomes active', async () => {
@@ -357,13 +380,23 @@ describe('keys, usage, audit, users', () => {
     const self = await call('DELETE', '/v1/keys/' + fake.state.keys[0].id, { key: HEAD });
     assert.equal(self.status, 400);
   });
-  test('usage: a key sees its own days; a manager with ?all=1 sees every key', async () => {
+  test('usage: a key sees its own days; only a head-office manage key sees every key', async () => {
     await call('GET', '/v1/me', { key: READ });
     const mine = await call('GET', '/v1/usage', { key: READ });
     assert.equal(mine.json.length, 1); assert.equal(mine.json[0].calls, 2);
     const all = await call('GET', '/v1/usage?all=1', { key: HEAD });
     assert.ok(all.json.length >= 2);
     assert.equal(fake.state.calls.filter(c => c.path.endsWith('/rpc/usage_report')).pop().body.p_key, null);
+    assert.equal((await call('GET', '/v1/usage?all=1', { key: MGR })).status, 403, 'a store manage key cannot see other stores’ keys');
+  });
+  test('openapi declares each route’s real success status and the error statuses the dispatcher emits', async () => {
+    const spec = (await call('GET', '/v1/openapi.json')).json;
+    for (const r of ROUTES) {
+      const op = spec.paths[r.path.replace(/:(\w+)/g, '{$1}')][r.method.toLowerCase()];
+      assert.ok(op.responses[String(r.status || 200)], `${r.method} ${r.path} should document ${r.status || 200}`);
+      for (const s of ['404', '409', '413', '422', '503']) assert.ok(op.responses[s], `${r.path} missing ${s}`);
+    }
+    assert.ok(spec.paths['/v1/customers']['post'].responses['201']);
   });
   test('audit lists writes and refusals, newest first, store-scoped for store keys', async () => {
     await call('PUT', '/v1/customers/SB10252/outcome', { key: WRITE, body: { outcome: 'fu' } });
@@ -383,6 +416,8 @@ describe('keys, usage, audit, users', () => {
     assert.ok(fake.state.users.some(u => u.email === 'thandi@chase.local'));
     const dup = await call('POST', '/v1/users', { key: MGR, body: { username: 'thandi', name: 'Again', password: 'longenough-pass' } });
     assert.equal(dup.status, 409);
+    const weak = await call('POST', '/v1/users', { key: MGR, body: { username: 'weakling', name: 'W', password: 'weak-but-long-enough' } });
+    assert.equal(weak.status, 400); assert.match(weak.json.error.message, /password/i);
     // profile insert fails (username taken in profiles but not in auth) → the auth user is removed again
     fake.state.profiles.push({ id: 'zzz', username: 'taken', name: 'T', role: 'consultant', agent: '', store_id: 's1' });
     const rb = await call('POST', '/v1/users', { key: MGR, body: { username: 'taken', name: 'T', password: 'longenough-pass' } });

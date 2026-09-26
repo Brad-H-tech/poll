@@ -16,6 +16,12 @@ import { HttpError, sha256Hex, timingSafeEqual } from './security.js';
 const KEY_RE = /^chk_([0-9a-f]{32})\.([A-Za-z0-9_-]{40,60})$/;
 const uuidFromHex = h => `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 
+/** a stable id for rate limiting BEFORE any database work: the key id is in the token itself */
+export function callerHint(request) {
+  const m = KEY_RE.exec(bearer(request));
+  return m ? 'key:' + uuidFromHex(m[1]) : null;
+}
+
 export function bearer(request) {
   const h = request.headers.get('Authorization') || '';
   const m = /^Bearer\s+(.+)$/i.exec(h.trim());

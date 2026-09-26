@@ -63,6 +63,7 @@ create table if not exists api.audit (
   ip       text not null default '',
   detail   text not null default '' check (char_length(detail) <= 400)
 );
+alter table api.audit add column if not exists request_id text;   -- the X-Request-Id the caller saw
 create index if not exists audit_at_idx on api.audit (at desc);
 
 -- belt and braces: RLS on, no policies -> only the service role (which bypasses RLS) can read
@@ -185,7 +186,8 @@ language sql stable security definer set search_path = api, public as $$
     from line where coalesce(r->>3, '') <> ''
     group by r->>3
   )
-  select c.acct, c.name, c.msisdn, c.email, c.category, c.product, c.package, c.offer,
+  select c.acct, c.name, coalesce(c.msisdn, ''), coalesce(c.email, ''), coalesce(c.category, ''),
+         coalesce(c.product, ''), coalesce(c.package, ''), coalesce(c.offer, ''),
          round(c.rsp, 2), c.lines,
          coalesce(t.agent, c.csr, ''), (t.agent is not null),
          coalesce(t.st, ''), coalesce(t.next, ''), coalesce(t.note, ''),
@@ -294,7 +296,7 @@ returns int language plpgsql security definer set search_path = api, public as $
 declare n int;
 begin
   insert into public.tracking (store_id, acct, agent)
-  select p_store, left(a, 40), upper(trim(p_agent)) from unnest(p_accts) a where coalesce(a, '') <> ''
+  select distinct p_store, left(a, 40), upper(trim(p_agent)) from unnest(p_accts) a where coalesce(a, '') <> ''
   on conflict (store_id, acct) do update set agent = excluded.agent;
   get diagnostics n = row_count;
   return n;
@@ -396,6 +398,15 @@ returns json language sql stable security definer set search_path = api, public 
     'verified_at', (select verify_at from public.stores where id = p_store),
     'as_of', now())
 $$;
+
+-- ---------- housekeeping: the audit trail is kept for 18 months ----------
+do $$ begin
+  create extension if not exists pg_cron;
+  perform cron.schedule('chase-prune-api-audit', '23 2 * * *',
+    $job$ delete from api.audit where at < now() - interval '18 months' $job$);
+exception when others then
+  raise notice 'pg_cron not available (%). Enable it under Database -> Extensions and re-run this file.', sqlerrm;
+end $$;
 
 -- ---------- only the worker may call any of this ----------
 do $$ declare r record; begin

@@ -5,7 +5,7 @@
 
 export class DbError extends Error {
   constructor(status, data) {
-    super((data && data.message) || 'Database error');
+    super((data && (data.message || data.msg || data.error_description)) || 'Database error');
     this.name = 'DbError';
     this.status = status;
     this.data = data || {};
@@ -21,6 +21,7 @@ export function publicError(err) {
     case '22023': return { status: 400, code: 'invalid', message: msg || 'Invalid value' };
     case '23503': return { status: 400, code: 'unknown_reference', message: 'Unknown store or reference' };
     case '23505': return { status: 409, code: 'conflict', message: /assigned/i.test(msg) ? 'Already assigned' : 'Already exists' };
+    case '21000': return { status: 400, code: 'invalid', message: 'The same item appears more than once in the request' };
     case '23514': return { status: 422, code: 'rejected', message: 'Rejected by a database rule (too long, too many, or a bad code)' };
     case '42501': return { status: 403, code: 'forbidden', message: msg || 'Not allowed' };
     case 'P0002': return { status: 404, code: 'not_found', message: msg || 'Not found' };

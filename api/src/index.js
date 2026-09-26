@@ -3,7 +3,7 @@
    parse body → resolve store → handler → JSON, with security headers and an
    audit row for every write and every refusal. */
 import { makeDb, DbError, publicError } from './db.js';
-import { authenticate } from './auth.js';
+import { authenticate, callerHint } from './auth.js';
 import { HttpError, securityHeaders, corsHeaders, RateLimiter, readJson, requestId, isStoreId } from './security.js';
 import { ROUTES, Reply, VERSION } from './routes.js';
 import { openapi, docsHtml } from './openapi.js';
@@ -52,13 +52,21 @@ export function createApp({ env, fetchImpl, limiter, now } = {}) {
       if (!ipHit.ok) throw new HttpError(429, 'rate_limited', 'Too many requests from this address', { retryAfter: ipHit.retryAfter });
 
       if (route.auth !== false) {
+        // per-caller limits run BEFORE the database is asked anything, so a throttled caller
+        // costs no round trip and burns no budget. The key id is readable from the token.
+        const perMinute = Number(env.RATE_PER_MINUTE) || 120;
+        const throttle = async id => {
+          const hit = rl.hit(id, perMinute);
+          if (!hit.ok) throw new HttpError(429, 'rate_limited', 'Too many requests — slow down', { retryAfter: hit.retryAfter });
+          if (env.RL && typeof env.RL.limit === 'function') {        // Cloudflare's global rate-limit binding, if configured
+            const g = await env.RL.limit({ key: id });
+            if (g && g.success === false) throw new HttpError(429, 'rate_limited', 'Too many requests — slow down', { retryAfter: 60 });
+          }
+        };
+        const hint = callerHint(request);
+        if (hint) await throttle(hint);
         actor = await authenticate(request, env, db, isWrite, route.userTokens === true);
-        const hit = rl.hit(actor.id, Number(env.RATE_PER_MINUTE) || 120);
-        if (!hit.ok) throw new HttpError(429, 'rate_limited', 'Too many requests — slow down', { retryAfter: hit.retryAfter });
-        if (env.RL && typeof env.RL.limit === 'function') {          // Cloudflare's global rate-limit binding, if configured
-          const g = await env.RL.limit({ key: actor.id });
-          if (g && g.success === false) throw new HttpError(429, 'rate_limited', 'Too many requests — slow down', { retryAfter: 60 });
-        }
+        if (!hint) await throttle(actor.id);                          // user tokens: known only after the check
         if (!actor.scopes.has(route.scope))
           throw new HttpError(403, 'forbidden', `This needs the ${route.scope} scope; your key has: ${[...actor.scopes].join(', ') || 'none'}`);
         if (route.headOffice && actor.store_id)
@@ -82,7 +90,7 @@ export function createApp({ env, fetchImpl, limiter, now } = {}) {
 
       const c = {
         env, db, actor, store, body, request, ctx, query: url.searchParams,
-        params: Object.fromEntries(route.keys.map((k, i) => [k, decodeURIComponent(route.re.exec(url.pathname)[i + 1])])),
+        params: Object.fromEntries(route.keys.map((k, i) => [k, decodeParam(route.re.exec(url.pathname)[i + 1])])),
         openapi: () => openapi(url.origin),
         docs: () => new Response(docsHtml(url.origin), { status: 200, headers: {
           ...securityHeaders(rid), 'Content-Type': 'text/html; charset=utf-8',
@@ -102,9 +110,13 @@ export function createApp({ env, fetchImpl, limiter, now } = {}) {
       else { console.error(`[${rid}]`, e && e.stack || e); response = fail(500, 'internal', 'Something went wrong on our side'); }
     }
 
-    // audit every write and every refusal; never the health/docs noise
-    if (route && route.auth !== false && (method !== 'GET' || [401, 403, 429].includes(status))) {
+    // audit every write and every refusal of an identifiable caller (a real key id, or a checked
+    // login). Requests with no credential at all are not written down: that would let anyone
+    // grow the audit table for free. They are still rate-limited per IP.
+    const identifiable = !!actor || !!callerHint(request);
+    if (route && route.auth !== false && identifiable && (method !== 'GET' || [401, 403, 429].includes(status))) {
       const row = {
+        request_id: rid,
         key_id: actor && actor.key_id || null, actor: actor ? String(actor.name).slice(0, 80) : '',
         // a refusal that happened before the store was resolved is still attributed to the key's own store
         method, path: url.pathname.slice(0, 200), store_id: store || (actor && actor.store_id) || null,
@@ -116,6 +128,11 @@ export function createApp({ env, fetchImpl, limiter, now } = {}) {
     }
     return response;
   };
+}
+
+function decodeParam(s) {
+  try { return decodeURIComponent(s); }
+  catch (e) { throw new HttpError(400, 'invalid', 'Bad percent-encoding in the URL'); }
 }
 
 async function safeErrorText(res) {

@@ -11,7 +11,7 @@
      c.params   path parameters, c.query URLSearchParams, c.body parsed JSON (writes only)
    They return a plain object (→ 200 JSON) or reply(status, object). */
 import {
-  HttpError, str, requireStr, oneOf, isoDate, intIn, isUuid, isStoreId, cleanAcct,
+  HttpError, str, requireStr, oneOf, isoDate, intIn, isUuid, isStoreId, cleanAcct, isScalar,
   OUTCOMES, ACTIVITIES, SCOPES,
 } from './security.js';
 
@@ -25,8 +25,9 @@ function route(method, path, meta, handler) {
   const re = new RegExp('^' + path.replace(/:(\w+)/g, (_, k) => { keys.push(k); return '([^/]+)'; }) + '$');
   // userTokens: the Chase app may call this with a manager's login token (everything else is keys only)
   // headOffice: only a head-office key (no store) may call this
+  // status: the success status this route replies with (documented in the OpenAPI spec)
   return { method, path, re, keys, handler, auth: true, scope: 'read', store: 'required', maxBody: 256 * KB,
-           userTokens: false, headOffice: false, ...meta };
+           userTokens: false, headOffice: false, status: 200, ...meta };
 }
 
 /* ---- shared schema fragments for the docs ---- */
@@ -130,7 +131,7 @@ export const ROUTES = [
       });
     }),
 
-  route('POST', '/v1/customers/:acct/activities', { scope: 'write', tag: 'Customers', summary: 'Log a touch: WhatsApp, call, no answer, SMS or email',
+  route('POST', '/v1/customers/:acct/activities', { scope: 'write', status: 201, tag: 'Customers', summary: 'Log a touch: WhatsApp, call, no answer, SMS or email',
     params: [S.storeParam], body: { type: 'wa' }, example: { acct: 'SB10251', activities: [{ t: 'wa', by: 'Excel report', at: '2026-09-26 09:14' }] } },
     async c => {
       const acct = cleanAcct(c.params.acct);
@@ -140,7 +141,7 @@ export const ROUTES = [
       }));
     }),
 
-  route('POST', '/v1/customers', { scope: 'write', tag: 'Customers', summary: 'Add a walk-in / manual lead to the active base',
+  route('POST', '/v1/customers', { scope: 'write', status: 201, tag: 'Customers', summary: 'Add a walk-in / manual lead to the active base',
     params: [S.storeParam], body: { name: 'Thandi Ndlovu', msisdn: '0821234567', email: '', note: 'Asked about fibre' },
     example: { acct: 'WI3F9A2C1B', base_id: 'uuid' } },
     async c => reply(201, await c.db.rpc('add_walkin', {
@@ -160,7 +161,7 @@ export const ROUTES = [
       ...(c.query.get('status') ? { status: 'eq.' + oneOf(c.query.get('status'), ['pending', 'approved', 'rejected'], 'status') } : {}),
     })),
 
-  route('POST', '/v1/claims', { scope: 'write', tag: 'Claims', summary: 'Ask for a customer (consultant)',
+  route('POST', '/v1/claims', { scope: 'write', status: 201, tag: 'Claims', summary: 'Ask for a customer (consultant)',
     params: [S.storeParam], body: { acct: 'SB10258', customer: 'Thandi Ndlovu' },
     example: { id: 'uuid', acct: 'SB10258', status: 'pending' } },
     async c => reply(201, await c.db.rpc('raise_claim', {
@@ -182,7 +183,8 @@ export const ROUTES = [
   route('POST', '/v1/assignments', { scope: 'manage', tag: 'Claims', summary: 'Give customers to a consultant (manager). agent "" = nobody, null = let the base decide',
     params: [S.storeParam], body: { accts: ['SB10258', 'SB10259'], agent: 'SIPHO' }, example: { assigned: 2, agent: 'SIPHO' } },
     async c => {
-      const accts = (Array.isArray(c.body.accts) ? c.body.accts : []).slice(0, 5000).map(cleanAcct).filter(Boolean);
+      // de-duplicated: Postgres refuses to upsert the same row twice in one statement (21000)
+      const accts = [...new Set((Array.isArray(c.body.accts) ? c.body.accts : []).slice(0, 5000).map(cleanAcct).filter(Boolean))];
       if (!accts.length) throw new HttpError(400, 'missing', 'accts must be a non-empty array of account numbers');
       const agent = c.body.agent === null ? null : str(c.body.agent, 40).toUpperCase().trim();
       const n = await c.db.rpc('assign', { p_store: c.store, p_accts: accts, p_agent: agent });
@@ -206,7 +208,7 @@ export const ROUTES = [
       return r;
     }),
 
-  route('POST', '/v1/bases', { scope: 'manage', tag: 'Bases', summary: 'Load a new monthly base (manager). Becomes the active base.', maxBody: 8 * MB,
+  route('POST', '/v1/bases', { scope: 'manage', status: 201, tag: 'Bases', summary: 'Load a new monthly base (manager). Becomes the active base.', maxBody: 8 * MB,
     params: [S.storeParam], body: { label: 'Upgrade base · Oct 2026', rows: [['SIPHO', 'Thandi', 'Ndlovu', 'SB10251', '27821234567', 'Made For Me M', '2024-10-01', 'iPhone 15', 599, 'Upgrade', '', 'Consumer', 'R599 p/m', '']] },
     example: { id: 'uuid', rows: 382 } },
     async c => {
@@ -214,6 +216,7 @@ export const ROUTES = [
       if (!Array.isArray(rows) || !rows.length) throw new HttpError(400, 'missing', 'rows must be a non-empty array');
       if (rows.length > 50000) throw new HttpError(413, 'too_large', 'At most 50 000 rows per base');
       if (!rows.every(Array.isArray)) throw new HttpError(400, 'invalid', 'Every row must be an array of cells');
+      if (!rows.every(r => r.length <= 40 && r.every(isScalar))) throw new HttpError(400, 'invalid', 'Cells must be text, numbers, true/false or null (max 40 per row)');
       return reply(201, await c.db.rpc('load_base', { p_store: c.store, p_label: str(c.body.label, 40), p_rows: rows }));
     }),
 
@@ -226,10 +229,12 @@ export const ROUTES = [
 
   /* ------------------------------------------------------------ keys, usage, audit, users */
   route('GET', '/v1/usage', { store: 'none', tag: 'Admin', summary: 'Calls per day for your key (managers: ?all=1 for every key)',
-    params: [{ name: 'days', in: 'query', description: '1–365 (default 30)', example: 30 }, { name: 'all', in: 'query', description: '1 = every key (manage scope)', example: 1 }],
+    params: [{ name: 'days', in: 'query', description: '1–365 (default 30)', example: 30 }, { name: 'all', in: 'query', description: '1 = every key (head-office manage key)', example: 1 }],
     example: [{ key_id: 'uuid', name: 'Excel report', day: '2026-09-26', calls: 12, writes: 0, denied: 0 }] },
     async c => {
-      const all = c.query.get('all') === '1' && c.actor.scopes.has('manage');
+      const all = c.query.get('all') === '1';
+      if (all && (!c.actor.scopes.has('manage') || c.actor.store_id))
+        throw new HttpError(403, 'forbidden', 'Usage of every key is for a head-office manage key');
       if (!all && !c.actor.key_id) return [];
       return c.db.rpc('usage_report', { p_key: all ? null : c.actor.key_id, p_days: intIn(c.query.get('days'), 1, 365, 30) });
     }),
@@ -239,7 +244,7 @@ export const ROUTES = [
     async c => c.db.select('keys', { select: 'id,name,store_id,scopes,daily_limit,active,expires_at,created_by,created_at,last_used_at',
       order: 'created_at.desc', ...(c.actor.store_id ? { store_id: 'eq.' + c.actor.store_id } : {}) }, 'api')),
 
-  route('POST', '/v1/keys', { scope: 'manage', store: 'none', headOffice: true, tag: 'Admin', summary: 'Create an API key (head office only). The secret is shown ONCE in this reply.',
+  route('POST', '/v1/keys', { scope: 'manage', store: 'none', headOffice: true, status: 201, tag: 'Admin', summary: 'Create an API key (head office only). The secret is shown ONCE in this reply.',
     body: { name: 'Excel report', store: 's1', scopes: ['read'], daily_limit: 500, expires_days: 365 },
     example: { id: 'uuid', key: 'chk_9f3…​.Xy…', name: 'Excel report', store_id: 's1', scopes: ['read'], daily_limit: 500, note: 'Store this now — it cannot be shown again' } },
     async c => {
@@ -279,10 +284,10 @@ export const ROUTES = [
   route('GET', '/v1/audit', { scope: 'manage', store: 'none', tag: 'Admin', summary: 'Who did what through the API (writes and refusals)',
     params: [{ name: 'limit', in: 'query', description: '1–200 (default 50)', example: 50 }],
     example: [{ at: '2026-09-26T09:20:11Z', actor: 'Excel report', method: 'PUT', path: '/v1/customers/SB10251/outcome', store_id: 's1', status: 200, ms: 84, ip: '196.0.0.1' }] },
-    async c => c.db.select('audit', { select: 'at,key_id,actor,method,path,store_id,status,ms,ip,detail', order: 'at.desc',
+    async c => c.db.select('audit', { select: 'at,request_id,key_id,actor,method,path,store_id,status,ms,ip,detail', order: 'at.desc',
       limit: intIn(c.query.get('limit'), 1, 200, 50), ...(c.actor.store_id ? { store_id: 'eq.' + c.actor.store_id } : {}) }, 'api')),
 
-  route('POST', '/v1/users', { scope: 'manage', userTokens: true, tag: 'Admin',
+  route('POST', '/v1/users', { scope: 'manage', userTokens: true, status: 201, tag: 'Admin',
     summary: 'Create a consultant or manager login — works with public sign-ups turned OFF. The Chase app’s Team tab calls this with the manager’s own login token.',
     params: [S.storeParam], body: { username: 'thandi', name: 'Thandi Ndlovu', password: 'at least 10 characters', role: 'consultant', agent: 'THANDI' },
     example: { id: 'uuid', username: 'thandi', name: 'Thandi Ndlovu', role: 'consultant', agent: 'THANDI', store_id: 's1' } },
@@ -298,7 +303,16 @@ export const ROUTES = [
       let user;
       try { user = await c.db.adminCreateUser(email, password); }
       catch (e) {
-        if (e.status === 422 || /already|exists|registered/i.test(e.message)) throw new HttpError(409, 'conflict', 'Username already exists');
+        // Supabase Auth (GoTrue) answers 422 for several reasons; tell them apart by its error code
+        const d = e.data || {};
+        const code = String(d.error_code || d.code || '');
+        const text = String(d.msg || d.message || d.error_description || '');
+        if (code === 'email_exists' || code === 'user_already_exists' || /already|registered|exists/i.test(text))
+          throw new HttpError(409, 'conflict', 'Username already exists');
+        if (code === 'weak_password' || /password/i.test(text))
+          throw new HttpError(400, 'invalid', 'Supabase rejected that password: ' + (text || 'too weak'));
+        if (e.status === 422 || e.status === 400)
+          throw new HttpError(400, 'invalid', text || 'Supabase rejected the new login');
         throw e;
       }
       const id = user && (user.id || (user.user && user.user.id));

@@ -242,7 +242,7 @@
       if (!isMgr()) return ERR('Manager only', 403);
       const key = String(body.key || '').replace(/[^a-z_]/gi, '');
       if (!['wa_tpl', 'quotes', 'report_to'].includes(key)) return ERR('Unknown setting');
-      const patch = {}; patch[key] = String(body.value || '').slice(0, 8000);
+      const patch = {}; patch[key] = String(body.value || '').slice(0, key === 'report_to' ? 40 : 8000);
       const { error } = await sb.from('stores').update(patch).eq('id', STORE);
       if (error) return ERR(error);
       cache.settings[key] = patch[key];

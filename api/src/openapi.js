@@ -18,9 +18,13 @@ export function openapi(origin) {
           schema: { type: typeof q.example === 'number' ? 'integer' : 'string' }, example: q.example })),
       ],
       responses: {
-        '200': { description: 'OK', content: { 'application/json': { example: r.example === undefined ? { ok: true } : r.example } } },
+        [String(r.status || 200)]: { description: r.status === 201 ? 'Created' : 'OK',
+          content: { 'application/json': { example: r.example === undefined ? { ok: true } : r.example } } },
         '400': { $ref: '#/components/responses/Error' }, '401': { $ref: '#/components/responses/Error' },
-        '403': { $ref: '#/components/responses/Error' }, '429': { $ref: '#/components/responses/RateLimited' },
+        '403': { $ref: '#/components/responses/Error' }, '404': { $ref: '#/components/responses/Error' },
+        '409': { $ref: '#/components/responses/Error' }, '413': { $ref: '#/components/responses/Error' },
+        '422': { $ref: '#/components/responses/Error' }, '429': { $ref: '#/components/responses/RateLimited' },
+        '503': { $ref: '#/components/responses/Error' },
       },
     };
     if (r.body) op.requestBody = { required: true, content: { 'application/json': { example: r.body } } };

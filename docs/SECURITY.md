@@ -68,14 +68,15 @@ Run against project `dzmqogwggompkwasiglq` with Supabase's own advisors plus a r
 
 | Attack | Control | Test |
 |---|---|---|
-| Guess a key | 32 random bytes; hash compared; per-IP floor; every failure audited | `wrong secret → 401…`, `per-IP floor…` |
+| Guess a key | 32 random bytes; hash compared; per-key and per-IP throttles before any database call; every wrong-secret attempt on a real key id audited | `wrong secret → 401…`, `per-IP floor…`, `burst rate limit … BEFORE the database is asked` |
+| Hostile request bodies | byte-accurate streaming cap, nesting depth ≤ 6, objects rejected where text is expected, malformed URL encoding → 400 | `bodies: byte-accurate cap…`, `a malformed percent-encoded path parameter → 400` |
 | Reuse a leaked key | scopes + store pinning limit blast radius; instant revoke; expiry | `a store key cannot look at another store`, `revoke a key…` |
 | Escalate scope | a key can never grant more than its creator; route scopes | `create a key: … scopes cannot exceed` |
 | Cross-store read/write | store resolved once in the dispatcher, every RPC gets `p_store` | `a store key is pinned…` |
 | Injection | no SQL in the worker; parameters only; ids must be UUIDs; account numbers stripped to `[A-Za-z0-9._-]` | `account numbers are sanitised…`, `ids must be UUIDs` |
 | Oversized input | 256 KB body (8 MB for bases), 50 000 rows, text clamps, DB CHECKs | `body size caps…` |
 | Flood / cost attack | per-caller and per-IP minute limits, per-key daily budget, global cap | `limits and budgets` suite |
-| Information leakage | error mapping hides SQL/tables; no stack traces; `no-store`; `noindex` | `…without leaking…`, security headers test |
+| Information leakage | error mapping hides SQL/tables; no stack traces; `no-store`; `noindex`; usage of all keys and key management are head-office only | `…without leaking…`, `usage: … only a head-office manage key sees every key` |
 | Browser abuse (CSRF-style) | CORS only for named origins; bearer tokens, no cookies | `CORS` suite |
 | Clickjacking / injection on the app | `frame-ancestors 'none'`, CSP `connect-src` limited to our Supabase project | `site/_headers` |
 
