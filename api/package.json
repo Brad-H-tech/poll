@@ -1,0 +1,13 @@
+{
+  "name": "chase-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Chase CRM API — a zero-dependency Cloudflare Worker in front of Supabase",
+  "scripts": {
+    "test": "node --test 'test/*.test.js'",
+    "dev": "npx wrangler dev",
+    "deploy": "npx wrangler deploy"
+  },
+  "engines": { "node": ">=20" }
+}
