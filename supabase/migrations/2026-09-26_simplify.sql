@@ -170,7 +170,7 @@ create policy claims_update on public.claims for update to authenticated
 -- ---------- guards: the database refuses bad or oversized data itself ----------
 -- These hold even if someone bypasses the app and talks to the API directly.
 create or replace function chase.guard_tracking() returns trigger
-  language plpgsql as $$
+  language plpgsql set search_path = public as $$
 begin
   if tg_op = 'UPDATE' then
     new.store_id := old.store_id;          -- keys never move between stores
