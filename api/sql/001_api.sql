@@ -95,7 +95,7 @@ end $$;
 -- One round trip per request: check the key, count the call, report the budget.
 create or replace function api.authenticate(p_key_id uuid, p_hash text, p_write boolean default false)
 returns json language plpgsql security definer set search_path = api, public as $$
-declare k api.keys; u api.usage; v_total int;
+declare k api.keys; u api.usage; v_total int; v_day date;
 begin
   select * into k from api.keys where keys.id = p_key_id;
   if k.id is null or k.key_hash <> p_hash then
@@ -105,18 +105,22 @@ begin
   if k.expires_at is not null and k.expires_at < now() then
     return json_build_object('ok', false, 'reason', 'expired');
   end if;
+  -- budgets roll over at South African midnight, like every other date in Chase
+  v_day := (now() at time zone 'Africa/Johannesburg')::date;
   insert into api.usage (key_id, day, calls, writes)
-  values (k.id, current_date, 1, case when p_write then 1 else 0 end)
+  values (k.id, v_day, 1, case when p_write then 1 else 0 end)
   on conflict (key_id, day) do update
     set calls = usage.calls + 1, writes = usage.writes + (case when p_write then 1 else 0 end)
   returning * into u;
   if u.calls > k.daily_limit then
-    update api.usage set denied = denied + 1 where key_id = k.id and day = current_date;
+    update api.usage set denied = denied + 1 where key_id = k.id and day = v_day;
   end if;
   if k.last_used_at is null or k.last_used_at < now() - interval '5 minutes' then
     update api.keys set last_used_at = now() where keys.id = k.id;
   end if;
-  select coalesce(sum(calls), 0) into v_total from api.usage where day = current_date;
+  -- the global figure counts SERVED calls only: a key stuck at its own limit must not
+  -- push everyone else over the cap
+  select coalesce(sum(calls - denied), 0) into v_total from api.usage where day = v_day;
   return json_build_object(
     'ok', u.calls <= k.daily_limit,
     'reason', case when u.calls > k.daily_limit then 'daily_limit' else null end,
@@ -132,7 +136,7 @@ returns json language sql stable security definer set search_path = api, public 
                            order by u.day desc, k.name), '[]'::json)
   from api.usage u join api.keys k on k.id = u.key_id
   where (p_key is null or u.key_id = p_key)
-    and u.day >= current_date - least(greatest(coalesce(p_days, 30), 1), 365);
+    and u.day >= (now() at time zone 'Africa/Johannesburg')::date - least(greatest(coalesce(p_days, 30), 1), 365);
 $$;
 
 -- ---------- helpers ----------
@@ -200,10 +204,14 @@ create or replace function api.customers(
   p_store text, p_q text default '', p_agent text default '', p_status text default '',
   p_offset int default 0, p_limit int default 50)
 returns json language sql stable security definer set search_path = api, public as $$
-  with f as (
-    select * from api.book(p_store) b
-    where (coalesce(p_q, '') = '' or b.name ilike '%' || p_q || '%' or b.acct ilike '%' || p_q || '%'
-           or coalesce(b.msisdn, '') like '%' || p_q || '%')
+  with q as (
+    -- the search text is data, never a pattern: % _ and \ are escaped before ILIKE sees them
+    select regexp_replace(coalesce(p_q, ''), '([\\%_])', '\\\1', 'g') as v
+  ),
+  f as (
+    select b.* from api.book(p_store) b, q
+    where (q.v = '' or b.name ilike '%' || q.v || '%' or b.acct ilike '%' || q.v || '%'
+           or coalesce(b.msisdn, '') like '%' || q.v || '%')
       and (coalesce(p_agent, '') = '' or b.owner = upper(p_agent) or (p_agent = 'none' and b.owner = ''))
       and (coalesce(p_status, '') = '' or b.outcome = p_status or (p_status = 'none' and b.outcome = ''))
   )
@@ -234,7 +242,8 @@ begin
   if p_st not in ('', 'fu', 'cb', 'quote', 'visit', 'won', 'lost', 'na', 'nowa', 'upg', 'wrong') then
     raise exception 'Unknown outcome code' using errcode = '22023';
   end if;
-  select * into prev from public.tracking where store_id = p_store and acct = p_acct;
+  -- lock the row so two simultaneous saves cannot each build history from the same stale snapshot
+  select * into prev from public.tracking where store_id = p_store and acct = p_acct for update;
   v_hist := coalesce(prev.hist, '[]'::jsonb);
   if coalesce(prev.st, '') <> p_st then
     v_hist := api.head(jsonb_build_array(jsonb_build_object('from', coalesce(prev.st, ''), 'to', p_st,
@@ -306,6 +315,9 @@ create or replace function api.raise_claim(p_store text, p_acct text, p_customer
 returns json language plpgsql security definer set search_path = api, public as $$
 declare c public.claims;
 begin
+  if coalesce(trim(p_agent), '') = '' then
+    raise exception 'agent is required: the consultant code as it appears in the base' using errcode = '22023';
+  end if;
   if exists (select 1 from public.tracking where store_id = p_store and acct = p_acct and coalesce(agent, '') <> '') then
     raise exception 'Already assigned' using errcode = '23505';
   end if;
@@ -321,14 +333,16 @@ returns json language plpgsql security definer set search_path = api, public as 
 declare c public.claims; v_owner text;
 begin
   if p_verdict not in ('approved', 'rejected') then raise exception 'verdict must be approved or rejected' using errcode = '22023'; end if;
-  select * into c from public.claims where id = p_claim and store_id = p_store and status = 'pending';
+  -- locked: two managers deciding the same claim at once get one decision, not one each
+  select * into c from public.claims where id = p_claim and store_id = p_store and status = 'pending' for update;
   if c.id is null then raise exception 'No pending claim' using errcode = 'P0002'; end if;
-  update public.claims set status = p_verdict, decided = api.today() where id = c.id;
   if p_verdict = 'approved' then
-    v_owner := coalesce(nullif(c.agent, ''), upper(c.by_name));
+    v_owner := left(coalesce(nullif(trim(c.agent), ''), upper(trim(c.by_name))), 40);
+    if coalesce(v_owner, '') = '' then raise exception 'This claim has no consultant to assign to' using errcode = '22023'; end if;
     insert into public.tracking (store_id, acct, agent) values (p_store, c.acct, v_owner)
     on conflict (store_id, acct) do update set agent = excluded.agent;
   end if;
+  update public.claims set status = p_verdict, decided = api.today() where id = c.id and status = 'pending';
   return json_build_object('id', c.id, 'acct', c.acct, 'status', p_verdict, 'owner', v_owner);
 end $$;
 

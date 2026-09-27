@@ -135,7 +135,10 @@ export function intIn(v, min, max, dflt) {
 }
 export const isUuid = v => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(v || ''));
 export const isStoreId = v => /^s\d{1,3}$/.test(String(v || ''));
-export const cleanAcct = v => str(v, 40).replace(/[^A-Za-z0-9._-]/g, '');
+/* an account number is whatever the base file says it is (spaces, slashes and all), so it is
+   validated, never rewritten: no control characters, 1–40 characters. It only ever travels as a
+   JSON parameter to a SQL function, never inside SQL text. */
+export const cleanAcct = v => { const s = str(v, 40).trim(); return /^[^\u0000-\u001f\u007f]{1,40}$/.test(s) ? s : ''; };
 
 /* ---- crypto ---- */
 export async function sha256Hex(text) {

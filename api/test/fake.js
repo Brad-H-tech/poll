@@ -54,9 +54,10 @@ export async function fakeSupabase() {
       if (!key || key.key_hash !== p_hash) return { ok: false, reason: 'bad_key' };
       if (!key.active) return { ok: false, reason: 'revoked' };
       if (key.expires_at && key.expires_at < new Date().toISOString()) return { ok: false, reason: 'expired' };
-      const u = state.usage[key.id + day] ||= { calls: 0, writes: 0 };
+      const u = state.usage[key.id + day] ||= { calls: 0, writes: 0, denied: 0 };
       u.calls++; if (p_write) u.writes++;
-      const total = Object.values(state.usage).reduce((s, x) => s + x.calls, 0);
+      if (u.calls > key.daily_limit) u.denied++;
+      const total = Object.values(state.usage).reduce((s, x) => s + x.calls - x.denied, 0);   // served calls only, like the SQL
       return { ok: u.calls <= key.daily_limit, reason: u.calls > key.daily_limit ? 'daily_limit' : null,
         key: { id: key.id, name: key.name, store_id: key.store_id, scopes: key.scopes, daily_limit: key.daily_limit },
         calls_today: u.calls, total_today: total };
@@ -105,6 +106,7 @@ export async function fakeSupabase() {
       return p_accts.length;
     },
     raise_claim({ p_store, p_acct, p_customer, p_by, p_agent }) {
+      if (!String(p_agent || '').trim()) fail('22023', 'agent is required: the consultant code as it appears in the base');
       const t = state.tracking.find(x => x.store_id === p_store && x.acct === p_acct);
       if (t && t.agent) fail('23505', 'Already assigned', 409);
       if (state.claims.some(c => c.store_id === p_store && c.acct === p_acct && c.status === 'pending')) fail('23505', 'duplicate key', 409);
@@ -156,8 +158,15 @@ export async function fakeSupabase() {
     const headers = init.headers || {};
     const body = init.body ? JSON.parse(init.body) : null;
     state.calls.push({ method, path: u.pathname, query: Object.fromEntries(u.searchParams), headers, body });
-    const schema = headers['Accept-Profile'] || 'public';
+    // PostgREST reads Accept-Profile for GET and Content-Profile for writes
+    const schema = (method === 'GET' ? headers['Accept-Profile'] : headers['Content-Profile']) || 'public';
     const isService = headers.Authorization === 'Bearer service';
+    // the real columns of the api schema (001_api.sql): an unknown key in an insert is a PGRST204
+    const COLUMNS = {
+      keys: ['id', 'name', 'key_hash', 'store_id', 'scopes', 'daily_limit', 'active', 'expires_at', 'created_by', 'created_at', 'last_used_at'],
+      usage: ['key_id', 'day', 'calls', 'writes', 'denied'],
+      audit: ['id', 'at', 'key_id', 'actor', 'method', 'path', 'store_id', 'status', 'ms', 'ip', 'detail', 'request_id'],
+    };
 
     /* ---- auth server ---- */
     if (u.pathname === '/auth/v1/user') {
@@ -215,12 +224,22 @@ export async function fakeSupabase() {
       };
       if (method === 'GET') {
         let out = rows.filter(match);
+        const order = u.searchParams.get('order');
+        if (order) {
+          const [col, dir] = order.split('.');
+          out = [...out].sort((a, b) => (a[col] < b[col] ? -1 : a[col] > b[col] ? 1 : 0) * (dir === 'desc' ? -1 : 1));
+        }
         const lim = Number(u.searchParams.get('limit')); if (lim) out = out.slice(0, lim);
         return json(200, out.map(project));
       }
       if (method === 'PATCH') { const hit = rows.filter(match); hit.forEach(r => Object.assign(r, body)); return json(200, hit.map(project)); }
       if (method === 'POST') {
         const list = Array.isArray(body) ? body : [body];
+        if (COLUMNS[table]) {
+          const bad = list.flatMap(r => Object.keys(r)).find(k => !COLUMNS[table].includes(k));
+          if (bad) return json(400, { code: 'PGRST204', message: `Could not find the '${bad}' column of '${table}' in the schema cache` });
+        }
+        if (table === 'audit') list.forEach(r => { r.at = r.at || new Date(Date.now() + rows.length).toISOString(); });
         if (table === 'profiles' && list.some(r => rows.some(x => x.username === r.username))) return json(409, { code: '23505', message: 'duplicate key' });
         rows.push(...list);
         return headers.Prefer === 'return=minimal' ? new Response('', { status: 201 }) : json(201, list);

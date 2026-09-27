@@ -26,8 +26,10 @@
   });
 
   const emailFor = u => String(u || '').trim().toLowerCase() + '@' + EMAIL_DOMAIN;
-  const today = () => new Date().toISOString().slice(0, 10);
-  const stamp = () => new Date().toISOString().slice(0, 16).replace('T', ' ');
+  // South African dates, the same clock the API uses (a UTC date is a day behind until 02:00)
+  const TZ = 'Africa/Johannesburg';
+  const today = () => new Date().toLocaleDateString('en-CA', { timeZone: TZ });
+  const stamp = () => today() + ' ' + new Date().toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
   const J = (o, s) => new Response(JSON.stringify(o), {
     status: s || 200, headers: { 'Content-Type': 'application/json' },
   });
@@ -87,7 +89,8 @@
     if (actId && !rowsById[actId]) need.push(actId);           // nothing flagged active: the newest stands in
     if (actIdx > 0) need.push(list[actIdx - 1].id);              // the previous base, for the KPI deltas
     if (need.length) {
-      const { data } = await sb.from('bases').select('id,rows').in('id', need);
+      const { data, error } = await sb.from('bases').select('id,rows').in('id', need);
+      if (error) throw error;                                       // never pretend the active base is empty
       (data || []).forEach(b => { rowsById[b.id] = b.rows || []; });
     }
     cache.bases = list.map(b => {
@@ -227,11 +230,13 @@
       if (!base) return ERR('Load a base first');
       const acct = 'WI' + Math.random().toString(36).slice(2, 10).toUpperCase();
       const email = /@/.test(String(body.email || '')) ? String(body.email).slice(0, 120).trim() : '';
-      const rows = base.rows.concat([[ME.agent || '', name, '', acct, ms, '', today(),
-        'Walk-in / manual lead', 0, 'New / Add Sim', '', 'Consumer', '', email]]);
-      const { error } = await sb.from('bases').update({ rows }).eq('id', base.id);
+      const row = [ME.agent || '', name, '', acct, ms, '', today(),
+        'Walk-in / manual lead', 0, 'New / Add Sim', '', 'Consumer', '', email];
+      // appended server-side by public.add_walkin: consultants may add a customer but may
+      // never rewrite a base, and this never touches rows the phone has not downloaded
+      const { error } = await sb.rpc('add_walkin', { p_store: STORE, p_row: row });
       if (error) return ERR(error);
-      base.rows = rows;
+      if (!base.lazy) base.rows = base.rows.concat([row]);
       const note = String(body.note || '').slice(0, 5000);
       if (note) await saveTracking(acct, { note, by: ME.name, at: today() });
       emit('bases', {});
@@ -273,13 +278,17 @@
         .eq('store_id', STORE).eq('acct', acct).eq('status', 'pending').limit(1);
       if (!rows || !rows.length) return ERR('No pending claim', 404);
       const cl = rows[0];
-      const { error } = await sb.from('claims').update({ status: verdict, decided: today() }).eq('id', cl.id);
-      if (error) return ERR(error);
       if (verdict === 'approved') {
-        const agent = cl.agent || cl.by_name;
-        await sb.from('tracking').upsert({ store_id: STORE, acct, agent }, { onConflict: 'store_id,acct' });
+        // hand the customer over first; only then mark the claim decided, so a failed
+        // hand-over never leaves an "approved" claim with no owner
+        const agent = String(cl.agent || cl.by_name || '').toUpperCase().trim().slice(0, 40);
+        if (!agent) return ERR('This claim has no consultant to assign to');
+        const { error: ae } = await sb.from('tracking').upsert({ store_id: STORE, acct, agent }, { onConflict: 'store_id,acct' });
+        if (ae) return ERR(ae);
         cache.assign[acct] = agent;
       }
+      const { error } = await sb.from('claims').update({ status: verdict, decided: today() }).eq('id', cl.id).eq('status', 'pending');
+      if (error) return ERR(error);
       emit('claims', {}); emit('bases', {});
       return J({ ok: true });
     }],
@@ -397,7 +406,7 @@
           store_id: STORE, label: String(body.label || 'Uploaded base').slice(0, 40),
           rows, active: true,
         }).select('id').single();
-        if (error) return ERR(error);
+        if (error) return ERR(/bases_one_active/.test(error.message || '') ? 'Someone else just loaded a base — refresh and try again' : error);
         cache.bases.push({ id: data.id, label: String(body.label || 'Uploaded base').slice(0, 40), rows });
         cache.active = data.id; added = true;
         emit('bases', {});
@@ -409,7 +418,7 @@
       if (!isMgr()) return ERR('Manager only', 403);
       await sb.from('bases').update({ active: false }).eq('store_id', STORE);
       const { error } = await sb.from('bases').update({ active: true }).eq('id', m[1]);
-      if (error) return ERR(error);
+      if (error) return ERR(/bases_one_active/.test(error.message || '') ? 'Someone else just switched bases — refresh and try again' : error);
       cache.active = m[1];
       emit('bases', {});
       return J({ ok: true });
@@ -461,7 +470,9 @@
           });
         } catch (e) { return ERR('Could not reach the Chase API', 502); }
         const j = await r.json().catch(() => ({}));
-        if (!r.ok) return ERR((j.error && j.error.message) || 'Could not create the login', r.status);
+        // never relay a 401: the app treats 401 as "you are signed out", but here it means
+        // the API could not check the token (or the API is down), not that this session ended
+        if (!r.ok) return ERR((j.error && j.error.message) || 'Could not create the login', r.status === 401 ? 502 : r.status);
         emit('team', {});
         return J({ ok: true });
       }

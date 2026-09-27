@@ -1258,8 +1258,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   });
 
   const emailFor = u => String(u || '').trim().toLowerCase() + '@' + EMAIL_DOMAIN;
-  const today = () => new Date().toISOString().slice(0, 10);
-  const stamp = () => new Date().toISOString().slice(0, 16).replace('T', ' ');
+  // South African dates, the same clock the API uses (a UTC date is a day behind until 02:00)
+  const TZ = 'Africa/Johannesburg';
+  const today = () => new Date().toLocaleDateString('en-CA', { timeZone: TZ });
+  const stamp = () => today() + ' ' + new Date().toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
   const J = (o, s) => new Response(JSON.stringify(o), {
     status: s || 200, headers: { 'Content-Type': 'application/json' },
   });
@@ -1319,7 +1321,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     if (actId && !rowsById[actId]) need.push(actId);           // nothing flagged active: the newest stands in
     if (actIdx > 0) need.push(list[actIdx - 1].id);              // the previous base, for the KPI deltas
     if (need.length) {
-      const { data } = await sb.from('bases').select('id,rows').in('id', need);
+      const { data, error } = await sb.from('bases').select('id,rows').in('id', need);
+      if (error) throw error;                                       // never pretend the active base is empty
       (data || []).forEach(b => { rowsById[b.id] = b.rows || []; });
     }
     cache.bases = list.map(b => {
@@ -1459,11 +1462,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if (!base) return ERR('Load a base first');
       const acct = 'WI' + Math.random().toString(36).slice(2, 10).toUpperCase();
       const email = /@/.test(String(body.email || '')) ? String(body.email).slice(0, 120).trim() : '';
-      const rows = base.rows.concat([[ME.agent || '', name, '', acct, ms, '', today(),
-        'Walk-in / manual lead', 0, 'New / Add Sim', '', 'Consumer', '', email]]);
-      const { error } = await sb.from('bases').update({ rows }).eq('id', base.id);
+      const row = [ME.agent || '', name, '', acct, ms, '', today(),
+        'Walk-in / manual lead', 0, 'New / Add Sim', '', 'Consumer', '', email];
+      // appended server-side by public.add_walkin: consultants may add a customer but may
+      // never rewrite a base, and this never touches rows the phone has not downloaded
+      const { error } = await sb.rpc('add_walkin', { p_store: STORE, p_row: row });
       if (error) return ERR(error);
-      base.rows = rows;
+      if (!base.lazy) base.rows = base.rows.concat([row]);
       const note = String(body.note || '').slice(0, 5000);
       if (note) await saveTracking(acct, { note, by: ME.name, at: today() });
       emit('bases', {});
@@ -1474,7 +1479,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if (!isMgr()) return ERR('Manager only', 403);
       const key = String(body.key || '').replace(/[^a-z_]/gi, '');
       if (!['wa_tpl', 'quotes', 'report_to'].includes(key)) return ERR('Unknown setting');
-      const patch = {}; patch[key] = String(body.value || '').slice(0, 8000);
+      const patch = {}; patch[key] = String(body.value || '').slice(0, key === 'report_to' ? 40 : 8000);
       const { error } = await sb.from('stores').update(patch).eq('id', STORE);
       if (error) return ERR(error);
       cache.settings[key] = patch[key];
@@ -1505,13 +1510,17 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         .eq('store_id', STORE).eq('acct', acct).eq('status', 'pending').limit(1);
       if (!rows || !rows.length) return ERR('No pending claim', 404);
       const cl = rows[0];
-      const { error } = await sb.from('claims').update({ status: verdict, decided: today() }).eq('id', cl.id);
-      if (error) return ERR(error);
       if (verdict === 'approved') {
-        const agent = cl.agent || cl.by_name;
-        await sb.from('tracking').upsert({ store_id: STORE, acct, agent }, { onConflict: 'store_id,acct' });
+        // hand the customer over first; only then mark the claim decided, so a failed
+        // hand-over never leaves an "approved" claim with no owner
+        const agent = String(cl.agent || cl.by_name || '').toUpperCase().trim().slice(0, 40);
+        if (!agent) return ERR('This claim has no consultant to assign to');
+        const { error: ae } = await sb.from('tracking').upsert({ store_id: STORE, acct, agent }, { onConflict: 'store_id,acct' });
+        if (ae) return ERR(ae);
         cache.assign[acct] = agent;
       }
+      const { error } = await sb.from('claims').update({ status: verdict, decided: today() }).eq('id', cl.id).eq('status', 'pending');
+      if (error) return ERR(error);
       emit('claims', {}); emit('bases', {});
       return J({ ok: true });
     }],
@@ -1629,7 +1638,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           store_id: STORE, label: String(body.label || 'Uploaded base').slice(0, 40),
           rows, active: true,
         }).select('id').single();
-        if (error) return ERR(error);
+        if (error) return ERR(/bases_one_active/.test(error.message || '') ? 'Someone else just loaded a base — refresh and try again' : error);
         cache.bases.push({ id: data.id, label: String(body.label || 'Uploaded base').slice(0, 40), rows });
         cache.active = data.id; added = true;
         emit('bases', {});
@@ -1641,7 +1650,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       if (!isMgr()) return ERR('Manager only', 403);
       await sb.from('bases').update({ active: false }).eq('store_id', STORE);
       const { error } = await sb.from('bases').update({ active: true }).eq('id', m[1]);
-      if (error) return ERR(error);
+      if (error) return ERR(/bases_one_active/.test(error.message || '') ? 'Someone else just switched bases — refresh and try again' : error);
       cache.active = m[1];
       emit('bases', {});
       return J({ ok: true });
@@ -1693,7 +1702,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
           });
         } catch (e) { return ERR('Could not reach the Chase API', 502); }
         const j = await r.json().catch(() => ({}));
-        if (!r.ok) return ERR((j.error && j.error.message) || 'Could not create the login', r.status);
+        // never relay a 401: the app treats 401 as "you are signed out", but here it means
+        // the API could not check the token (or the API is down), not that this session ended
+        if (!r.ok) return ERR((j.error && j.error.message) || 'Could not create the login', r.status === 401 ? 502 : r.status);
         emit('team', {});
         return J({ ok: true });
       }
@@ -2588,7 +2599,7 @@ const SVG_TEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 const SVG_WA='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.7-.1a11 11 0 0 1-5.6-4.9c-.4-.7-.7-1.5-.7-2.2 0-.6.3-1.2.7-1.5.2-.2.4-.2.5-.2h.4c.2 0 .3 0 .5.4l.7 1.6c0 .2 0 .3-.1.4l-.3.4c-.2.1-.3.3-.1.5a8 8 0 0 0 3 2.6c.3.1.4.1.6-.1l.6-.8c.2-.2.3-.1.5-.1l1.6.8c.2.1.3.2.4.3 0 .2 0 .8-.2 1.3Z"/></svg>';
 const SVG_MAIL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>';
 const digits=s=>String(s||'').replace(/[^0-9]/g,'');
-const TODAY=()=>new Date().toISOString().slice(0,10);
+const TODAY=()=>new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Johannesburg'});
 function mailBtn(c,mini){
   const e=String(c.email||'').trim();
   if(e){

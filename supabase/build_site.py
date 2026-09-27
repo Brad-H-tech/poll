@@ -20,15 +20,20 @@ SBJS = os.path.join(ROOT, 'supabase', 'vendor', 'supabase-js.umd.js')
 SB_URL = 'https://dzmqogwggompkwasiglq.supabase.co'
 SB_KEY = 'sb_publishable_fu6yXakyx-Egk6Jcb_9BMg_cwh2dZTX'   # publishable: safe in the page, RLS does the guarding
 
-# The Chase API (api/). Blank until it is deployed; then put its address here, e.g.
-# 'https://chase-api.<your-subdomain>.workers.dev'. With it set, the Team tab creates logins
-# through the API and Supabase public sign-ups can be turned OFF.
-API_URL = os.environ.get('CHASE_API_URL', '')
+# The Chase API (api/). Blank until it is deployed; then put its address here (committed, so CI
+# rebuilds the same site), e.g. 'https://chase-api.<your-subdomain>.workers.dev'. With it set, the
+# Team tab creates logins through the API and Supabase public sign-ups can be turned OFF.
+API_URL = ''
 
 mock = '--mock' in sys.argv
 if mock:
     OUT = os.path.join(os.environ.get('CHASE_BUILD_DIR') or os.path.join(ROOT, '.build'), 'site-mock')
     API_URL = os.environ.get('CHASE_API_URL', 'https://chase-api.mock')   # the browser test intercepts this
+
+if API_URL:
+    u = urlsplit(API_URL)
+    assert u.scheme == 'https' and u.netloc and not u.path.strip('/'), \
+        'API_URL must be an https origin like https://chase-api.x.workers.dev (got %r)' % API_URL
 
 def read(p):
     with open(p, encoding='utf-8') as f:

@@ -180,6 +180,13 @@ describe('limits and budgets (the credits)', () => {
     const r = await call('GET', '/v1/me', { key: HEAD });
     assert.equal(r.status, 503); assert.equal(r.json.error.code, 'budget');
   });
+  test('a key stuck at its own limit gets 429s and never pushes the others over the global cap', async () => {
+    await fresh({ CHASE_DAILY_CAP: '4' });
+    for (let i = 0; i < 6; i++) await call('GET', '/v1/me', { key: TINY });      // 2 served, 4 denied
+    const others = await call('GET', '/v1/me', { key: READ });
+    assert.equal(others.status, 200, 'denied calls do not count towards the global figure');
+    assert.equal((await call('GET', '/v1/me', { key: TINY })).status, 429, 'and the stuck key still gets 429, not 503');
+  });
   test('burst rate limit per caller → 429, decided BEFORE the database is asked (no budget burned)', async () => {
     await fresh({ RATE_PER_MINUTE: '3' });
     for (let i = 0; i < 3; i++) assert.equal((await call('GET', '/v1/me', { key: READ })).status, 200);
@@ -217,15 +224,15 @@ describe('limits and budgets (the credits)', () => {
     await fresh({ RL: { limit: async () => ({ success: false }) } });
     assert.equal((await call('GET', '/v1/me', { key: READ })).status, 429);
   });
-  test('body size caps: 256 KB normally, 8 MB for base uploads', async () => {
+  test('body size caps: 256 KB normally, 1 MB and 5 000 rows for base uploads', async () => {
     await fresh();
     const big = 'x'.repeat(300 * 1024);
     const r = await call('PUT', '/v1/customers/SB10251/outcome', { key: WRITE, body: { outcome: 'cb', note: big } });
     assert.equal(r.status, 413);
-    const rows = Array.from({ length: 20000 }, (_, i) => ['A', 'n', 's', 'AC' + i, '2782' + i]);   // ~600 KB, allowed on /v1/bases
-    const ok = await call('POST', '/v1/bases', { key: HEAD, body: { store: 's1', label: 'Big', rows } });
-    assert.equal(ok.status, 201); assert.equal(ok.json.rows, 20000);
-    const tooMany = await call('POST', '/v1/bases', { key: HEAD, body: { store: 's1', rows: Array.from({ length: 50001 }, () => ['a']) } });
+    const rows = Array.from({ length: 4000 }, (_, i) => ['A', 'n', 's', 'AC' + i, '2782' + i, '', '', 'P', 100]);   // ~150 KB, over 256 KB is fine here
+    const ok = await call('POST', '/v1/bases', { key: HEAD, body: { store: 's1', label: 'Big', rows: rows.concat(rows.slice(0, 500).map(r => [...r, 'x'.repeat(300)])) } });
+    assert.equal(ok.status, 201); assert.equal(ok.json.rows, 4500);
+    const tooMany = await call('POST', '/v1/bases', { key: HEAD, body: { store: 's1', rows: Array.from({ length: 5001 }, () => ['a']) } });
     assert.equal(tooMany.status, 413);
   });
   test('customer pages are capped at 200 and offsets clamped', async () => {
@@ -258,10 +265,12 @@ describe('input validation', () => {
     assert.equal(r.status, 400);
     assert.ok(!fake.state.calls.some(c => /set_outcome|log_activity/.test(c.path)), 'database never called');
   });
-  test('account numbers are sanitised and unknown customers are 404', async () => {
+  test('account numbers travel exactly as the base spells them (as a parameter, never as SQL), and unknown ones are 404', async () => {
     const r = await call('GET', '/v1/customers/SB10251%27%20OR%201=1', { key: READ });
     assert.equal(r.status, 404);
-    assert.equal(fake.state.calls.find(c => c.path.endsWith('/rpc/customer')).body.p_acct, 'SB10251OR11');
+    assert.equal(fake.state.calls.find(c => c.path.endsWith('/rpc/customer')).body.p_acct, "SB10251' OR 1=1");
+    assert.equal((await call('GET', '/v1/customers/%01bad', { key: READ })).status, 400, 'control characters are refused');
+    assert.equal((await call('GET', '/v1/customers/' + encodeURIComponent('SB 10253'), { key: READ })).status, 404, 'a space is a legal character');
   });
   test('ids must be UUIDs', async () => {
     assert.equal((await call('POST', '/v1/claims/not-a-uuid/decide', { key: MGR, body: { verdict: 'approved' } })).status, 400);
@@ -308,11 +317,14 @@ describe('the business calls', () => {
     const r = await call('POST', '/v1/customers', { key: WRITE, body: { name: 'New Person', msisdn: '0821234567' } });
     assert.equal(r.status, 201); assert.match(r.json.acct, /^WI/);
   });
-  test('claims: raise, duplicate → 409, decide (manage) → owner set', async () => {
-    const dup = await call('POST', '/v1/claims', { key: WRITE, body: { acct: 'SB10252', customer: 'Bongani' } });
+  test('claims: a key must name the consultant; raise, duplicate → 409, decide (manage) → owner set', async () => {
+    const noAgent = await call('POST', '/v1/claims', { key: WRITE, body: { acct: 'SB10252', customer: 'Bongani' } });
+    assert.equal(noAgent.status, 400); assert.match(noAgent.json.error.message, /agent is required/);
+    const dup = await call('POST', '/v1/claims', { key: WRITE, body: { acct: 'SB10252', customer: 'Bongani', agent: 'sipho' } });
     assert.equal(dup.status, 409);
-    const taken = await call('POST', '/v1/claims', { key: WRITE, body: { acct: 'SB10251' } });
+    const taken = await call('POST', '/v1/claims', { key: WRITE, body: { acct: 'SB10251', agent: 'SIPHO' } });
     assert.equal(taken.status, 409); assert.match(taken.json.error.message, /assigned/i);
+    assert.equal(fake.state.calls.filter(c => c.path.endsWith('/rpc/raise_claim')).pop().body.p_agent, 'SIPHO');
     const list = await call('GET', '/v1/claims?status=pending', { key: READ });
     assert.equal(list.json.length, 1);
     const d = await call('POST', '/v1/claims/11111111-1111-4111-8111-111111111111/decide', { key: MGR, body: { verdict: 'approved' } });
@@ -332,7 +344,7 @@ describe('the business calls', () => {
   });
   test('bases: metadata only, then paged rows, then a new upload becomes active', async () => {
     const meta = await call('GET', '/v1/bases', { key: READ });
-    assert.equal(meta.json[0].rows, 2); assert.ok(!('rows' in meta.json[0]) || typeof meta.json[0].rows === 'number');
+    assert.equal(meta.json[0].rows, 2, 'a count, not the rows themselves');
     const page = await call('GET', '/v1/bases/22222222-2222-4222-8222-222222222222/rows?limit=1', { key: READ });
     assert.equal(page.json.total, 2); assert.equal(page.json.rows.length, 1);
     const up = await call('POST', '/v1/bases', { key: MGR, body: { label: 'Oct', rows: [['A', 'B', 'C', 'X1']] } });
@@ -379,6 +391,9 @@ describe('keys, usage, audit, users', () => {
     assert.equal((await call('GET', '/v1/me', { key: created.json.key })).json.error.code, 'revoked');
     const self = await call('DELETE', '/v1/keys/' + fake.state.keys[0].id, { key: HEAD });
     assert.equal(self.status, 400);
+    const shouted = await call('DELETE', '/v1/keys/' + fake.state.keys[0].id.toUpperCase(), { key: HEAD });
+    assert.equal(shouted.status, 400, 'an upper-cased uuid is the same key');
+    assert.equal(fake.state.keys[0].active, true);
   });
   test('usage: a key sees its own days; only a head-office manage key sees every key', async () => {
     await call('GET', '/v1/me', { key: READ });
@@ -405,6 +420,12 @@ describe('keys, usage, audit, users', () => {
     assert.equal(r.status, 200);
     assert.ok(r.json.some(a => a.path === '/v1/customers/SB10252/outcome' && a.status === 200));
     assert.ok(r.json.some(a => a.status === 403 && /limited to store/.test(a.detail)));
+    assert.equal(r.json[0].status, 403, 'newest first: the refusal came after the write');
+    assert.ok(r.json.every(a => a.request_id), 'every row carries the request id');
+    // a refusal before authentication still names the key that was tried
+    await call('GET', '/v1/me', { key: keyString(2).replace(/\.S3/, '.X3') });
+    const bad = fake.state.audit.find(a => a.status === 401);
+    assert.equal(bad.key_id, fake.state.keys[1].id);
     assert.equal(fake.state.calls.filter(c => c.path === '/rest/v1/audit' && c.method === 'GET').pop().query.store_id, 'eq.s1');
     assert.equal((await call('GET', '/v1/audit', { key: WRITE })).status, 403);
   });

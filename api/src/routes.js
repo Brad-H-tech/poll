@@ -161,13 +161,18 @@ export const ROUTES = [
       ...(c.query.get('status') ? { status: 'eq.' + oneOf(c.query.get('status'), ['pending', 'approved', 'rejected'], 'status') } : {}),
     })),
 
-  route('POST', '/v1/claims', { scope: 'write', status: 201, tag: 'Claims', summary: 'Ask for a customer (consultant)',
-    params: [S.storeParam], body: { acct: 'SB10258', customer: 'Thandi Ndlovu' },
-    example: { id: 'uuid', acct: 'SB10258', status: 'pending' } },
-    async c => reply(201, await c.db.rpc('raise_claim', {
-      p_store: c.store, p_acct: cleanAcct(requireStr(c.body.acct, 40, 'acct')),
-      p_customer: str(c.body.customer, 60), p_by: c.actor.name, p_agent: c.actor.agent || '',
-    }))),
+  route('POST', '/v1/claims', { scope: 'write', status: 201, tag: 'Claims', summary: 'Ask for a customer on behalf of a consultant. agent = their code as it appears in the base.',
+    params: [S.storeParam], body: { acct: 'SB10258', customer: 'Thandi Ndlovu', agent: 'SIPHO' },
+    example: { id: 'uuid', acct: 'SB10258', agent: 'SIPHO', status: 'pending' } },
+    async c => {
+      const acct = cleanAcct(requireStr(c.body.acct, 40, 'acct'));
+      if (!acct) throw new HttpError(400, 'invalid', 'Bad account number');
+      const agent = (str(c.body.agent, 40).toUpperCase().trim()) || c.actor.agent || '';
+      if (!agent) throw new HttpError(400, 'missing', 'agent is required: the consultant code as it appears in the base (a key has no consultant of its own)');
+      return reply(201, await c.db.rpc('raise_claim', {
+        p_store: c.store, p_acct: acct, p_customer: str(c.body.customer, 60), p_by: c.actor.name, p_agent: agent,
+      }));
+    }),
 
   route('POST', '/v1/claims/:id/decide', { scope: 'manage', tag: 'Claims', summary: 'Approve or reject a claim (manager); approving makes them the owner',
     params: [S.storeParam], body: { verdict: 'approved' }, example: { id: 'uuid', acct: 'SB10258', status: 'approved', owner: 'SIPHO' } },
@@ -208,13 +213,15 @@ export const ROUTES = [
       return r;
     }),
 
-  route('POST', '/v1/bases', { scope: 'manage', status: 201, tag: 'Bases', summary: 'Load a new monthly base (manager). Becomes the active base.', maxBody: 8 * MB,
+  route('POST', '/v1/bases', { scope: 'manage', status: 201, tag: 'Bases', maxBody: 1 * MB,
+    summary: 'Load a new monthly base (manager). Becomes the active base. Up to 5 000 rows / 1 MB here; bigger files are loaded in the app, which talks to Supabase directly.',
     params: [S.storeParam], body: { label: 'Upgrade base · Oct 2026', rows: [['SIPHO', 'Thandi', 'Ndlovu', 'SB10251', '27821234567', 'Made For Me M', '2024-10-01', 'iPhone 15', 599, 'Upgrade', '', 'Consumer', 'R599 p/m', '']] },
     example: { id: 'uuid', rows: 382 } },
     async c => {
       const rows = c.body.rows;
       if (!Array.isArray(rows) || !rows.length) throw new HttpError(400, 'missing', 'rows must be a non-empty array');
-      if (rows.length > 50000) throw new HttpError(413, 'too_large', 'At most 50 000 rows per base');
+      // the worker parses this in its own CPU budget: keep API uploads modest, the app handles the big monthly files
+      if (rows.length > 5000) throw new HttpError(413, 'too_large', 'At most 5 000 rows per base through the API; load bigger bases in the app');
       if (!rows.every(Array.isArray)) throw new HttpError(400, 'invalid', 'Every row must be an array of cells');
       if (!rows.every(r => r.length <= 40 && r.every(isScalar))) throw new HttpError(400, 'invalid', 'Cells must be text, numbers, true/false or null (max 40 per row)');
       return reply(201, await c.db.rpc('load_base', { p_store: c.store, p_label: str(c.body.label, 40), p_rows: rows }));
@@ -274,8 +281,9 @@ export const ROUTES = [
     example: { id: 'uuid', active: false } },
     async c => {
       if (!isUuid(c.params.id)) throw new HttpError(400, 'invalid', 'Bad key id');
-      if (c.params.id === c.actor.key_id) throw new HttpError(400, 'invalid', 'Use a different key to revoke this one');
-      const rows = await c.db.update('keys', { id: 'eq.' + c.params.id, select: 'id,active',
+      const id = c.params.id.toLowerCase();                   // uuids compare case-insensitively in Postgres
+      if (id === String(c.actor.key_id).toLowerCase()) throw new HttpError(400, 'invalid', 'Use a different key to revoke this one');
+      const rows = await c.db.update('keys', { id: 'eq.' + id, select: 'id,active',
         ...(c.actor.store_id ? { store_id: 'eq.' + c.actor.store_id } : {}) }, { active: false }, 'api');
       if (!rows.length) throw new HttpError(404, 'not_found', 'No such key');
       return rows[0];
@@ -299,7 +307,8 @@ export const ROUTES = [
       if (password.length < 10 || password.length > 128) throw new HttpError(400, 'invalid', 'password must be 10–128 characters');
       const role = oneOf(c.body.role || 'consultant', ['consultant', 'manager'], 'role');
       const agent = str(c.body.agent, 40).toUpperCase().trim();
-      const email = username + '@' + (c.env.CHASE_EMAIL_DOMAIN || 'chase.local');
+      // the app signs people in as <username>@chase.local (supabase/chase-supabase.js); the two must agree
+      const email = username + '@chase.local';
       let user;
       try { user = await c.db.adminCreateUser(email, password); }
       catch (e) {

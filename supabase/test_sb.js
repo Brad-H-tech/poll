@@ -86,6 +86,12 @@ const SEED = {
   ok(lazy.length === 3 && lazy[2].rows > 300 && lazy[1].rows === 60 && lazy[0].rows === 0 && lazy[0].lazy && lazy[0].count === 30,
      'older base listed without downloading its rows: ' + JSON.stringify(lazy));
   ok(await p.$eval('#basePills', e => /30 rows · tap to load/.test(e.textContent)), 'lazy base pill shows its row count');
+  // and at the wire: every bases query that asked for `rows` was limited to the active base or to ≤ 2 ids
+  const wire = await p.evaluate(() => (window.__mockQueries || []).filter(q => q.table === 'bases' && q.op === 'select')
+    .map(q => ({ cols: q.cols, filters: q.filters.map(f => f.op === 'in' ? 'in:' + f.vals.length : f.col + '=' + f.val) })));
+  const rowQueries = wire.filter(q => q.cols === '*' || q.cols.split(',').includes('rows'));
+  ok(rowQueries.length > 0 && rowQueries.every(q => q.filters.includes('active=true') || q.filters.some(f => /^in:[12]$/.test(f))),
+     'no bases query downloaded rows for more than the active base and one before it: ' + JSON.stringify(wire));
   ok(await p.$eval('#whoami', e => /Bradley/.test(e.textContent) && /manager/.test(e.textContent)), 'signed in as manager');
 
   // ---- set an outcome; it must persist to the database with history

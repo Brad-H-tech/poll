@@ -24,14 +24,15 @@ not. 6 stores × 10 consultants × 20 opens a day × 400 rows is fine. 6 stores 
 | **Per-minute limits** | `RATE_PER_MINUTE` (120) per caller, `RATE_IP_PER_MINUTE` (300) per address, plus the Cloudflare rate-limit binding | Bursts are cut before they reach the database |
 | **Pages, never blobs** | `p_limit` ≤ 200 customers, ≤ 500 base rows; `GET /v1/bases` returns counts not rows | The biggest object in the system is never sent whole |
 | **Work in the database** | every business route = one `api.*` function | One round trip per call; the worker stays under its CPU budget |
-| **Input caps** | 256 KB bodies (8 MB for a base), 50 000 rows, text lengths | Nobody can grow the database by accident |
+| **Input caps** | 256 KB bodies (1 MB and 5 000 rows for a base through the API), text lengths; the database itself caps any base at 50 000 rows / 25 MB | Nobody can grow the database by accident, and the Worker stays inside its CPU budget |
+| **A key at its limit hurts only itself** | denied calls are not counted towards the global cap, and a key's 429 is decided before the global 503 | One runaway spreadsheet cannot switch the API off for everyone |
 | **Database growth caps** | CHECK constraints: notes ≤ 5 000 chars, activities ≤ 30, history ≤ 25, base ≤ 25 MB | Even a bypass of the worker cannot inflate rows |
 | **Audit is cheap** | one small insert per write or refusal of an identified caller, fire-and-forget; reads and credential-less requests are not audited; rows older than 18 months are pruned nightly | Audit does not double the write load and cannot be inflated by strangers |
 | **Throttle before the database** | per-key and per-IP limits are decided from the token itself, before `api.authenticate` runs | A flood of 429s costs Supabase nothing and burns no budget |
 | **Metering is free** | usage counter rides on the authentication query | No extra round trip |
 | **No dependencies** | `api/package.json` has none | Nothing to pay for, nothing to update |
 
-Watch it: `GET /v1/usage` (your key) · `GET /v1/usage?all=1` (every key, manage scope) ·
+Watch it: `GET /v1/usage` (your key) · `GET /v1/usage?all=1` (every key; head-office manage key) ·
 Supabase → Reports → API / Database for egress and size.
 
 ## 3. What the app does about it (after this change)
@@ -63,7 +64,7 @@ Working in sessions like this one costs tokens rather than rands. The habits tha
 efficient, and are worth keeping:
 
 - Tests before production: the migration was run inside a rolled-back transaction on the live
-  project and the app driven through 30 checks in a real browser *before* anything was pushed —
+  project and the app driven through the full browser suite *before* anything was pushed —
   cheaper than a broken morning for the team.
 - Generated docs (`/v1/docs`, `openapi.json`) instead of hand-written ones that need re-doing.
 - No new frameworks or packages to learn, update or pay for.
@@ -78,5 +79,5 @@ efficient, and are worth keeping:
 | Per IP per minute | 300 | `RATE_IP_PER_MINUTE` |
 | Customer page | 50, max 200 | `?limit=` |
 | Base rows page | 200, max 500 | `?limit=` |
-| Body size | 256 KB / 8 MB (bases) | `route.maxBody` |
-| Base size | 50 000 rows / 25 MB | `bases_shape_chk` |
+| Body size | 256 KB / 1 MB (bases via API) | `route.maxBody` |
+| Base size | 5 000 rows via API; 50 000 rows / 25 MB in the database | route check; `bases_shape_chk` |

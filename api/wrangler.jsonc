@@ -20,8 +20,7 @@
     "CHASE_DAILY_CAP": "20000",
     // per caller, per minute (in-memory floor; the RL binding below is the global ceiling)
     "RATE_PER_MINUTE": "120",
-    "RATE_IP_PER_MINUTE": "300",
-    "CHASE_EMAIL_DOMAIN": "chase.local"
+    "RATE_IP_PER_MINUTE": "300"
   },
   // Workers Rate Limiting binding: 120 requests per caller per 60 s, enforced across all edge locations.
   "ratelimits": [

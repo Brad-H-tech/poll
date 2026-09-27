@@ -39,7 +39,7 @@
     constructor(table) { this.table = table; this.filters = []; this._op = null; this._payload = null;
                          this._one = false; this._maybe = false; this._orderBy = null; this._asc = true;
                          this._limit = null; this._returning = false; }
-    select(_cols) { if (!this._op) this._op = 'select'; else this._returning = true; return this; }
+    select(cols) { if (!this._op) { this._op = 'select'; this._cols = cols; } else this._returning = true; return this; }
     insert(rows) { this._op = 'insert'; this._payload = Array.isArray(rows) ? rows : [rows]; return this; }
     update(patch) { this._op = 'update'; this._payload = patch; return this; }
     upsert(rows, opts) { this._op = 'upsert'; this._payload = Array.isArray(rows) ? rows : [rows];
@@ -56,9 +56,13 @@
     _run() {
       sync();
       const rows = T(this.table);
+      // every query is recorded so the browser test can assert what went over the wire
+      (window.__mockQueries = window.__mockQueries || []).push({ table: this.table, op: this._op, cols: this._cols || '*', filters: clone(this.filters) });
       try {
         if (this._op === 'select') {
-          let out = rows.filter(r => match(r, this.filters)).map(clone);
+          const cols = this._cols && this._cols !== '*' ? this._cols.split(',').map(s => s.trim()) : null;
+          const project = r => cols ? Object.fromEntries(cols.filter(c => c in r).map(c => [c, r[c]])) : r;
+          let out = rows.filter(r => match(r, this.filters)).map(r => project(clone(r)));
           if (this._orderBy) out.sort((a, b) => {
             const x = a[this._orderBy], y = b[this._orderBy];
             return (x < y ? -1 : x > y ? 1 : 0) * (this._asc ? 1 : -1);
@@ -175,6 +179,20 @@
       const o = (opts && opts.auth) || {};
       return {
         from: t => new Q(t),
+        // the database functions the adapter calls (see supabase/schema.sql)
+        rpc(name, args) {
+          return Promise.resolve().then(() => {
+            sync();
+            if (name === 'add_walkin') {
+              const base = T('bases').filter(b => b.store_id === args.p_store && b.active).pop();
+              if (!base) return { data: null, error: { message: 'Load a base first' } };
+              base.rows.push(clone(args.p_row)); write();
+              emitChange('bases', 'UPDATE', base);
+              return { data: args.p_row[3], error: null };
+            }
+            return { data: null, error: { message: 'mock: unknown function ' + name } };
+          });
+        },
         auth: makeAuth(o.persistSession !== false, o.storageKey || 'mock-auth'),
         channel: n => new Channel(n),
         removeChannel(ch) { const i = channels.indexOf(ch); if (i >= 0) channels.splice(i, 1); },

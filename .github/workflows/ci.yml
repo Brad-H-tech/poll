@@ -28,8 +28,8 @@ jobs:
         run: python3 supabase/build_site.py
       - name: Fail if the committed build is stale
         run: |
-          if ! git diff --quiet -- site/; then
+          if [ -n "$(git status --porcelain -- site/)" ]; then
             echo "::error::site/ is out of date — run: python3 supabase/build_site.py and commit"
-            git --no-pager diff --stat -- site/
+            git --no-pager status --short -- site/
             exit 1
           fi

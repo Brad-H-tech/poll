@@ -91,6 +91,9 @@ Every endpoint, with a copy-paste curl, is on the live docs page: `https://…/v
 **WhatsApp bot that logs "no answer"** — when the bot's call times out:
 `POST /v1/customers/{acct}/activities` `{"type":"na"}` (write key for that store).
 
+**A bot raising a claim for a consultant** — a key has no consultant of its own, so say whose it is:
+`POST /v1/claims` `{"acct":"SB10258","customer":"Thandi Ndlovu","agent":"SIPHO"}`.
+
 **Head-office morning report** — a script loops stores `s1`…`s6` and calls
 `/v1/reports/summary?store=sN` with a head-office read key, then emails one table.
 
@@ -137,8 +140,9 @@ Quote the `request_id` when asking for help; it appears in the audit table and t
 6. **Allowed origin** — in `api/wrangler.jsonc` set `CHASE_ALLOWED_ORIGINS` to the app's real address.
 7. **First key** — `select * from api.mint_key('Head office', null, '{read,write,manage}', 2000, 365, 'bradley');`
    then `curl …/v1/me`. Green.
-8. **Point the app at the API** — `CHASE_API_URL=https://chase-api.<sub>.workers.dev python3 supabase/build_site.py`,
-   commit `site/`, merge. The Team tab now creates logins through the API; turn public sign-ups **off**.
+8. **Point the app at the API** — set `API_URL = 'https://chase-api.<sub>.workers.dev'` in `supabase/build_site.py`
+   (committed, so CI rebuilds the same site), run `python3 supabase/build_site.py`, commit `site/` with it, merge.
+   The Team tab now creates logins through the API; turn public sign-ups **off**.
 
 ## FAQ
 
@@ -150,5 +154,6 @@ key is a Cloudflare secret and never reaches a browser.
 a real login, you cannot cap what it does, and nothing records what it did. A key with `read`,
 store `s1`, 100 calls/day, is a much smaller thing to lose.
 
-**Does the API slow the app down?** The app does not use it (yet). It keeps talking to Supabase
-directly with live sync. The API is for everything else.
+**Does the API slow the app down?** No. The app uses it for one thing only, creating logins from
+the Team tab. Everything else still goes straight to Supabase with live sync. If the API were down,
+consultants could still work the book; only "Add user" would wait.

@@ -59,6 +59,9 @@ Run against project `dzmqogwggompkwasiglq` with Supabase's own advisors plus a r
 | 8 | Public sign-ups must stay on because the Team tab creates users by signing up; a stranger can create a (profile-less) login | Medium | **Fixed in code**: the Team tab calls `POST /v1/users` with the manager's own token once the app is built with `CHASE_API_URL`; then sign-ups go off, see §6 |
 | 13 | Any consultant could re-assign or verify via the API if it accepted app logins everywhere | Medium | **Designed out**: the API is keys-only; a login token works on `POST /v1/users` alone, and only a head-office key manages keys |
 | 14 | Customer bases (personal information) kept forever; every phone downloaded every base on every open | Medium (POPIA + cost) | **Fixed**: nightly job removes inactive bases after 12 months; the app downloads rows for the active base and the previous one only |
+| 15 | A consultant's walk-in was silently discarded: the app rewrote the whole base row, which only managers may do, and the empty result was never checked | High | **Fixed**: `public.add_walkin()` appends one row server-side for any signed-in person in that store |
+| 16 | Two simultaneous saves on one customer could lose a history entry; two managers deciding one claim could leave it rejected yet assigned | Medium | **Fixed**: row locks in `set_outcome` / `decide_claim`; hand-over before approval in the app |
+| 17 | A key stuck at its daily limit still counted towards the global cap, so one runaway spreadsheet could switch the API off for every store | Medium | **Fixed**: only served calls count; the key's own 429 is decided first |
 | 9 | One auth user (`simone@chase.local`) has no profile — a half-created person | Info | Open — decide: finish in Team tab or delete in Authentication → Users |
 | 10 | App page served without security headers (framing, CSP) | Medium | **Fixed**: `site/_headers` |
 | 11 | `report_to` (a manager's phone number) and templates would be readable by `anon` once folded into `stores` | Medium | **Fixed before it shipped**: column-level grant, `anon` sees only `id,name,sort` |
@@ -95,15 +98,15 @@ Run against project `dzmqogwggompkwasiglq` with Supabase's own advisors plus a r
 
 | Symptom | First move |
 |---|---|
-| A key is leaked | `DELETE /v1/keys/{id}` with a manage key (or `update api.keys set active=false where id='…'`). Check `GET /v1/audit` for what it did. |
+| A key is leaked | `DELETE /v1/keys/{id}` with a head-office manage key (or `update api.keys set active=false where id='…'`). Check `GET /v1/audit` for what it did. |
 | Suspicious writes in the book | `select * from public.tracking where updated_at > now() - interval '1 day' order by updated_at desc;` — `hist` on each row says who changed what and when. |
-| The service key is exposed | Supabase → Settings → API Keys → rotate; `wrangler secret put SUPABASE_SERVICE_KEY`. Everything else keeps working. |
+| The service key is exposed | Supabase → Settings → API Keys → rotate; `npx wrangler secret put SUPABASE_SERVICE_KEY --config api/wrangler.jsonc`. Everything else keeps working. |
 | API bill/usage spike | Lower `CHASE_DAILY_CAP` in `api/wrangler.jsonc` and redeploy; `GET /v1/usage?all=1` shows which key. |
 | A consultant's login is compromised | Supabase → Authentication → Users → the user → "Send password recovery" or delete; their profile row keeps the book intact. |
 
 ## 8. Checklist before every release
 
-- [ ] `cd api && node --test` green
+- [ ] `(cd api && node --test)` green
 - [ ] `python3 supabase/build_site.py --mock && node supabase/test_sb.js` green
 - [ ] Supabase → Advisors → Security shows no new warnings
 - [ ] No secrets in the diff (`git diff | grep -i -E "sb_secret|service_role|eyJ"` is empty)

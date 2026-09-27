@@ -55,11 +55,12 @@ async function keyActor(idHex, secret, env, db, isWrite) {
     throw new HttpError(401, 'unauthenticated', 'Unknown or wrong API key');
   if (r.reason === 'revoked') throw new HttpError(401, 'revoked', 'This API key has been revoked');
   if (r.reason === 'expired') throw new HttpError(401, 'expired', 'This API key has expired');
+  // a key at its own limit is that key's problem (429) — never reported as a global outage
+  if (r.reason === 'daily_limit' || r.ok === false)
+    throw new HttpError(429, 'daily_limit', `This key has used its ${r.key.daily_limit} calls for today`, { retryAfter: 3600 });
   const cap = Number(env.CHASE_DAILY_CAP || 0);
   if (cap && Number(r.total_today) > cap)
     throw new HttpError(503, 'budget', 'The API has reached its daily budget for all keys; try again tomorrow', { retryAfter: 3600 });
-  if (r.reason === 'daily_limit' || r.ok === false)
-    throw new HttpError(429, 'daily_limit', `This key has used its ${r.key.daily_limit} calls for today`, { retryAfter: 3600 });
   return {
     type: 'key', id: 'key:' + r.key.id, key_id: r.key.id, name: r.key.name,
     store_id: r.key.store_id || null, scopes: new Set(r.key.scopes || []), agent: '',

@@ -23,6 +23,7 @@ export function createApp({ env, fetchImpl, limiter, now } = {}) {
     const cors = corsHeaders(request, env);
     const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || '';
     let actor = null, store = null, route = null, status = 500;
+    const keyHint = callerHint(request);          // the key id named in the token, before any check
 
     const finish = (s, body, extraHeaders) => {
       status = s;
@@ -63,10 +64,9 @@ export function createApp({ env, fetchImpl, limiter, now } = {}) {
             if (g && g.success === false) throw new HttpError(429, 'rate_limited', 'Too many requests — slow down', { retryAfter: 60 });
           }
         };
-        const hint = callerHint(request);
-        if (hint) await throttle(hint);
+        if (keyHint) await throttle(keyHint);
         actor = await authenticate(request, env, db, isWrite, route.userTokens === true);
-        if (!hint) await throttle(actor.id);                          // user tokens: known only after the check
+        if (!keyHint) await throttle(actor.id);                       // user tokens: known only after the check
         if (!actor.scopes.has(route.scope))
           throw new HttpError(403, 'forbidden', `This needs the ${route.scope} scope; your key has: ${[...actor.scopes].join(', ') || 'none'}`);
         if (route.headOffice && actor.store_id)
@@ -113,11 +113,12 @@ export function createApp({ env, fetchImpl, limiter, now } = {}) {
     // audit every write and every refusal of an identifiable caller (a real key id, or a checked
     // login). Requests with no credential at all are not written down: that would let anyone
     // grow the audit table for free. They are still rate-limited per IP.
-    const identifiable = !!actor || !!callerHint(request);
+    const identifiable = !!actor || !!keyHint;
     if (route && route.auth !== false && identifiable && (method !== 'GET' || [401, 403, 429].includes(status))) {
       const row = {
         request_id: rid,
-        key_id: actor && actor.key_id || null, actor: actor ? String(actor.name).slice(0, 80) : '',
+        // a refusal before authentication (wrong secret, revoked, throttled) still names the key being tried
+        key_id: actor ? actor.key_id : (keyHint ? keyHint.slice(4) : null), actor: actor ? String(actor.name).slice(0, 80) : '',
         // a refusal that happened before the store was resolved is still attributed to the key's own store
         method, path: url.pathname.slice(0, 200), store_id: store || (actor && actor.store_id) || null,
         status, ms: Math.max(0, clock() - started),

@@ -5,7 +5,7 @@ Every requirement has an ID, the place in the code that satisfies it, and the au
 that would fail if it stopped being true. Run the proof yourself:
 
 ```bash
-cd api && node --test          # API behaviour (worker + fake Supabase)
+(cd api && node --test)        # API behaviour (worker + fake Supabase)
 python3 supabase/build_site.py --mock && node supabase/test_sb.js   # the app end-to-end in a real browser
 ```
 
@@ -45,16 +45,16 @@ third party: named keys, per-store limits, budgets, an audit trail and a stable,
 | F12 | API keys for systems; the Chase app's Team tab may call **one** endpoint (`POST /v1/users`) with the manager's own login token | `api/src/auth.js`, `userTokens` flag in `api/src/routes.js`; adapter `POST /api/users` in `supabase/chase-supabase.js` | `POST /v1/users with a manager token…`; browser: `Team tab called the Chase API…` | Met |
 | F15 | Old bases are removed automatically after 12 months; the app lists old bases by row count and downloads rows only for the active base and the one before it | pg_cron job + `rows_count` column (`supabase/schema.sql`); `loadState()` in the adapter; pills in the app | browser: `older base listed without downloading its rows` | Met |
 | F13 | Machine-readable spec and human docs that cannot drift from the code | `api/src/openapi.js` generates both from `ROUTES` | `openapi.json lists every route…`, `docs page is HTML…` | Met |
-| F14 | Work with the simplified 5-table database (settings on `stores`, owner on `tracking`) | `supabase/schema.sql`, `supabase/migrations/2026-09-26_simplify.sql`, adapter `supabase/chase-supabase.js` | browser suite: 30/30 pass on the new layout | Met |
+| F14 | Work with the simplified 5-table database (settings on `stores`, owner on `tracking`) | `supabase/schema.sql`, `supabase/migrations/2026-09-26_simplify.sql`, adapter `supabase/chase-supabase.js` | the browser suite passes on the new layout | Met |
 
 ## 3. Security requirements
 
 | ID | Requirement | How it is met | Evidence | Status |
 |---|---|---|---|---|
-| S1 | Every data endpoint requires authentication | dispatcher in `api/src/index.js` calls `authenticate()` for every route with `auth !== false` | `no key → 401 and it is audited`, `garbage token → 401` | Met |
+| S1 | Every data endpoint requires authentication | dispatcher in `api/src/index.js` calls `authenticate()` for every route with `auth !== false` | `no key → 401; not audited (nothing to attribute)…`, `garbage token → 401` | Met |
 | S2 | Secrets are never stored or transmitted to the database; only a SHA-256 hash | worker hashes the secret, `api.authenticate()` compares hashes; `api.mint_key()` stores only the hash | `wrong secret → 401 (hash compared, secret never sent…)`, `create a key: secret shown once…` | Met |
 | S3 | Keys can be revoked instantly and can expire | `active` / `expires_at` checked on every call | `revoked and expired keys → 401 with a reason`, `revoke a key: takes effect at once…` | Met |
-| S4 | Least privilege: read / write / manage scopes; a key can never grant more than its creator has | `route.scope` check; `POST /v1/keys` intersects scopes with the caller's | `a read key cannot write`, `a write key cannot manage`, `create a key: … scopes cannot exceed` | Met |
+| S4 | Least privilege: read / write / manage scopes; a key can never grant more than its creator has | `route.scope` check; `POST /v1/keys` refuses (403) any requested scope the caller does not hold, and only head-office keys may mint at all | `a read key cannot write`, `a write key cannot manage`, `a store manager key cannot mint, list or revoke keys` | Met |
 | S5 | Store isolation: a store key can only ever touch its own store; head office must name a store | store resolution in the dispatcher | `a store key cannot look at another store`, `a store key is pinned…`, `a head-office key must name the store` | Met |
 | S6 | When the app calls with a login token, the profile is read under *that* token, never the service key, so row-level security decides | `db.profileFromJwt()` | `POST /v1/users with a manager token: profile read under THEIR token` | Met |
 | S20 | Keys only: login tokens are refused on every endpoint except `POST /v1/users`, and Supabase Auth is not even consulted for them | `allowUserToken` in `api/src/auth.js` | `user login tokens are refused everywhere except…` | Met |
@@ -85,7 +85,10 @@ third party: named keys, per-store limits, budgets, an audit trail and a stable,
 | C3 | Burst protection per caller | in-memory limiter + Cloudflare rate-limit binding | `burst rate limit per caller → 429`, `Cloudflare rate-limit binding is honoured` | Met |
 | C4 | Never move more data than asked: pages are capped, base rows are paged in the database, base lists carry counts not rows | `p_limit` clamps; `api.base_rows()`; `api.bases()` | `customer pages are capped at 200`, `the database is asked for the page, not the whole base`, `bases: metadata only…` | Met |
 | C5 | Heavy work happens in Postgres, one round trip per call, not in the worker | every business route is a single RPC | code review: `api/src/routes.js` | Met |
-| C6 | Request bodies capped (256 KB; 8 MB for base uploads) and rows capped at 50 000 | `readJson()`; route `maxBody`; `bases_shape_chk` | `body size caps…` | Met |
+| C6 | Request bodies capped (256 KB; 1 MB and 5 000 rows for base uploads through the API, which runs in the Worker's own CPU budget; the app loads the big monthly files directly) and the database caps any base at 50 000 rows / 25 MB | `readJson()`; route `maxBody`; `bases_shape_chk` | `body size caps…` | Met |
+| S25 | A consultant can add a walk-in customer without being allowed to rewrite a base | `public.add_walkin()` appends one validated row server-side (`supabase/schema.sql`); the adapter calls it instead of re-uploading the base | browser: `walk-in appended to the store base…`; SQL dry run | Met |
+| S26 | Two people acting on the same customer or claim at once cannot lose each other's change | `set_outcome` and `decide_claim` lock the row (`for update`); the adapter hands a customer over before marking a claim approved | SQL dry run | Met |
+| S27 | Account numbers are used exactly as the base spells them (spaces and all), validated not rewritten, and always as parameters | `cleanAcct()` in `api/src/security.js` | `account numbers travel exactly as the base spells them…` | Met |
 | C7 | Database growth bounded: notes ≤ 5 000 chars, activities ≤ 30, history ≤ 25, bases ≤ 25 MB | CHECK constraints in `supabase/schema.sql` | migration dry-run | Met (manual) |
 | C8 | Usage is visible to the people who pay for it | `GET /v1/usage`, `GET /v1/me` | `usage: a key sees its own days…` | Met |
 | C9 | Zero paid dependencies: no npm packages, runs on Cloudflare's and Supabase's free tiers | `api/package.json` has no dependencies | — | Met |

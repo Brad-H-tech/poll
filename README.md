@@ -33,7 +33,7 @@ Fresh project: run `supabase/schema.sql`. Existing 7-table project: run
 
 ```bash
 python3 supabase/build_site.py                 # rebuild site/index.html from the app + adapter (commit the result)
-cd api && node --test                          # API behaviour tests
+(cd api && node --test)                        # API behaviour tests
 python3 supabase/build_site.py --mock \
   && node supabase/test_sb.js                  # the app end-to-end in a real browser (needs playwright + chromium)
 ```
