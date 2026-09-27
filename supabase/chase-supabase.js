@@ -7,11 +7,15 @@
    The app cannot tell the difference.
 
    Also swaps EventSource (live sync) for Supabase Realtime.
+
+   Database shape (5 tables): stores (incl. settings), profiles,
+   bases, tracking (incl. who owns each customer), claims.
 ========================================================= */
 (function () {
   const SB_URL = '__SB_URL__';
   const SB_KEY = '__SB_KEY__';
   const EMAIL_DOMAIN = 'chase.local';
+  const API_URL = '__API_URL__';   // the Chase API (api/); '' until it is deployed — see build_site.py
 
   const sb = supabase.createClient(SB_URL, SB_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, storageKey: 'chase-auth' },
@@ -22,8 +26,10 @@
   });
 
   const emailFor = u => String(u || '').trim().toLowerCase() + '@' + EMAIL_DOMAIN;
-  const today = () => new Date().toISOString().slice(0, 10);
-  const stamp = () => new Date().toISOString().slice(0, 16).replace('T', ' ');
+  // South African dates, the same clock the API uses (a UTC date is a day behind until 02:00)
+  const TZ = 'Africa/Johannesburg';
+  const today = () => new Date().toLocaleDateString('en-CA', { timeZone: TZ });
+  const stamp = () => today() + ' ' + new Date().toLocaleTimeString('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit' });
   const J = (o, s) => new Response(JSON.stringify(o), {
     status: s || 200, headers: { 'Content-Type': 'application/json' },
   });
@@ -63,25 +69,47 @@
   /* ---------- read the whole working set for one store ---------- */
   async function loadState() {
     const sid = STORE;
-    const [bases, tracking, claims, assign, settings] = await Promise.all([
-      sb.from('bases').select('id,label,rows,active,created_at').eq('store_id', sid).order('created_at'),
+    // Bases are the big thing (up to 50 000 rows each). Only the ACTIVE base's rows — plus the
+    // one before it, which the KPI deltas compare against — are downloaded. Older bases arrive
+    // as label + row count only; tapping one in the app activates it, which loads it.
+    const [metas, activeRows, tracking, claims, store] = await Promise.all([
+      sb.from('bases').select('id,label,active,created_at,rows_count').eq('store_id', sid).order('created_at'),
+      sb.from('bases').select('id,rows').eq('store_id', sid).eq('active', true).order('created_at', { ascending: false }).limit(1),
       sb.from('tracking').select('*').eq('store_id', sid),
       sb.from('claims').select('*').eq('store_id', sid).order('created_at', { ascending: false }),
-      sb.from('assign').select('acct,agent').eq('store_id', sid),
-      sb.from('settings').select('*').eq('store_id', sid).maybeSingle(),
+      sb.from('stores').select('wa_tpl,quotes,report_to,verify_at').eq('id', sid).maybeSingle(),
     ]);
 
-    cache.bases = (bases.data || []).map(b => ({ id: b.id, label: b.label, rows: b.rows || [] }));
-    const act = (bases.data || []).find(b => b.active);
-    cache.active = act ? act.id : (cache.bases.length ? cache.bases[cache.bases.length - 1].id : null);
+    const list = metas.data || [];
+    const rowsById = {};
+    (activeRows.data || []).forEach(b => { rowsById[b.id] = b.rows || []; });
+    const actId = (list.find(b => b.active) || list[list.length - 1] || {}).id || null;
+    const actIdx = list.findIndex(b => b.id === actId);
+    const need = [];
+    if (actId && !rowsById[actId]) need.push(actId);           // nothing flagged active: the newest stands in
+    if (actIdx > 0) need.push(list[actIdx - 1].id);              // the previous base, for the KPI deltas
+    if (need.length) {
+      const { data, error } = await sb.from('bases').select('id,rows').in('id', need);
+      if (error) throw error;                                       // never pretend the active base is empty
+      (data || []).forEach(b => { rowsById[b.id] = b.rows || []; });
+    }
+    cache.bases = list.map(b => {
+      const rows = rowsById[b.id];
+      return { id: b.id, label: b.label, rows: rows || [], lazy: !rows,
+               count: b.rows_count != null ? b.rows_count : (rows ? rows.length : 0) };
+    });
+    cache.active = actId;
 
     cache.tracking = {};
+    cache.assign = {};
     (tracking.data || []).forEach(t => {
       const rec = { st: t.st || '', next: t.next || '', note: t.note || '',
                     by: t.by_name || '', at: t.at || '',
                     acts: t.acts || [], hist: t.hist || [] };
       if (t.ver) rec.ver = t.ver;
       cache.tracking[t.acct] = rec;
+      // agent null = the base file decides; '' = deliberately nobody; 'NAME' = manager override
+      if (t.agent !== null && t.agent !== undefined) cache.assign[t.acct] = t.agent;
     });
 
     cache.claims = (claims.data || []).map(c => ({
@@ -89,10 +117,7 @@
       status: c.status, at: c.at || '', decided: c.decided || undefined,
     }));
 
-    cache.assign = {};
-    (assign.data || []).forEach(a => { cache.assign[a.acct] = a.agent || ''; });
-
-    const s = settings.data || {};
+    const s = store.data || {};
     cache.settings = {};
     ['wa_tpl', 'quotes', 'report_to', 'verify_at'].forEach(k => { if (s[k]) cache.settings[k] = s[k]; });
 
@@ -115,12 +140,14 @@
         .concat(rec.hist).slice(0, 25);
     }
     cache.tracking[acct] = rec;
+    // agent (owner) and ver (MTN-confirmed) are manager-only columns, written by the
+    // assign and verify routes. An upsert only touches the columns it names, so
+    // leaving them out here means a consultant's save can never clobber them.
     const { error } = await sb.from('tracking').upsert({
       store_id: STORE, acct,
       st: rec.st || '', next: rec.next || '', note: rec.note || '',
       by_name: rec.by || ME.name, at: rec.at || today(),
-      ver: rec.ver || null, acts: rec.acts, hist: rec.hist,
-      updated_at: new Date().toISOString(),
+      acts: rec.acts, hist: rec.hist,
     }, { onConflict: 'store_id,acct' });
     if (error) throw error;
     return rec;
@@ -203,11 +230,13 @@
       if (!base) return ERR('Load a base first');
       const acct = 'WI' + Math.random().toString(36).slice(2, 10).toUpperCase();
       const email = /@/.test(String(body.email || '')) ? String(body.email).slice(0, 120).trim() : '';
-      const rows = base.rows.concat([[ME.agent || '', name, '', acct, ms, '', today(),
-        'Walk-in / manual lead', 0, 'New / Add Sim', '', 'Consumer', '', email]]);
-      const { error } = await sb.from('bases').update({ rows }).eq('id', base.id);
+      const row = [ME.agent || '', name, '', acct, ms, '', today(),
+        'Walk-in / manual lead', 0, 'New / Add Sim', '', 'Consumer', '', email];
+      // appended server-side by public.add_walkin: consultants may add a customer but may
+      // never rewrite a base, and this never touches rows the phone has not downloaded
+      const { error } = await sb.rpc('add_walkin', { p_store: STORE, p_row: row });
       if (error) return ERR(error);
-      base.rows = rows;
+      if (!base.lazy) base.rows = base.rows.concat([row]);
       const note = String(body.note || '').slice(0, 5000);
       if (note) await saveTracking(acct, { note, by: ME.name, at: today() });
       emit('bases', {});
@@ -218,8 +247,8 @@
       if (!isMgr()) return ERR('Manager only', 403);
       const key = String(body.key || '').replace(/[^a-z_]/gi, '');
       if (!['wa_tpl', 'quotes', 'report_to'].includes(key)) return ERR('Unknown setting');
-      const patch = { store_id: STORE }; patch[key] = String(body.value || '').slice(0, 8000);
-      const { error } = await sb.from('settings').upsert(patch, { onConflict: 'store_id' });
+      const patch = {}; patch[key] = String(body.value || '').slice(0, key === 'report_to' ? 40 : 8000);
+      const { error } = await sb.from('stores').update(patch).eq('id', STORE);
       if (error) return ERR(error);
       cache.settings[key] = patch[key];
       emit('settings', {});
@@ -249,13 +278,17 @@
         .eq('store_id', STORE).eq('acct', acct).eq('status', 'pending').limit(1);
       if (!rows || !rows.length) return ERR('No pending claim', 404);
       const cl = rows[0];
-      const { error } = await sb.from('claims').update({ status: verdict, decided: today() }).eq('id', cl.id);
-      if (error) return ERR(error);
       if (verdict === 'approved') {
-        const agent = cl.agent || cl.by_name;
-        await sb.from('assign').upsert({ store_id: STORE, acct, agent }, { onConflict: 'store_id,acct' });
+        // hand the customer over first; only then mark the claim decided, so a failed
+        // hand-over never leaves an "approved" claim with no owner
+        const agent = String(cl.agent || cl.by_name || '').toUpperCase().trim().slice(0, 40);
+        if (!agent) return ERR('This claim has no consultant to assign to');
+        const { error: ae } = await sb.from('tracking').upsert({ store_id: STORE, acct, agent }, { onConflict: 'store_id,acct' });
+        if (ae) return ERR(ae);
         cache.assign[acct] = agent;
       }
+      const { error } = await sb.from('claims').update({ status: verdict, decided: today() }).eq('id', cl.id).eq('status', 'pending');
+      if (error) return ERR(error);
       emit('claims', {}); emit('bases', {});
       return J({ ok: true });
     }],
@@ -269,13 +302,13 @@
       const rows = accts.map(acct => {
         const prev = cache.tracking[acct] || {};
         cache.tracking[acct] = Object.assign({}, prev, { ver: d });
-        return { store_id: STORE, acct, st: prev.st || '', next: prev.next || '', note: prev.note || '',
-                 by_name: prev.by || ME.name, at: prev.at || d, ver: d,
-                 acts: prev.acts || [], hist: prev.hist || [] };
+        return { store_id: STORE, acct, ver: d };
       });
-      const { error } = await sb.from('tracking').upsert(rows, { onConflict: 'store_id,acct' });
-      if (error) return ERR(error);
-      await sb.from('settings').upsert({ store_id: STORE, verify_at: d }, { onConflict: 'store_id' });
+      for (let i = 0; i < rows.length; i += 500) {
+        const { error } = await sb.from('tracking').upsert(rows.slice(i, i + 500), { onConflict: 'store_id,acct' });
+        if (error) return ERR(error);
+      }
+      await sb.from('stores').update({ verify_at: d }).eq('id', STORE);
       cache.settings.verify_at = d;
       emit('tracking', {}); emit('settings', {});
       return J({ ok: true, verified: accts.length });
@@ -288,8 +321,10 @@
       if (!accts.length) return ERR('No accounts given');
       const agent = String(body.agent || '').toUpperCase().trim().slice(0, 40);
       const rows = accts.map(acct => ({ store_id: STORE, acct, agent }));
-      const { error } = await sb.from('assign').upsert(rows, { onConflict: 'store_id,acct' });
-      if (error) return ERR(error);
+      for (let i = 0; i < rows.length; i += 500) {
+        const { error } = await sb.from('tracking').upsert(rows.slice(i, i + 500), { onConflict: 'store_id,acct' });
+        if (error) return ERR(error);
+      }
       accts.forEach(a => { cache.assign[a] = agent; });
       emit('bases', {});
       return J({ ok: true, moved: accts.length, agent });
@@ -340,7 +375,7 @@
         pool.forEach(([acct], idx) => put(acct, agents[idx % agents.length]));
       }
       for (let i = 0; i < writes.length; i += 500) {
-        const { error } = await sb.from('assign').upsert(writes.slice(i, i + 500), { onConflict: 'store_id,acct' });
+        const { error } = await sb.from('tracking').upsert(writes.slice(i, i + 500), { onConflict: 'store_id,acct' });
         if (error) return ERR(error);
       }
       emit('bases', {});
@@ -371,7 +406,7 @@
           store_id: STORE, label: String(body.label || 'Uploaded base').slice(0, 40),
           rows, active: true,
         }).select('id').single();
-        if (error) return ERR(error);
+        if (error) return ERR(/bases_one_active/.test(error.message || '') ? 'Someone else just loaded a base — refresh and try again' : error);
         cache.bases.push({ id: data.id, label: String(body.label || 'Uploaded base').slice(0, 40), rows });
         cache.active = data.id; added = true;
         emit('bases', {});
@@ -383,7 +418,7 @@
       if (!isMgr()) return ERR('Manager only', 403);
       await sb.from('bases').update({ active: false }).eq('store_id', STORE);
       const { error } = await sb.from('bases').update({ active: true }).eq('id', m[1]);
-      if (error) return ERR(error);
+      if (error) return ERR(/bases_one_active/.test(error.message || '') ? 'Someone else just switched bases — refresh and try again' : error);
       cache.active = m[1];
       emit('bases', {});
       return J({ ok: true });
@@ -415,8 +450,34 @@
     ['POST', /^\/api\/users$/, async (m, body) => {
       if (!isMgr()) return ERR('Manager only', 403);
       const u = String(body.u || '').toLowerCase().replace(/[^a-z0-9._-]/g, '');
-      if (!u || !body.name) return ERR('Name and username are required');
-      if (String(body.p || '').length < 6) return ERR('Password must be at least 6 characters');
+      const name = String(body.name || '').trim().slice(0, 60);
+      if (!u || !name) return ERR('Name and username are required');
+      if (String(body.p || '').length < 10) return ERR('Password must be at least 10 characters');
+      const role = body.role === 'manager' ? 'manager' : 'consultant';
+      const agent = String(body.agent || '').toUpperCase().trim().slice(0, 40);
+
+      if (API_URL) {
+        // The Chase API creates the login with its admin rights, so Supabase public sign-ups
+        // can be OFF. It is called with the manager's own login token — no API key in this page.
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) return ERR('Not signed in', 401);
+        let r;
+        try {
+          r = await realFetch(API_URL + '/v1/users?store=' + encodeURIComponent(STORE), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
+            body: JSON.stringify({ username: u, name, password: body.p, role, agent }),
+          });
+        } catch (e) { return ERR('Could not reach the Chase API', 502); }
+        const j = await r.json().catch(() => ({}));
+        // never relay a 401: the app treats 401 as "you are signed out", but here it means
+        // the API could not check the token (or the API is down), not that this session ended
+        if (!r.ok) return ERR((j.error && j.error.message) || 'Could not create the login', r.status === 401 ? 502 : r.status);
+        emit('team', {});
+        return J({ ok: true });
+      }
+
+      // Until the API is deployed: sign the person up directly (needs public sign-ups ON).
       const { data, error } = await sbSignup.auth.signUp({ email: emailFor(u), password: body.p });
       if (error) {
         return ERR(/already/i.test(error.message) ? 'Username already exists' : error.message,
@@ -424,11 +485,7 @@
       }
       const id = data && data.user && data.user.id;
       if (!id) return ERR('Supabase did not return the new user — check that email confirmation is turned off in Authentication → Providers → Email');
-      const { error: pe } = await sb.from('profiles').insert({
-        id, username: u, name: String(body.name).slice(0, 60),
-        role: body.role === 'manager' ? 'manager' : 'consultant',
-        agent: String(body.agent || '').toUpperCase().trim(), store_id: STORE,
-      });
+      const { error: pe } = await sb.from('profiles').insert({ id, username: u, name, role, agent, store_id: STORE });
       if (pe) return ERR(pe);
       emit('team', {});
       return J({ ok: true });
@@ -503,12 +560,16 @@
                       by: r.by_name || '', at: r.at || '', acts: r.acts || [], hist: r.hist || [] };
         if (r.ver) rec.ver = r.ver;
         cache.tracking[r.acct] = rec;
+        // the owner rides on the same row: tell the app when it changed
+        const hadOwner = r.acct in cache.assign, prevOwner = cache.assign[r.acct];
+        if (r.agent === null || r.agent === undefined) delete cache.assign[r.acct];
+        else cache.assign[r.acct] = r.agent;
         emit('tracking', { acct: r.acct, rec });
+        if (hadOwner !== (r.acct in cache.assign) || prevOwner !== cache.assign[r.acct]) emit('bases', {});
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'claims', filter: flt }, () => emit('claims', {}))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'assign', filter: flt }, () => emit('bases', {}))
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bases', filter: flt }, () => emit('bases', {}))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'settings', filter: flt }, () => emit('settings', {}))
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'stores', filter: 'id=eq.' + STORE }, () => emit('settings', {}))
       .subscribe();
   }
   function unsubscribeLive() {

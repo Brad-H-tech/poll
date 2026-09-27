@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  api:
+    name: Chase API tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax-check the Supabase adapter
+        run: node --check supabase/chase-supabase.js
+      - name: Run the API suite
+        working-directory: api
+        run: node --test 'test/*.test.js'
+
+  site:
+    name: Built site matches its sources
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild site/ from shelly-app + adapter
+        run: python3 supabase/build_site.py
+      - name: Fail if the committed build is stale
+        run: |
+          if [ -n "$(git status --porcelain -- site/)" ]; then
+            echo "::error::site/ is out of date — run: python3 supabase/build_site.py and commit"
+            git --no-pager status --short -- site/
+            exit 1
+          fi

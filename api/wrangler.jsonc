@@ -1,0 +1,29 @@
+// Chase API — Cloudflare Worker config.
+// Deploy from the repo root:   npx wrangler deploy --config api/wrangler.jsonc
+// (or connect the repo a third time in Cloudflare with that as the deploy command,
+//  exactly like cl-academy uses drill.wrangler.jsonc).
+//
+// Secrets are NOT in this file. Set them once with:
+//   npx wrangler secret put SUPABASE_URL          --config api/wrangler.jsonc   → https://dzmqogwggompkwasiglq.supabase.co
+//   npx wrangler secret put SUPABASE_SERVICE_KEY  --config api/wrangler.jsonc   → the *secret* key (Supabase → Settings → API Keys)
+//   npx wrangler secret put SUPABASE_ANON_KEY     --config api/wrangler.jsonc   → the publishable key (used only to check user tokens)
+{
+  "name": "chase-api",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-01",
+  "observability": { "enabled": true },
+  "vars": {
+    // browsers may call the API only from these pages (server-to-server callers are unaffected)
+    // ← replace with the real address of the Chase app (Cloudflare → Workers → chase-crm)
+    "CHASE_ALLOWED_ORIGINS": "https://chase-crm.YOUR-SUBDOMAIN.workers.dev",
+    // hard ceiling on ALL keys together per day — the "credits" kill switch
+    "CHASE_DAILY_CAP": "20000",
+    // per caller, per minute (in-memory floor; the RL binding below is the global ceiling)
+    "RATE_PER_MINUTE": "120",
+    "RATE_IP_PER_MINUTE": "300"
+  },
+  // Workers Rate Limiting binding: 120 requests per caller per 60 s, enforced across all edge locations.
+  "ratelimits": [
+    { "name": "RL", "namespace_id": "1001", "simple": { "limit": 120, "period": 60 } }
+  ]
+}

@@ -1062,7 +1062,7 @@
       <div class="toolbar" style="margin-top:16px">
         <input class="ti" id="nuName" placeholder="Full name" autocomplete="off">
         <input class="ti" id="nuUser" placeholder="username" autocomplete="off">
-        <input class="ti" id="nuPass" placeholder="password (6+)" type="password" autocomplete="new-password">
+        <input class="ti" id="nuPass" placeholder="password (10+)" type="password" autocomplete="new-password">
         <input class="ti" id="nuAgent" placeholder="CSR name in base (e.g. SIMONE)" autocomplete="off" style="max-width:210px">
         <select class="sel" id="nuRole"><option value="consultant">Consultant</option><option value="manager">Manager</option></select>
         <button class="abtn" id="nuAdd">Add user</button>
@@ -1575,7 +1575,7 @@ const agentColor=(()=>{let extra=0;const cache={...AGENT_COLORS};
 function renderPills(){
   $('#basePills').innerHTML=datasets.map((d,i)=>`
     <button class="bpill" data-i="${i}" aria-pressed="${i===activeIdx}">
-      ${esc(d.label)} <small>${esc(d.sub)}</small>${datasets.length>1?'<span class="x" data-del="'+i+'" title="Remove base">×</span>':''}
+      ${esc(d.label)} <small>${esc(d.lazy?(d.count||0).toLocaleString('en-ZA')+' rows · tap to load':d.sub)}</small>${datasets.length>1?'<span class="x" data-del="'+i+'" title="Remove base">×</span>':''}
     </button>`).join('');
   $$('#basePills .bpill').forEach(b=>b.onclick=e=>{
     const del=e.target.dataset.del;
@@ -2002,7 +2002,7 @@ const SVG_TEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 const SVG_WA='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.7-.1a11 11 0 0 1-5.6-4.9c-.4-.7-.7-1.5-.7-2.2 0-.6.3-1.2.7-1.5.2-.2.4-.2.5-.2h.4c.2 0 .3 0 .5.4l.7 1.6c0 .2 0 .3-.1.4l-.3.4c-.2.1-.3.3-.1.5a8 8 0 0 0 3 2.6c.3.1.4.1.6-.1l.6-.8c.2-.2.3-.1.5-.1l1.6.8c.2.1.3.2.4.3 0 .2 0 .8-.2 1.3Z"/></svg>';
 const SVG_MAIL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>';
 const digits=s=>String(s||'').replace(/[^0-9]/g,'');
-const TODAY=()=>new Date().toISOString().slice(0,10);
+const TODAY=()=>new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Johannesburg'});
 function mailBtn(c,mini){
   const e=String(c.email||'').trim();
   if(e){
@@ -3009,7 +3009,7 @@ async function refreshState(){
   ME=st.me;tracking=st.tracking||{};
   SETTINGS=st.settings||{};CLAIMS=st.claims||[];ASSIGN=st.assign||{};
   $('#storeSub').textContent=st.storeName||'MTN Dealer';
-  datasets=st.bases.map(b=>Object.assign(buildDataset(b.rows,b.label),{id:b.id}));
+  datasets=st.bases.map(b=>Object.assign(buildDataset(b.rows,b.label),{id:b.id,lazy:!!b.lazy,count:b.count}));
   if(!datasets.length)datasets=[Object.assign(buildDataset([],'No base loaded yet'),{id:null})];
   const ai=datasets.findIndex(d=>d.id===st.active);
   activeIdx=ai<0?0:ai;
