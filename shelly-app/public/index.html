@@ -3,7 +3,7 @@
 <link rel="icon" href="/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
-<script>try{document.documentElement.setAttribute("data-accent",localStorage.getItem("si-accent")||"pink")}catch(e){document.documentElement.setAttribute("data-accent","pink")}</script>
+<script>try{document.documentElement.setAttribute("data-accent",localStorage.getItem("si-accent")||"blue")}catch(e){document.documentElement.setAttribute("data-accent","blue")}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Chase CRM — upgrade chase & customer tracking for MTN dealer stores. Work your book, log every call, never let a lead go cold.">
 <meta name="theme-color" content="#c2467c">
@@ -668,6 +668,54 @@
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
   .reveal{opacity:0;transform:translateY(14px)}
   .reveal.in{opacity:1;transform:none;transition:opacity .6s ease,transform .6s cubic-bezier(.22,1,.36,1)}
+  /* ============ Sign-in flow: business → store → who's chasing → password ============ */
+  .l-card.lf{width:min(420px,94vw);text-align:left;padding:28px 26px 24px;gap:0}
+  .lf [data-step]{display:flex;flex-direction:column;gap:12px}
+  .lf [data-step][hidden]{display:none}
+  .lf .lf-logo{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:4px}
+  .lf h3{margin:6px 0 0;font-size:20px;letter-spacing:-.02em}
+  .lf p{margin:0;color:var(--ink-3);font-size:13.5px;text-align:center}
+  .lf-big{appearance:none;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left;font:inherit;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
+  .lf-big.solid{background:var(--brand);border-color:transparent;color:#14140f}
+  .lf-big b{display:block;font-size:15px}.lf-big small{display:block;font-size:12.5px;opacity:.75}
+  .lf-biz{appearance:none;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left;font:inherit;padding:14px 16px;border-radius:18px;border:0;background:#ffcb05;color:#14140f;box-shadow:0 18px 36px -20px rgba(255,203,5,.6)}
+  .lf-bizmark{width:48px;height:48px;border-radius:12px;background:#14140f;color:#ffcb05;display:grid;place-items:center;font-weight:800;font-size:20px;flex:none}
+  .lf-biz small{display:block;font-size:11px;font-weight:800;letter-spacing:.12em}
+  .lf-biz b{display:block;font-size:20px;letter-spacing:-.02em;line-height:1.1}
+  .lf-biz .lf-bizsub{font-size:12px;font-weight:600;opacity:.7;letter-spacing:0}
+  .lf-stores{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .lf-store{appearance:none;cursor:pointer;text-align:left;font:inherit;padding:12px 13px;border-radius:14px;border:2px solid transparent;background:var(--surface-2);color:var(--ink);display:flex;flex-direction:column;gap:3px}
+  .lf-store:hover{border-color:var(--line-strong)}.lf-store.on{border-color:var(--brand-deep)}
+  .lf-store b{font-size:14.5px}.lf-store small{font-size:11.5px;color:var(--ink-3)}
+  .lf-pill{appearance:none;cursor:pointer;align-self:flex-start;display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:13px;font-weight:700;padding:6px 12px 6px 6px;border-radius:999px;border:0;background:#ffcb05;color:#14140f}
+  .lf-pill span{width:26px;height:26px;border-radius:999px;background:#14140f;color:#ffcb05;display:grid;place-items:center;font-size:11px;font-weight:800}
+  .lf-pill small{font-weight:600;opacity:.7}
+  .lf-people{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+  .lf-person{appearance:none;cursor:pointer;font:inherit;border:0;background:none;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0}
+  .lf-av{width:82px;height:82px;border-radius:18px;display:grid;place-items:center;color:#fff;font-size:30px;font-weight:800;background:var(--surface-3)}
+  .lf-person b{font-size:14px}.lf-person small{font-size:11px;color:var(--ink-3);margin-top:-6px}
+  .lf-else .lf-av{color:var(--ink-3);border:2px dashed var(--line-strong);background:var(--surface-2)}
+  .lf-back{appearance:none;cursor:pointer;font:inherit;border:0;background:var(--surface-2);color:var(--ink);width:34px;height:34px;border-radius:999px;font-size:16px;align-self:flex-start}
+  .lf-face{width:96px;height:96px;border-radius:22px;display:grid;place-items:center;color:#fff;font-size:36px;font-weight:800;align-self:center;background:var(--surface-3)}
+  .lf .lf-hi{text-align:center}.lf .lf-hi h3{margin:0}.lf .lf-hi small{color:var(--ink-3);font-size:12.5px}
+  .lf-link{appearance:none;cursor:pointer;font:inherit;border:0;background:none;color:var(--ink-3);font-size:12.5px;text-decoration:underline;align-self:center}
+  .lf-link[hidden]{display:none}
+  /* ============ Start here: the one lead to work first ============ */
+  .starthere{margin-top:18px}
+  .starthere .lbln{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-deep)}
+  .sh-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .sh-tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .sh-tag{font-size:10px;font-weight:800;letter-spacing:.08em;padding:3px 8px;border-radius:5px;background:var(--surface-3);color:var(--ink-2);white-space:nowrap}
+  .sh-tag.hot{background:var(--brand);color:#14140f}
+  .sh-name{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-top:10px}
+  .sh-meta{font-size:13.5px;color:var(--ink-2);margin-top:2px}
+  .sh-note{font-size:13px;color:var(--ink-3);margin-top:8px}
+  .sh-acts{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .sh-btn{appearance:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-size:14px;font-weight:700;height:42px;padding:0 16px;border-radius:11px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);text-decoration:none;flex:1 1 120px}
+  .sh-btn svg{width:16px;height:16px}
+  .sh-btn.solid{background:var(--brand);border-color:transparent;color:#14140f}
+  .sh-btn.wa{background:#25d366;border-color:transparent;color:#fff}
+
   /* ============ Team — sortable, searchable, paged data table ============ */
   .dtab{background:var(--surface-1);border:1px solid var(--line);border-radius:16px;overflow:hidden;font-size:14px}
   .dtab .dt-bar{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
@@ -887,6 +935,7 @@
 </div>
 
 <main class="wrap">
+  <section class="card pad-lg starthere" id="startHere" hidden aria-label="Start here"></section>
   <div class="section-hd" id="explorer">
     <div>
       <span class="lbln">The Book</span>
@@ -1141,15 +1190,42 @@
   </div>
 </div></div>
 
-<div class="login" id="login"><div class="l-card">
-  <div class="logo" style="justify-content:center;margin-bottom:6px"><span class="mark" style="font-size:11px;letter-spacing:-.5px">C</span><b style="font-size:17px">Chase CRM</b></div>
-  <p>Choose your store and sign in</p>
-  <select class="ti" id="liStore" aria-label="Store"></select>
-  <input class="ti" id="liU" placeholder="Username" autocomplete="username">
-  <input class="ti" id="liP" type="password" placeholder="Password" autocomplete="current-password">
-  <div class="l-err" id="liErr"></div>
-  <button class="btn2 solid" id="liGo" style="width:100%">Sign in</button>
-  <div class="accs" id="accPickL" style="justify-content:center;margin-top:4px"></div>
+<div class="login" id="login"><div class="l-card lf" id="lf">
+  <section data-step="welcome">
+    <div class="lf-logo"><span class="mark" style="font-size:11px;letter-spacing:-.5px">C</span><b style="font-size:17px">Chase CRM</b></div>
+    <p>Work your book, log every call, never let a lead go cold.</p>
+    <button class="lf-big solid" data-go="business"><b>My business is on Chase</b><small>Sign in to your store</small></button>
+    <button class="lf-big" data-go="new"><b>I'm new here</b><small>Get Chase CRM for my stores</small></button>
+    <div class="accs" id="accPickL" style="justify-content:center;margin-top:6px"></div>
+  </section>
+  <section data-step="new" hidden>
+    <button class="lf-back" data-go="welcome" aria-label="Back">←</button>
+    <h3>Chase CRM for your business</h3>
+    <p style="text-align:left">Each business gets its own book: your stores, your admin login, your team — nobody else can see your customers. Cell-Logic sets it up and you're live the same day.</p>
+    <p style="text-align:left">Send your business name, your stores and a contact number:</p>
+    <a class="btn2 solid" style="text-align:center" target="_blank" rel="noopener" href="https://wa.me/?text=Hi%20Cell-Logic%2C%20I%27d%20like%20Chase%20CRM%20for%20my%20business.%0ABusiness%3A%20%0AStores%3A%20%0AContact%3A%20">WhatsApp a request</a>
+  </section>
+  <section data-step="business" hidden>
+    <button class="lf-biz" data-go="welcome"><span class="lf-bizmark">CL</span><span><small>YOU'RE IN</small><b id="lfBiz">Cell-Logic</b><small class="lf-bizsub" id="lfBizSub">MTN dealer</small></span></button>
+    <h3>Which store are you at?</h3>
+    <div class="lf-stores" id="lfStores"></div>
+    <select id="liStore" aria-label="Store" hidden></select>
+  </section>
+  <section data-step="who" hidden>
+    <button class="lf-pill" data-go="business"><span>CL</span><b id="lfWhoStore">Store</b><small>· change</small></button>
+    <h3 id="lfWho">Who's chasing today?</h3>
+    <div class="lf-people" id="lfPeople"></div>
+  </section>
+  <section data-step="pass" hidden>
+    <button class="lf-back" data-go="who" aria-label="Back">←</button>
+    <div class="lf-face" id="lfFace">?</div>
+    <div class="lf-hi"><h3 id="lfHi">Sign in</h3><small id="lfHiSub"></small></div>
+    <input class="ti" id="liU" placeholder="Username" autocomplete="username">
+    <input class="ti" id="liP" type="password" placeholder="Password" autocomplete="current-password">
+    <div class="l-err" id="liErr"></div>
+    <button class="btn2 solid" id="liGo" style="width:100%">Sign in</button>
+    <button class="lf-link" id="lfForget" hidden>Not you? Remove this face from this phone</button>
+  </section>
 </div></div>
 
 <div class="qback" id="qback" hidden></div>
@@ -2909,6 +2985,32 @@ function renderHero(){
   $('#hsDue').textContent=dayCounts().due;
   const hs=(hotMine&&ME.agent)?DS().customers.filter(c=>assignedTo(c)===ME.agent):DS().customers;
   $('#hsHot').textContent=hs.filter(c=>hotScore(c).score>=72).length;
+  renderStartHere();
+}
+/* the single best lead to work right now: an overdue or due-today callback wins, then the hottest score */
+function renderStartHere(){
+  const box=$('#startHere');if(!box)return;
+  if(!ME||ME.role==='manager'||!ME.agent){box.hidden=true;return;}
+  const today=TODAY();
+  const mine=DS().customers.filter(c=>assignedTo(c)===ME.agent&&!CLOSED_ST.includes((tracking[c.acct]||{}).st||''));
+  if(!mine.length){box.hidden=true;return;}
+  const rank=c=>{const t=tracking[c.acct]||{};let s=Math.max(0,hotScore(c).score);if(t.next&&t.next<=today)s+=100;return s;};
+  const c=mine.slice().sort((a,b)=>rank(b)-rank(a))[0];
+  const t=tracking[c.acct]||{},sc=hotScore(c).score,ooc=(c.stats||[]).some(s=>/out of contract/i.test(s));
+  const why=t.next&&t.next<today?'Callback overdue since '+t.next:t.next===today?'Callback promised for today':sc>=72?'Hottest lead in your book':'Best value still open';
+  const d=digits(c.msisdn);
+  box.hidden=false;
+  box.innerHTML=`<div class="sh-top"><div><span class="lbln">Start here</span><div class="h-desc">${esc(why)}</div></div>
+      <div class="sh-tags">${sc>=72?'<span class="sh-tag hot">HOT</span>':''}${ooc?'<span class="sh-tag">OUT OF CONTRACT</span>':''}</div></div>
+    <div class="sh-name">${esc(titleCase(c.name))}</div>
+    <div class="sh-meta">${esc(c.prod&&c.prod!=='—'?c.prod:'')}${c.pkgs&&c.pkgs[0]?' · '+esc(c.pkgs[0]):''}${c.rsp?' · <b>'+zar(c.rsp)+'/m</b>':''}</div>
+    ${t.note?`<div class="sh-note">“${esc(t.note)}”</div>`:''}
+    <div class="sh-acts">
+      ${d?`<a class="sh-btn solid" href="tel:+${d}">${SVG_TEL}Call</a>`:''}
+      ${d?`<a class="sh-btn wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener">${SVG_WA}WhatsApp</a>`:''}
+      <button class="sh-btn" data-sh-log="${esc(c.acct)}">Log the call</button>
+    </div>`;
+  const b=$('[data-sh-log]',box);if(b)b.onclick=()=>openQuick(b.dataset.shLog);
 }
 function renderSubView(v){
   subView=v;
@@ -2981,26 +3083,76 @@ function applyView(v){
   document.body.classList.toggle('consultant',v!=='mgr');
   $$('#viewSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===v)));
 }
+/* ---- Sign-in flow: business → store → who's chasing → password ----
+   The faces on "who's chasing" are the people who have signed in on THIS phone
+   (kept in localStorage) — nothing about the team is shown before a password. */
+const BUSINESS={name:'Cell-Logic',sub:'MTN dealer'};
+const LF={step:'welcome',store:null,storeName:'',person:null,stores:STORES.map(([id,name])=>({id,name}))};
+function lfPeople(){try{return JSON.parse(localStorage.getItem('chase-people')||'[]');}catch(e){return [];}}
+function lfSave(list){try{localStorage.setItem('chase-people',JSON.stringify(list.slice(0,12)));}catch(e){}}
+function lfRemember(p){lfSave([p].concat(lfPeople().filter(x=>!(x.u===p.u&&x.store===p.store))));}
+function lfGo(step,o){
+  o=o||{};
+  if(o.store){LF.store=o.store;const s=LF.stores.find(x=>x.id===o.store);LF.storeName=s?s.name:o.store;
+    const sel=$('#liStore');if(sel)sel.value=o.store;}
+  if(o.person!==undefined)LF.person=o.person;
+  if(o.someoneElse)LF.person=null;
+  LF.step=step;
+  $$('#lf [data-step]').forEach(s=>s.hidden=s.dataset.step!==step);
+  $('#liErr').textContent='';
+  if(step==='business'){
+    const people=lfPeople();
+    $('#lfBiz').textContent=BUSINESS.name;
+    $('#lfBizSub').textContent=BUSINESS.sub+' · '+LF.stores.length+' store'+(LF.stores.length===1?'':'s');
+    $('#lfStores').innerHTML=LF.stores.map(s=>{const n=people.filter(p=>p.store===s.id).length;
+      return `<button class="lf-store ${s.id===LF.store?'on':''}" data-store="${esc(s.id)}"><b>${esc(s.name)}</b><small>${n?n+' signed in here':'tap to continue'}</small></button>`;}).join('');
+    $$('#lfStores [data-store]').forEach(b=>b.onclick=()=>lfGo('who',{store:b.dataset.store}));
+  }
+  if(step==='who'){
+    if(!LF.store){lfGo('business');return;}
+    $('#lfWhoStore').textContent=LF.storeName;
+    const people=lfPeople().filter(p=>p.store===LF.store);
+    $('#lfWho').textContent=people.length?"Who's chasing today?":'Who are you?';
+    $('#lfPeople').innerHTML=people.map(p=>`<button class="lf-person" data-u="${esc(p.u)}">
+        <span class="lf-av" style="background:${agentColor(String(p.agent||p.name||'?').toUpperCase())}">${esc((p.name||p.u||'?')[0].toUpperCase())}</span>
+        <b>${esc(titleCase(String(p.name||p.u).split(/\s+/)[0]))}</b>${p.role==='manager'?'<small>admin</small>':''}</button>`).join('')+
+      `<button class="lf-person lf-else" id="lfElse"><span class="lf-av">+</span><b>${people.length?'Someone else':'Sign in'}</b></button>`;
+    $$('#lfPeople [data-u]').forEach(b=>b.onclick=()=>lfGo('pass',{person:people.find(p=>p.u===b.dataset.u)||null}));
+    $('#lfElse').onclick=()=>lfGo('pass',{someoneElse:true});
+  }
+  if(step==='pass'){
+    const p=LF.person;
+    $('#lfFace').textContent=p?String(p.name||p.u)[0].toUpperCase():'?';
+    $('#lfFace').style.background=p?agentColor(String(p.agent||p.name||'?').toUpperCase()):'';
+    $('#lfHi').textContent=p?'Hi '+titleCase(String(p.name||p.u).split(/\s+/)[0]):'Sign in';
+    $('#lfHiSub').textContent=(LF.storeName||'')+(p?' · @'+p.u:'');
+    $('#liU').value=p?p.u:'';$('#liU').hidden=!!p;$('#liP').value='';
+    $('#lfForget').hidden=!p;
+    setTimeout(()=>$(p?'#liP':'#liU').focus(),60);
+  }
+}
 function showLogin(){
   if(es){es.close();es=null;}
   AGENTS_CACHE=null;
   document.body.classList.remove('authed');document.body.classList.remove('is-mgr');
   {const m=$('#pmenu');if(m)m.hidden=true;}
   $('#login').classList.add('show');
-  setTimeout(()=>$('#liU').focus(),80);
+  let last=null;try{last=localStorage.getItem('si-store');}catch(e){}
+  lfGo(lfPeople().length?'business':'welcome',last?{store:last}:{});
 }
 async function doLogin(){
   const u=$('#liU').value.trim(),p=$('#liP').value;
   if(!u||!p){$('#liErr').textContent='Enter username and password';return;}
   $('#liErr').textContent='';$('#liGo').disabled=true;
   try{
-    const storeId=($('#liStore')&&$('#liStore').value)||'s1';
+    const storeId=LF.store||($('#liStore')&&$('#liStore').value)||'s1';
     try{localStorage.setItem('si-store',storeId)}catch(e){}
     const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({u,p,store:storeId})});
     if(!r.ok){$('#liErr').textContent=(await r.json().catch(()=>({}))).error||'Login failed';return;}
     $('#login').classList.remove('show');$('#liP').value='';
     await boot();
+    lfRemember({u:ME.u||u,name:ME.name||u,agent:ME.agent||'',role:ME.role,store:storeId});
   }catch(e){$('#liErr').textContent='Server unreachable';}
   finally{$('#liGo').disabled=false;}
 }
@@ -3142,9 +3294,12 @@ async function populateStores(){
   let last='s1';try{last=localStorage.getItem('si-store')||'s1'}catch(e){}
   if(!stores.some(x=>x.id===last))last=stores[0].id;
   sel.innerHTML=stores.map(x=>`<option value="${x.id}" ${x.id===last?'selected':''}>${esc(x.name)}</option>`).join('');
+  LF.stores=stores;
+  if(LF.store){const s=stores.find(x=>x.id===LF.store);if(s)LF.storeName=s.name;}
+  if(LF.step==='business')lfGo('business');
 }
 function renderAcc(){
-  const cur=document.documentElement.getAttribute('data-accent')||'pink';
+  const cur=document.documentElement.getAttribute('data-accent')||'blue';
   ['#accPick','#accPickL'].forEach(sel=>{const el=$(sel);if(!el)return;
     el.innerHTML=Object.entries(ACCENTS).map(([k,c])=>
       `<button class="acc" title="${k}" data-k="${k}" aria-pressed="${k===cur}" style="background:${c}"></button>`).join('');
@@ -3161,6 +3316,8 @@ function init(){
     applyView(b.dataset.v);
   });
   $('#liGo').onclick=doLogin;
+  $$('#lf [data-go]').forEach(b=>b.onclick=()=>lfGo(b.dataset.go));
+  $('#lfForget').onclick=()=>{if(LF.person)lfSave(lfPeople().filter(x=>!(x.u===LF.person.u&&x.store===LF.store)));lfGo('who');};
   $('#liP').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   $('#liU').addEventListener('keydown',e=>{if(e.key==='Enter')$('#liP').focus();});
   $('#logoutBtn').onclick=async()=>{

@@ -59,7 +59,8 @@ const SEED = {
     return p;
   }
   const login = async (p, store, u, pw) => {
-    await p.selectOption('#liStore', store); await p.waitForTimeout(150);
+    // the sign-in flow is business -> store -> who's chasing -> password; jump to the password step
+    await p.evaluate(s => lfGo('pass', { store: s, someoneElse: true }), store); await p.waitForTimeout(150);
     await p.fill('#liU', u); await p.fill('#liP', pw);
     await p.click('#liGo'); await p.waitForTimeout(1500);
   };
