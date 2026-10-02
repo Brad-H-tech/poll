@@ -65,6 +65,7 @@ create table if not exists api.audit (
 );
 alter table api.audit add column if not exists request_id text;   -- the X-Request-Id the caller saw
 create index if not exists audit_at_idx on api.audit (at desc);
+create index if not exists keys_store_idx on api.keys (store_id);
 
 -- belt and braces: RLS on, no policies -> only the service role (which bypasses RLS) can read
 alter table api.keys  enable row level security;
@@ -141,19 +142,19 @@ $$;
 
 -- ---------- helpers ----------
 
-create or replace function api.today() returns text language sql stable as $$
+create or replace function api.today() returns text language sql stable set search_path = pg_catalog as $$
   select to_char(now() at time zone 'Africa/Johannesburg', 'YYYY-MM-DD')
 $$;
-create or replace function api.stamp() returns text language sql stable as $$
+create or replace function api.stamp() returns text language sql stable set search_path = pg_catalog as $$
   select to_char(now() at time zone 'Africa/Johannesburg', 'YYYY-MM-DD HH24:MI')
 $$;
 
 -- keep only the first n elements of a json array
-create or replace function api.head(p jsonb, n int) returns jsonb language sql immutable as $$
+create or replace function api.head(p jsonb, n int) returns jsonb language sql immutable set search_path = pg_catalog as $$
   select coalesce((select jsonb_agg(e order by i) from jsonb_array_elements(p) with ordinality x(e, i) where i <= n), '[]'::jsonb)
 $$;
 
-create or replace function api.tracking_json(t public.tracking) returns json language sql immutable as $$
+create or replace function api.tracking_json(t public.tracking) returns json language sql immutable set search_path = pg_catalog as $$
   select json_build_object(
     'acct', t.acct, 'outcome', coalesce(t.st, ''), 'next_action', coalesce(t.next, ''),
     'note', coalesce(t.note, ''), 'updated_by', coalesce(t.by_name, ''), 'updated_on', coalesce(t.at, ''),
