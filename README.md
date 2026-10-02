@@ -1,13 +1,19 @@
-# poll — Chase CRM and friends
+# Chase CRM
 
-Everything in this repo deploys from `main` to Cloudflare. The parts that matter:
+This repo holds only Chase CRM. Everything deploys from `main` to Cloudflare:
 
 | Part | What | Lives in | Deploys as |
 |---|---|---|---|
 | **Chase CRM** | The customer-tracking app for the six MTN dealer stores | `shelly-app/public/` (source) → `site/` (built) | `chase-crm` worker (`wrangler.jsonc`) |
 | **Chase API** | A safe, metered API on the same data for spreadsheets, bots and scripts | `api/` | `chase-api` worker (`api/wrangler.jsonc`) |
 | **Database** | Supabase: five tables + row-level security + rules | `supabase/` | run in Supabase → SQL Editor |
-| **CL Academy** | The training / drill site | `site/drill/` | `cl-academy` worker (`drill.wrangler.jsonc`) |
+
+## Where the other things went
+
+CL Academy (the training drill), the Live Poll and the `/refs` page moved to the
+`Brad-H-tech/cl-academy` repo on 2026-10-02, with their history. Old experiments (petrol tracker,
+phone finder, portfolio, early Chase demos) were removed from `main`; every branch as it stood
+that day is kept under `backup/<branch>-2026-10-02`.
 
 ## Start here
 

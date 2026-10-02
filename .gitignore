@@ -2,3 +2,7 @@
 node_modules/
 .wrangler/
 api/.dev.vars
+# local secrets — never commit these
+.env
+.env.*
+*.dev.vars
