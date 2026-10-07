@@ -9,7 +9,7 @@ jobs:
     name: Chase API tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -23,7 +23,7 @@ jobs:
     name: Built site matches its sources
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Rebuild site/ from shelly-app + adapter
         run: python3 supabase/build_site.py
       - name: Fail if the committed build is stale
