@@ -7,7 +7,16 @@ Everything in this repo deploys from `main` to Cloudflare. The parts that matter
 | **Chase CRM** | The customer-tracking app for the six MTN dealer stores | `shelly-app/public/` (source) → `site/` (built) | `chase-crm` worker (`wrangler.jsonc`) |
 | **Chase API** | A safe, metered API on the same data for spreadsheets, bots and scripts | `api/` | `chase-api` worker (`api/wrangler.jsonc`) |
 | **Database** | Supabase: five tables + row-level security + rules | `supabase/` | run in Supabase → SQL Editor |
-| **CL Academy** | The training / drill site | `site/drill/` | `cl-academy` worker (`drill.wrangler.jsonc`) |
+
+## One repo per app
+
+This repo is **only** Chase CRM and the Chase API. Every push to `main` here redeploys
+the `chase-crm` worker, so nothing else should live here.
+
+- **CL Academy** moved to its own repo, [Brad-H-tech/-cl-academy](https://github.com/Brad-H-tech/-cl-academy),
+  which deploys the `cl-academy` worker. Its old copy (`site/drill/`, `drill.wrangler.jsonc`) is removed from here.
+- **New project?** Create a new, empty GitHub repo for it first and start the Claude session on *that* repo,
+  so it never lands here as another branch.
 
 ## Start here
 
