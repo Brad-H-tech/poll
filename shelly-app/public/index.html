@@ -359,6 +359,13 @@
   .uppanel:hover{border-color:var(--brand-deep);transform:translateY(-1px)}
   .uppanel .ut h3{font-size:16px}
   .uppanel .ut p{margin:5px 0 0;color:var(--ink-2);font-size:13px;max-width:600px}
+  .tpl-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;cursor:default}
+  .tpl-help{margin-top:12px;max-width:640px;font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:default}
+  .tpl-help table{border-collapse:collapse;width:100%}
+  .tpl-help td{padding:4px 8px 4px 0;vertical-align:top;border-top:1px solid var(--line)}
+  .tpl-help tr:first-child td{border-top:0}
+  .tpl-help td:first-child{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;white-space:nowrap;color:var(--ink)}
+  .tpl-help .req{color:var(--neg);font-weight:800}
   .pin-inp{width:100%;font:inherit;font-size:17px;letter-spacing:.25em;text-align:center;padding:12px;
     background:var(--surface-2);border:1px solid var(--line);border-radius:11px;color:var(--ink);outline:none;margin-bottom:16px}
   .pin-inp:focus{border-color:var(--brand-deep)}
@@ -1064,6 +1071,11 @@
         <p>Drop the raw <b>.csv</b> or <b>.xlsx</b> here (or click). Columns are auto-mapped. If the file
         carries <b>Outcome / Next action / Notes</b> columns — like Chase CRM's own CSV export — customer
         outcomes are updated automatically, so you can round-trip the book through Excel.</p>
+        <div class="tpl-row">
+          <button class="abtn" type="button" id="tplDl">Download blank template (.csv)</button>
+          <button class="abtn" type="button" id="tplHow">What goes in each column</button>
+        </div>
+        <div class="tpl-help" id="tplHelp" hidden></div>
       </div>
       <button class="upbtn" type="button" tabindex="-1">Choose file</button>
     </section>
@@ -1454,6 +1466,40 @@ const FIELD_LBL={acct:'Account number',name:'Customer name',product:'Product / d
   surname:'Surname',msisdn:'Phone number',csr:'Consultant (CSR)',package:'Price plan',act:'Activation date',email:'Email',
   ctype:'Contract type',status:'Status',category:'Category',outcome:'Outcome',next:'Callback date',note:'Notes'};
 const FIELD_REQ=['acct','name','product','rsp'];
+/* The blank template people download, fill in and upload. Heading · Chase field · example · what to put there. */
+const TEMPLATE_COLS=[
+  ['AccountNumber','acct','1001234567','The customer\'s account number — one row per account. Must be unique.'],
+  ['CustomerName','name','Thandi','First name (or full name if that\'s all you have).'],
+  ['CustomerSurname','surname','Mokoena','Surname.'],
+  ['PrimaryMSISDN','msisdn','0831234567','Cell number — digits only, 083… or 2783….'],
+  ['ProductDescription','product','Samsung Galaxy A55','The device or product they are on now.'],
+  ['HandsetRSP','rsp','499','Monthly price in rand — just the number, no "R".'],
+  ['Package','package','MTN Mega Gigs S','Price plan name.'],
+  ['ContractType','ctype','Upgrade','Upgrade, New, UYO… leave blank if unsure.'],
+  ['ActivationDate','act','2024-03-15','When the contract started — year-month-day.'],
+  ['InvoiceStatus','status','Out of contract','e.g. Out of contract, Active.'],
+  ['CustomerCategory','category','Consumer','Consumer or Business.'],
+  ['Offer','offer','Galaxy S24 @ R649','The deal you want to pitch (optional).'],
+  ['Email','email','thandi@example.com','Optional.'],
+  ['CSR','csr','SIMONE','Consultant\'s code if already allocated — blank goes to the unassigned pool.'],
+  ['Outcome','outcome','','Leave blank for a fresh base. Filled in by Chase on export.'],
+  ['NextActionDate','next','','Leave blank for a fresh base.'],
+  ['CallNotes','note','','Leave blank for a fresh base.']];
+function csvCell(v){v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function downloadTemplate(){
+  const lines=[TEMPLATE_COLS.map(c=>c[0]).join(','),
+    TEMPLATE_COLS.map(c=>csvCell(c[1]==='acct'?'EXAMPLE-DELETE-THIS-ROW':c[2])).join(',')];
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Chase-base-template.csv';
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);
+  toast('Template downloaded — open it in Excel, fill it in, save, then drop it here');
+}
+function renderTemplateHelp(){
+  const req=k=>FIELD_REQ.includes(k);
+  $('#tplHelp').innerHTML=`<div style="margin-bottom:8px"><b>One row per customer.</b> Keep the headings exactly as they are; column order doesn't matter.
+    Columns marked <span class="req">*</span> must be filled in; everything else is optional. Delete the example row before you upload.</div>
+    <table>${TEMPLATE_COLS.map(c=>`<tr><td>${esc(c[0])}${req(c[1])?' <span class="req">*</span>':''}</td><td>${esc(c[3])}</td></tr>`).join('')}</table>`;
+}
 function colMemory(){try{return JSON.parse(localStorage.getItem('chase-colmap')||'{}')||{};}catch(e){return {};}}
 function mapHeaders(hdrRow){
   const map={},mem=colMemory();
@@ -1502,6 +1548,7 @@ function gridToRows(grid,override){
   for(let i=1;i<grid.length;i++){
     const r=grid[i];if(!r||!r.some(c=>String(c??'').trim()!==''))continue;
     const g=k=>map[k]===undefined?'':cleanCell(r[map[k]]);
+    if(/^example/i.test(g('acct')))continue;   // the template's sample row
     let rsp=parseFloat(String(g('rsp')).replace(/[R,\s]/gi,''));if(isNaN(rsp))rsp=0;
     const offer=g('offer');
     if(!rsp&&offer){const m=offer.match(/R\s*([\d\s,]+)/);if(m)rsp=parseInt(m[1].replace(/[^\d]/g,''),10)||0;}
@@ -3438,6 +3485,10 @@ function init(){
       .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
   };
   $('#upPanel').onclick=()=>$('#fileInp').click();
+  $('#tplDl').onclick=e=>{e.stopPropagation();downloadTemplate();};
+  $('#tplHow').onclick=e=>{e.stopPropagation();const h=$('#tplHelp');if(h.hidden)renderTemplateHelp();h.hidden=!h.hidden;
+    $('#tplHow').textContent=h.hidden?'What goes in each column':'Hide the column guide';};
+  $('#tplHelp').onclick=e=>e.stopPropagation();
   $('#subSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;renderSubView(b.dataset.sv);});
   $('#heroCta').onclick=()=>{navTo('day');};
   ['#dayBoard','#hotBoard'].forEach(sel=>$(sel).addEventListener('click',e=>{

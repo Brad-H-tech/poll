@@ -113,6 +113,30 @@ const SEED = {
   ok(await p.$eval('#mRows', e => /Columnsmatched17of17/.test(e.textContent.replace(/\s+/g, ''))), 'the standard MTN export matches all 17 columns by itself');
   await p.click('#mCancel'); await p.waitForTimeout(300);
 
+  /* ---------- 1b. the blank template ---------- */
+  await p.evaluate(() => navTo('load')); await p.waitForTimeout(600);
+  const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#tplDl')]);
+  ok(dl.suggestedFilename() === 'Chase-base-template.csv', 'Download blank template gives Chase-base-template.csv');
+  ok(!(await p.$eval('#modal', e => e.classList.contains('show'))), 'clicking the download button does not open the file picker/preview');
+  const tplPath = path.join(SC, 'downloaded-template.csv'); await dl.saveAs(tplPath);
+  const tplLines = fs.readFileSync(tplPath, 'utf8').replace(/^\ufeff/, '').trim().split(/\r?\n/);
+  ok(tplLines[0] === 'AccountNumber,CustomerName,CustomerSurname,PrimaryMSISDN,ProductDescription,HandsetRSP,Package,ContractType,ActivationDate,InvoiceStatus,CustomerCategory,Offer,Email,CSR,Outcome,NextActionDate,CallNotes',
+     'template has the 17 headings Chase reads, required ones first');
+  ok(tplLines.length === 2 && /^EXAMPLE-DELETE-THIS-ROW,Thandi/.test(tplLines[1]), 'one clearly-marked example row');
+  await p.click('#tplHow'); await p.waitForTimeout(200);
+  ok(await p.$eval('#tplHelp', e => !e.hidden && e.querySelectorAll('tr').length === 17 && /AccountNumber/.test(e.textContent) && e.querySelectorAll('.req').length >= 4),
+     'the column guide lists all 17 columns and stars the required four');
+  // someone fills in two customers but forgets to delete the example row
+  const filled = tplLines[0] + '\n' + tplLines[1] + '\n' +
+    '2001,Thandi,Mokoena,0831234567,Samsung Galaxy A55,499,MTN Mega Gigs S,Upgrade,2024-03-15,Out of contract,Consumer,,,,,,\n' +
+    '2002,Bongani,Dlamini,0829876543,iPhone 13,799,MTN Sky,Upgrade,2024-01-02,Out of contract,Business,,,,,,\n';
+  const filledPath = path.join(SC, 'filled-template.csv'); fs.writeFileSync(filledPath, filled);
+  await p.setInputFiles('#fileInp', filledPath); await p.waitForTimeout(1200);
+  ok(await p.$eval('#mRows', e => /Columnsmatched17of17/.test(e.textContent.replace(/\s+/g, ''))), 'a filled-in template maps itself 17 of 17');
+  ok(await p.$eval('#mRows', e => /Accounts2(?!\d)/.test(e.textContent.replace(/\s+/g, ''))), 'the example row is ignored: 2 accounts, not 3');
+  ok(!(await p.$eval('#mOk', e => e.disabled)), 'ready to add');
+  await p.click('#mCancel'); await p.waitForTimeout(300);
+
   /* ---------- 2. allocate people to stores ---------- */
   await p.evaluate(() => navTo('team')); await p.waitForTimeout(900);
   const simoneSel = await p.$('#teamList select[data-store-of="simone"]');
