@@ -42,6 +42,8 @@ python3 supabase/build_site.py                 # rebuild site/index.html from th
 (cd api && node --test)                        # API behaviour tests
 python3 supabase/build_site.py --mock \
   && node supabase/test_sb.js                  # the app end-to-end in a real browser (needs playwright + chromium)
+node supabase/test_login.js                    # the sign-in flow + Start-here card
+node supabase/test_admin.js                    # column check on upload, store allocation, messages by store
 ```
 
 CI (`.github/workflows/ci.yml`) runs the API tests and refuses a push whose `site/` build is stale.

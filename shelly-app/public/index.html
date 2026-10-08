@@ -313,7 +313,7 @@
   .modal{position:fixed;inset:0;z-index:95;display:none;place-items:center;padding:20px;
     background:rgba(10,10,8,.45);backdrop-filter:blur(4px)}
   .modal.show{display:grid}
-  .m-card{width:min(460px,100%);background:var(--surface-1);border:1px solid var(--line);
+  .m-card{width:min(460px,100%);max-height:92vh;overflow:auto;background:var(--surface-1);border:1px solid var(--line);
     border-radius:20px;box-shadow:var(--shadow-lg);padding:24px}
   .m-card h3{font-size:17px;margin-bottom:4px}
   .m-card .m-sub{color:var(--ink-3);font-size:12.5px;margin-bottom:16px}
@@ -322,6 +322,21 @@
     background:var(--surface-2);border:1px solid var(--line);border-radius:10px}
   .m-row b{font-variant-numeric:tabular-nums}
   .m-row.bad{border-color:color-mix(in srgb,var(--neg) 40%,transparent);color:var(--neg)}
+  .cmap-hd{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:2px 0 8px}
+  .cmap-hd small{display:block;text-transform:none;letter-spacing:0;font-weight:500;font-size:12px;color:var(--ink-2);margin-top:3px}
+  .cmap{display:grid;grid-template-columns:1fr 1fr;gap:7px 10px;margin-bottom:18px}
+  .cmap label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:var(--ink-2);font-weight:600}
+  .cmap label .sel{max-width:none;width:100%;padding:7px 24px 7px 9px;font-size:12px}
+  .cmap label.req b{color:var(--neg)}
+  .cmap label.miss .sel{border-color:color-mix(in srgb,var(--neg) 55%,transparent)}
+  @media(max-width:480px){.cmap{grid-template-columns:1fr}}
+  .smsg{border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:12px;background:var(--surface-2)}
+  .smsg-hd{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .smsg-hd b{font-size:14px}
+  .smsg .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--surface-1);border:1px solid var(--line);color:var(--ink-3)}
+  .smsg .pill.on{color:var(--brand-deep);border-color:color-mix(in srgb,var(--brand) 40%,transparent);background:color-mix(in srgb,var(--brand) 14%,transparent)}
+  .smsg .tplbox{min-height:84px;background:var(--surface-1)}
+  .sel.sel-sm{padding:5px 22px 5px 8px;font-size:12px;max-width:160px}
   .m-actions{display:flex;gap:10px;justify-content:flex-end}
   .btn2{appearance:none;cursor:pointer;font-size:13.5px;font-weight:640;border-radius:11px;padding:10px 18px;transition:.15s}
   .btn2.ghost{background:transparent;border:1px solid var(--line);color:var(--ink-2)}
@@ -1104,6 +1119,12 @@
       <div class="toolbar" style="margin-top:12px"><button class="abtn" id="quoteSave">Save quotes</button></div>
     </section>
 
+    <section class="card pad-lg" id="storeMsgCard" style="margin-top:16px" aria-label="Messages by store" hidden>
+      <div class="card-hd"><div><h3>Messages by store</h3>
+        <div class="h-desc">Every store's WhatsApp opener in one place · see who changed it last, change it yourself, or put it back to the default</div></div></div>
+      <div id="storeMsgBody"></div>
+    </section>
+
     <section class="card pad-lg" id="teamCard" style="margin-top:16px" aria-label="Team">
       <div class="card-hd"><div><h3>Team</h3>
         <div class="h-desc">Logins for the floor — everyone works the same live book</div></div></div>
@@ -1114,6 +1135,7 @@
         <input class="ti" id="nuPass" placeholder="password (10+)" type="password" autocomplete="new-password">
         <input class="ti" id="nuAgent" placeholder="CSR name in base (e.g. SIMONE)" autocomplete="off" style="max-width:210px">
         <select class="sel" id="nuRole"><option value="consultant">Consultant</option><option value="manager">Manager</option></select>
+        <select class="sel" id="nuStore" hidden aria-label="Store"></select>
         <button class="abtn" id="nuAdd">Add user</button>
       </div>
     </section>
@@ -1184,6 +1206,8 @@
   <h3>Add base to Chase CRM</h3>
   <div class="m-sub" id="mSub"></div>
   <div class="m-rows" id="mRows"></div>
+  <div class="cmap-hd" id="mMapHd">Check the columns<small>Chase guessed which column is which. Fix any that are wrong — it remembers for next month.</small></div>
+  <div class="cmap" id="mMap"></div>
   <div class="m-actions">
     <button class="btn2 ghost" id="mCancel">Cancel</button>
     <button class="btn2 solid" id="mOk">Add base</button>
@@ -1426,10 +1450,16 @@ const HEADER_MAP={csr:['csr','agent','consultant'],name:['customername','custome
   next:['nextaction','nextactiondate','callbackdate','followupdate','callback'],
   note:['callnotes','notes','comments','comment']};
 function normHdr(h){return String(h||'').toLowerCase().replace(/[^a-z]/g,'');}
+const FIELD_LBL={acct:'Account number',name:'Customer name',product:'Product / device',rsp:'Price (RSP)',offer:'Offer',
+  surname:'Surname',msisdn:'Phone number',csr:'Consultant (CSR)',package:'Price plan',act:'Activation date',email:'Email',
+  ctype:'Contract type',status:'Status',category:'Category',outcome:'Outcome',next:'Callback date',note:'Notes'};
+const FIELD_REQ=['acct','name','product','rsp'];
+function colMemory(){try{return JSON.parse(localStorage.getItem('chase-colmap')||'{}')||{};}catch(e){return {};}}
 function mapHeaders(hdrRow){
-  const map={};
+  const map={},mem=colMemory();
   hdrRow.forEach((h,i)=>{
     const n=normHdr(h);if(!n)return;
+    if(Object.prototype.hasOwnProperty.call(mem,n)){const k=mem[n];if(k&&FIELD_LBL[k]&&map[k]===undefined)map[k]=i;return;}
     for(const [k,alts] of Object.entries(HEADER_MAP)){
       if(map[k]!==undefined)continue;
       if(k==='note'&&n.includes('invoice'))continue;
@@ -1466,10 +1496,8 @@ function normOutcome(v){
   if(/contact/.test(s))return 'fu';
   return '';
 }
-function gridToRows(grid){
-  const map=mapHeaders(grid[0]);
-  if(map.acct===undefined&&map.name===undefined)
-    throw new Error('Could not find an Account or Customer column in the header row');
+function gridToRows(grid,override){
+  const map=override||mapHeaders(grid[0]);
   const rows=[],trackImp=[];
   for(let i=1;i<grid.length;i++){
     const r=grid[i];if(!r||!r.some(c=>String(c??'').trim()!==''))continue;
@@ -2027,39 +2055,73 @@ async function handleFiles(files){
       if(/\.csv$/i.test(file.name))grid=parseCSV(await file.text());
       else grid=await parseXLSX(await file.arrayBuffer());
       if(!grid.length)throw new Error('The file appears to be empty');
-      const {rows,map,trackImp}=gridToRows(grid);
-      if(!rows.length)throw new Error('No data rows found under the header');
-      const label=file.name.replace(/\.(xlsx|csv)$/i,'').replace(/[_-]+/g,' ').trim().slice(0,28);
-      const ds=buildDataset(rows,label||'Uploaded base');
-      ds._track=trackImp||[];
-      pendingBase=ds;
-      const critical=['acct','name','product','rsp'];
-      const missing=critical.filter(k=>map[k]===undefined&&!(k==='rsp'&&map.offer!==undefined));
+      if(grid.length<2)throw new Error('No data rows found under the header');
+      pendingGrid=grid;pendingMap=mapHeaders(grid[0]);
+      pendingLabel=file.name.replace(/\.(xlsx|csv)$/i,'').replace(/[_-]+/g,' ').trim().slice(0,28);
       $('#mSub').textContent=file.name;
-      $('#mRows').innerHTML=`
-        <div class="m-row"><span>Data rows detected</span><b>${ds.lineItems}</b></div>
-        <div class="m-row"><span>Accounts</span><b>${ds.customers.length}</b></div>
-        <div class="m-row"><span>Offer value / month</span><b>${zark(ds.totalRSP)}</b></div>
-        <div class="m-row"><span>Period detected</span><b>${esc(ds.sub||'—')}</b></div>
-        <div class="m-row"><span>Columns mapped</span><b>${Object.keys(map).length} of 13</b></div>
-        ${missing.length?`<div class="m-row bad"><span>Missing columns</span><b>${missing.join(', ')}</b></div>`:''}
-        ${ds._track.length?`<div class="m-row" style="border-color:color-mix(in srgb,var(--pos) 40%,transparent)"><span>Customer outcomes found</span><b>${ds._track.length} — will be applied</b></div>
-        <div class="m-row"><label><input type="checkbox" id="mAddBase" checked> Also load this file as a new base</label></div>`:''}`;
+      renderPending();
       $('#modal').classList.add('show');
     }catch(err){
       toast('⚠️ '+esc(err.message||'Could not read that file'));
     }
   }
 }
+let pendingGrid=null,pendingMap=null,pendingLabel='';
+function pendingMissing(map){return FIELD_REQ.filter(k=>map[k]===undefined&&!(k==='rsp'&&map.offer!==undefined));}
+/* Rebuild the preview from the file + the current column choices. Runs again whenever a column is changed. */
+function renderPending(){
+  if(!pendingGrid)return;
+  const map=pendingMap,hdr=pendingGrid[0];
+  const {rows,trackImp}=gridToRows(pendingGrid,map);
+  const ds=buildDataset(rows,pendingLabel||'Uploaded base');
+  ds._track=trackImp||[];
+  pendingBase=ds;
+  const missing=pendingMissing(map);
+  const addBaseChecked=$('#mAddBase')?$('#mAddBase').checked:true;
+  $('#mRows').innerHTML=`
+    <div class="m-row"><span>Data rows detected</span><b>${ds.lineItems}</b></div>
+    <div class="m-row"><span>Accounts</span><b>${ds.customers.length}</b></div>
+    <div class="m-row"><span>Offer value / month</span><b>${zark(ds.totalRSP)}</b></div>
+    <div class="m-row"><span>Period detected</span><b>${esc(ds.sub||'—')}</b></div>
+    <div class="m-row"><span>Columns matched</span><b>${Object.keys(map).length} of ${Object.keys(FIELD_LBL).length}</b></div>
+    ${missing.length?`<div class="m-row bad"><span>Still needed</span><b>${missing.map(k=>FIELD_LBL[k]).join(', ')}</b></div>`:''}
+    ${ds._track.length?`<div class="m-row" style="border-color:color-mix(in srgb,var(--pos) 40%,transparent)"><span>Customer outcomes found</span><b>${ds._track.length} — will be applied</b></div>
+    <div class="m-row"><label><input type="checkbox" id="mAddBase" ${addBaseChecked?'checked':''}> Also load this file as a new base</label></div>`:''}`;
+  // one dropdown per Chase field, listing the file's own headings
+  const used=new Set(Object.values(map));
+  const opts=i=>`<option value="">— not in this file —</option>`+hdr.map((h,j)=>{const t=cleanCell(h);if(!t)return '';
+    return `<option value="${j}" ${i===j?'selected':''}>${esc(t.slice(0,40))}</option>`;}).join('');
+  $('#mMap').innerHTML=Object.keys(FIELD_LBL).map(k=>{const req=FIELD_REQ.includes(k)&&!(k==='rsp'&&map.offer!==undefined);
+    return `<label class="${req?'req':''} ${req&&map[k]===undefined?'miss':''}">${FIELD_LBL[k]}${req?' <b>*</b>':''}<select class="sel" data-field="${k}">${opts(map[k])}</select></label>`;}).join('');
+  $$('#mMap select').forEach(sel=>sel.onchange=()=>{
+    const k=sel.dataset.field,v=sel.value;
+    if(v==='')delete pendingMap[k];
+    else{const j=+v;for(const o of Object.keys(pendingMap))if(pendingMap[o]===j)delete pendingMap[o];pendingMap[k]=j;}
+    renderPending();
+  });
+  $('#mOk').disabled=!!missing.length||!rows.length;
+  $('#mOk').title=missing.length?'Choose the starred columns first':'';
+}
+function rememberColumns(){
+  if(!pendingGrid||!pendingMap)return;
+  try{
+    const mem=colMemory(),byIdx={};
+    Object.entries(pendingMap).forEach(([k,i])=>byIdx[i]=k);
+    pendingGrid[0].forEach((h,i)=>{const n=normHdr(h);if(n)mem[n]=byIdx[i]||'';});
+    localStorage.setItem('chase-colmap',JSON.stringify(mem));
+  }catch(e){}
+}
 async function confirmBase(){
   if(!pendingBase)return;
+  if(pendingMissing(pendingMap||{}).length){toast('Choose the starred columns first');return;}
+  rememberColumns();
   const addChk=$('#mAddBase');
   const addBase=!(pendingBase._track||[]).length||!addChk||addChk.checked;
   const payload={label:pendingBase.label,rows:pendingBase.rows,outcomes:pendingBase._track||[],addBase};
   $('#mOk').disabled=true;
   try{
     const r=await api('/api/bases',{method:'POST',body:JSON.stringify(payload)});
-    $('#modal').classList.remove('show');pendingBase=null;
+    $('#modal').classList.remove('show');pendingBase=null;pendingGrid=null;pendingMap=null;
     filters=F0();shown=40;
     await refreshState();
     const bits=[];
@@ -2968,6 +3030,7 @@ function loadSettingsPanel(){
   const qb=$('#quoteBox');if(qb&&document.activeElement!==qb)qb.value=SETTINGS.quotes||'';
   const rt=$('#repTo');if(rt&&document.activeElement!==rt)rt.value=SETTINGS.report_to||'';
   tplPreview();
+  renderStoreMsgs();
 }
 function saveSetting(key,value,msg){
   return api('/api/settings',{method:'PUT',body:JSON.stringify({key,value})})
@@ -3244,7 +3307,13 @@ function drawTeam(){
     if(k==='u')return `<td class="mono mut">@${esc(r.u)}</td>`;
     if(k==='role')return `<td><span class="role ${r.role==='manager'?'mgr':''}">${r.role==='manager'?'Manager':'Consultant'}</span></td>`;
     if(k==='agent')return `<td class="mono">${r.agent?esc(r.agent):'<span class="mut">—</span>'}</td>`;
-    if(k==='store')return `<td>${esc(r.store)}</td>`;
+    if(k==='store'){
+      if(!(ME&&ME.head))return `<td>${esc(r.store)}</td>`;
+      const stores=(LF.stores&&LF.stores.length?LF.stores:STORES.map(([id,name])=>({id,name})));
+      return `<td><select class="sel sel-sm" data-store-of="${esc(r.u)}" aria-label="Store for ${esc(r.name)}">${
+        r.role==='manager'?`<option value="" ${!r.store_id?'selected':''}>All stores (head office)</option>`:''}${
+        stores.map(s=>`<option value="${s.id}" ${s.id===r.store_id?'selected':''}>${esc(s.name)}</option>`).join('')}</select></td>`;
+    }
     if(k==='accts'||k==='contacts')return `<td>${r[k]?r[k]:'<span class="mut">0</span>'}</td>`;
     if(k==='last')return `<td class="${r.last?'':'mut'}">${r.last||'—'}</td>`;
     return `<td class="act"><button class="abtn" data-pw="${esc(r.u)}">Reset PW</button>${r.u!==ME.u?`<button class="abtn" data-rm="${esc(r.u)}">Remove</button>`:''}</td>`;
@@ -3276,6 +3345,12 @@ function drawTeam(){
       .then(()=>toast('Password updated for @'+esc(b.dataset.pw)))
       .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
   });
+  $$('[data-store-of]',box).forEach(sel=>sel.onchange=()=>{
+    const u=sel.dataset.storeOf,store_id=sel.value,name=sel.options[sel.selectedIndex].textContent;
+    api('/api/users/'+u,{method:'PUT',body:JSON.stringify({store_id})})
+      .then(()=>{toast('@'+esc(u)+' moved to '+esc(name));renderTeam();})
+      .catch(e=>{if(e.message!=='auth'){toast('⚠️ '+esc(e.message));renderTeam();}});
+  });
   $$('[data-rm]',box).forEach(b=>b.onclick=()=>{
     if(!confirm('Remove @'+b.dataset.rm+'? Their login stops working immediately.'))return;
     api('/api/users/'+b.dataset.rm,{method:'DELETE'})
@@ -3284,7 +3359,36 @@ function drawTeam(){
   });
 }
 async function renderTeam(){
+  const ns=$('#nuStore');
+  if(ns){ns.hidden=!(ME&&ME.head);
+    if(ME&&ME.head&&document.activeElement!==ns){const stores=(LF.stores&&LF.stores.length?LF.stores:STORES.map(([id,name])=>({id,name})));
+      const cur=LF.store||$('#liStore').value;   // defaults to the store head office is signed into
+      ns.innerHTML=stores.map(s=>`<option value="${s.id}" ${s.id===cur?'selected':''}>${esc(s.name)}</option>`).join('');}}
   try{TEAM_USERS=await api('/api/users');drawTeam();}catch(e){}
+}
+
+/* ---- Messages by store (head office) ---- */
+function fmtWhen(iso){if(!iso)return '';const d=new Date(iso);if(isNaN(d))return '';
+  return d.toLocaleDateString('en-ZA',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});}
+async function renderStoreMsgs(){
+  const card=$('#storeMsgCard');if(!card)return;
+  if(!(ME&&ME.head)){card.hidden=true;return;}
+  const ae=document.activeElement;if(ae&&ae.tagName==='TEXTAREA'&&card.contains(ae))return;   // don't wipe a message someone is typing
+  let list;try{list=await api('/api/stores/settings');}catch(e){return;}
+  card.hidden=false;
+  $('#storeMsgBody').innerHTML=list.map(s=>{const custom=!!(s.wa_tpl&&s.wa_tpl.trim());
+    return `<div class="smsg" data-smsg="${esc(s.id)}">
+      <div class="smsg-hd"><b>${esc(s.name)}</b>
+        <span class="pill ${custom?'on':''}">${custom?('Changed by '+esc(s.by||'someone')+(s.at?' · '+esc(fmtWhen(s.at)):'')):'Default message'}</span></div>
+      <textarea class="tplbox" data-smsg-box="${esc(s.id)}">${esc(custom?s.wa_tpl:DEFAULT_TPL)}</textarea>
+      <div class="toolbar" style="margin:10px 0 0"><button class="abtn" data-smsg-save="${esc(s.id)}">Save for ${esc(s.name)}</button>
+        ${custom?`<button class="abtn" data-smsg-reset="${esc(s.id)}">Back to default</button>`:''}</div></div>`;}).join('');
+  const save=(id,val,msg)=>api('/api/stores/'+id+'/settings',{method:'PUT',body:JSON.stringify({wa_tpl:val})})
+    .then(()=>{toast(msg);renderStoreMsgs();if(id===(ME.store_id||$('#liStore').value))loadSettingsPanel();})
+    .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
+  $$('[data-smsg-save]',card).forEach(b=>b.onclick=()=>{const id=b.dataset.smsgSave;
+    const v=$(`[data-smsg-box="${id}"]`,card).value;save(id,v.trim()===DEFAULT_TPL.trim()?'':v,'Message saved for '+esc(b.textContent.replace(/^Save for /,'')));});
+  $$('[data-smsg-reset]',card).forEach(b=>b.onclick=()=>save(b.dataset.smsgReset,'','Back to the default message'));
 }
 
 async function populateStores(){
@@ -3326,6 +3430,7 @@ function init(){
   };
   $('#nuAdd').onclick=()=>{
     const body={name:$('#nuName').value.trim(),u:$('#nuUser').value.trim(),
+      ...(ME&&ME.head&&$('#nuStore').value?{store_id:$('#nuStore').value}:{}),
       p:$('#nuPass').value,role:$('#nuRole').value,agent:$('#nuAgent').value.trim()};
     api('/api/users',{method:'POST',body:JSON.stringify(body)})
       .then(()=>{toast('User added — they can sign in now');
