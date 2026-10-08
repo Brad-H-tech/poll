@@ -20,6 +20,8 @@ create table if not exists public.stores (
   name      text not null,
   sort      int  not null default 0,
   wa_tpl    text not null default '',       -- WhatsApp message template
+  wa_tpl_by text not null default '',       -- who last changed it (head office can see)
+  wa_tpl_at timestamptz,                    -- and when
   quotes    text not null default '',       -- mission quotes, one per line
   report_to text not null default '',       -- number the daily report goes to
   verify_at text                            -- last MTN activations check ('YYYY-MM-DD')

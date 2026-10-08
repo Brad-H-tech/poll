@@ -57,7 +57,7 @@
     if (ME.store_id) STORE = ME.store_id;
     return ME;
   }
-  const pubMe = () => ME && { u: ME.u, name: ME.name, role: ME.role, agent: ME.agent || '' };
+  const pubMe = () => ME && { u: ME.u, name: ME.name, role: ME.role, agent: ME.agent || '', store_id: ME.store_id || null, head: headOffice() };
 
   async function loadStores() {
     const { data } = await sb.from('stores').select('id,name,sort').order('sort');
@@ -248,10 +248,29 @@
       const key = String(body.key || '').replace(/[^a-z_]/gi, '');
       if (!['wa_tpl', 'quotes', 'report_to'].includes(key)) return ERR('Unknown setting');
       const patch = {}; patch[key] = String(body.value || '').slice(0, key === 'report_to' ? 40 : 8000);
+      if (key === 'wa_tpl') { patch.wa_tpl_by = ME.name; patch.wa_tpl_at = new Date().toISOString(); }
       const { error } = await sb.from('stores').update(patch).eq('id', STORE);
       if (error) return ERR(error);
       cache.settings[key] = patch[key];
       emit('settings', {});
+      return J({ ok: true });
+    }],
+
+    // head office: every store's WhatsApp message side by side, with who changed it last
+    ['GET', /^\/api\/stores\/settings$/, async () => {
+      if (!headOffice()) return ERR('Head office only', 403);
+      const { data, error } = await sb.from('stores').select('id,name,sort,wa_tpl,wa_tpl_by,wa_tpl_at').order('sort');
+      if (error) return ERR(error);
+      return J((data || []).map(s => ({ id: s.id, name: s.name, wa_tpl: s.wa_tpl || '', by: s.wa_tpl_by || '', at: s.wa_tpl_at || '' })));
+    }],
+    ['PUT', /^\/api\/stores\/([\w-]+)\/settings$/, async (m, body) => {
+      if (!headOffice()) return ERR('Head office only', 403);
+      if (!Object.keys(STORE_NAMES).length) await loadStores();
+      if (!STORE_NAMES[m[1]]) return ERR('Unknown store', 404);
+      const wa_tpl = String(body.wa_tpl || '').slice(0, 8000);
+      const { error } = await sb.from('stores').update({ wa_tpl, wa_tpl_by: ME.name, wa_tpl_at: new Date().toISOString() }).eq('id', m[1]);
+      if (error) return ERR(error);
+      if (m[1] === STORE) { cache.settings.wa_tpl = wa_tpl; emit('settings', {}); }
       return J({ ok: true });
     }],
 
@@ -455,6 +474,15 @@
       if (String(body.p || '').length < 10) return ERR('Password must be at least 10 characters');
       const role = body.role === 'manager' ? 'manager' : 'consultant';
       const agent = String(body.agent || '').toUpperCase().trim().slice(0, 40);
+      // head office can put the new person in any store; a store manager only in their own
+      if (!Object.keys(STORE_NAMES).length) await loadStores();
+      let targetStore = STORE;
+      if (headOffice() && body.store_id !== undefined) {
+        const want = String(body.store_id || '');
+        if (want && !STORE_NAMES[want]) return ERR('Unknown store');
+        targetStore = want || null;                       // '' = head office (all stores)
+        if (!targetStore && role !== 'manager') return ERR('A consultant must belong to a store');
+      }
 
       if (API_URL) {
         // The Chase API creates the login with its admin rights, so Supabase public sign-ups
@@ -463,7 +491,7 @@
         if (!session) return ERR('Not signed in', 401);
         let r;
         try {
-          r = await realFetch(API_URL + '/v1/users?store=' + encodeURIComponent(STORE), {
+          r = await realFetch(API_URL + '/v1/users?store=' + encodeURIComponent(targetStore || STORE), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + session.access_token },
             body: JSON.stringify({ username: u, name, password: body.p, role, agent }),
@@ -485,8 +513,26 @@
       }
       const id = data && data.user && data.user.id;
       if (!id) return ERR('Supabase did not return the new user — check that email confirmation is turned off in Authentication → Providers → Email');
-      const { error: pe } = await sb.from('profiles').insert({ id, username: u, name, role, agent, store_id: STORE });
+      const { error: pe } = await sb.from('profiles').insert({ id, username: u, name, role, agent, store_id: targetStore });
       if (pe) return ERR(pe);
+      emit('team', {});
+      return J({ ok: true });
+    }],
+
+    ['PUT', /^\/api\/users\/([\w.-]+)$/, async (m, body) => {
+      if (!isMgr()) return ERR('Manager only', 403);
+      if (!headOffice()) return ERR('Only head office can move people between stores', 403);
+      if (body.store_id === undefined) return ERR('Nothing to change');
+      if (!Object.keys(STORE_NAMES).length) await loadStores();
+      const want = String(body.store_id || '');
+      if (want && !STORE_NAMES[want]) return ERR('Unknown store');
+      const { data: who, error: qe } = await sb.from('profiles').select('username,role').eq('username', m[1]).maybeSingle();
+      if (qe) return ERR(qe);
+      if (!who) return ERR('No such person', 404);
+      if (!want && who.role !== 'manager') return ERR('A consultant must belong to a store');
+      if (m[1] === (ME && ME.u) && !want !== !ME.store_id) return ERR('You cannot change your own head-office status');
+      const { error } = await sb.from('profiles').update({ store_id: want || null }).eq('username', m[1]);
+      if (error) return ERR(error);
       emit('team', {});
       return J({ ok: true });
     }],
