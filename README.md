@@ -33,7 +33,7 @@ the `chase-crm` worker, so nothing else should live here.
 ```
 stores    the six shops + Admin — and each shop's WhatsApp template, quotes, report number, last MTN check
 profiles  one row per person who can sign in (manager | consultant, their store, their name in the base)
-bases     each monthly upload (the customer list)
+bases     each monthly upload (the customer list) — one per store per book (segment: consumer | sme)
 tracking  each customer's outcome, callback, note, activities, history — and who owns them
 claims    "can I have this customer?" requests
 ```
@@ -50,6 +50,7 @@ python3 supabase/build_site.py --mock \
   && node supabase/test_sb.js                  # the app end-to-end in a real browser (needs playwright + chromium)
 node supabase/test_login.js                    # the sign-in flow + Start-here card
 node supabase/test_admin.js                    # column check on upload, store allocation, messages by store
+node supabase/test_sme.js                      # the SME book: sign-in choice, multi-sheet export, email-first, templates
 ```
 
 CI (`.github/workflows/ci.yml`) runs the API tests and refuses a push whose `site/` build is stale.

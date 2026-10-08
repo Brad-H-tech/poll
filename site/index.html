@@ -171,6 +171,22 @@
   .seg button{appearance:none;border:0;background:transparent;color:var(--ink-2);
     font-size:12.5px;font-weight:600;padding:5px 11px;border-radius:8px;cursor:pointer;transition:.15s}
   .seg button[aria-pressed="true"]{background:var(--surface-1);color:var(--ink);box-shadow:var(--shadow)}
+  .segsw{display:none}
+  body.authed .segsw{display:inline-flex}
+  .segsw button{font-size:12px;padding:5px 10px}
+  .segsw button[data-seg="sme"][aria-pressed="true"]{background:var(--brand);color:#fff}
+  .lf-seg{display:flex;gap:6px;margin:0 0 12px}
+  .lf-seg button{flex:1;appearance:none;cursor:pointer;font:inherit;font-size:13px;font-weight:700;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink-2)}
+  .lf-seg button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+  .lf-seg small{display:block;font-size:11px;font-weight:500;opacity:.8}
+  .lines{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .lines a{font-size:12px;font-weight:600;color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px 9px;text-decoration:none}
+  .lines a:hover{color:var(--ink);border-color:var(--line-strong)}
+  body.sme .cust small{color:var(--brand-deep)}
+  .m-note{font-size:12.5px;background:color-mix(in srgb,var(--brand) 12%,transparent);border:1px solid color-mix(in srgb,var(--brand) 35%,transparent);border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.45}
+  .m-note button{margin-top:6px}
+  .m-alloc{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;padding:9px 12px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;margin-bottom:12px}
+
   .hint{font-size:11px;color:var(--ink-3);margin-top:12px;display:flex;align-items:center;gap:6px}
 
   /* ============ Charts ============ */
@@ -893,6 +909,10 @@
       <span class="mark" style="font-size:11px;letter-spacing:-.5px">C</span><b>Chase CRM</b>
       <span class="sub" id="storeSub">MTN Dealer</span>
     </div>
+    <div class="seg segsw" id="segSw" role="tablist" aria-label="Book">
+      <button data-seg="consumer" role="tab" aria-pressed="true">Consumer</button>
+      <button data-seg="sme" role="tab" aria-pressed="false">SME</button>
+    </div>
     <div class="top-spacer"></div>
     <div class="base-pills mgr-only" id="basePills" role="group" aria-label="Loaded bases"></div>
     <div class="seg" id="viewSeg" role="tablist" aria-label="View">
@@ -1114,9 +1134,16 @@
             <li>Delete the example row before you load.</li>
             <li>Saves as .xlsx or .csv — both load.</li>
           </ul>
-          <div class="toolbar" style="margin-top:14px">
+          <h4 style="margin-top:14px">Consumer base</h4>
+          <div class="toolbar">
             <button class="btn2 solid" type="button" id="tplXlsx">Download Excel template (.xlsx)</button>
             <button class="abtn" type="button" id="tplDl">.csv version</button>
+          </div>
+          <h4 style="margin-top:14px">SME base</h4>
+          <p style="margin-bottom:8px">One row per <b>business</b>: name, contact person, email, then as many MSISDN columns as they have lines. Fewer rows, more detail. Loaded into the SME book (switch at the top of the screen).</p>
+          <div class="toolbar">
+            <button class="btn2 solid" type="button" id="tplXlsxSme">Download SME Excel template (.xlsx)</button>
+            <button class="abtn" type="button" id="tplDlSme">.csv version</button>
           </div>
         </div>
       </div>
@@ -1260,6 +1287,8 @@
 <div class="modal" id="modal"><div class="m-card">
   <h3>Add base to Chase CRM</h3>
   <div class="m-sub" id="mSub"></div>
+  <div class="m-note" id="mNote" hidden></div>
+  <div class="m-alloc" id="mAlloc" hidden><span>Allocate every row to</span><select class="sel" id="mAllocSel"></select></div>
   <div class="m-rows" id="mRows"></div>
   <div class="cmap-hd" id="mMapHd">Check the columns<small>Chase guessed which column is which. Fix any that are wrong — it remembers for next month.</small></div>
   <div class="cmap" id="mMap"></div>
@@ -1299,6 +1328,10 @@
     <button class="lf-back" data-go="who" aria-label="Back">←</button>
     <div class="lf-face" id="lfFace">?</div>
     <div class="lf-hi"><h3 id="lfHi">Sign in</h3><small id="lfHiSub"></small></div>
+    <div class="lf-seg" id="lfSeg" role="tablist" aria-label="Which book">
+      <button type="button" data-seg="consumer" aria-pressed="true">Consumer<small>upgrades &amp; new lines</small></button>
+      <button type="button" data-seg="sme" aria-pressed="false">SME<small>business accounts</small></button>
+    </div>
     <input class="ti" id="liU" placeholder="Username" autocomplete="username">
     <input class="ti" id="liP" type="password" placeholder="Password" autocomplete="current-password">
     <div class="l-err" id="liErr"></div>
@@ -1428,6 +1461,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
   /* ---------- session state ---------- */
   let ME = null;        // {id, u, name, role, agent, store_id}
   let STORE = 's1';     // store currently being worked
+  let SEG = 'consumer';  // which book: 'consumer' or 'sme' — each has its own active base per store
+  const segOf = v => v === 'sme' ? 'sme' : 'consumer';
   let STORE_NAMES = {};
   const cache = { tracking: {}, assign: {}, settings: {}, claims: [], bases: [], active: null };
 
@@ -1460,8 +1495,8 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // one before it, which the KPI deltas compare against — are downloaded. Older bases arrive
     // as label + row count only; tapping one in the app activates it, which loads it.
     const [metas, activeRows, tracking, claims, store] = await Promise.all([
-      sb.from('bases').select('id,label,active,created_at,rows_count').eq('store_id', sid).order('created_at'),
-      sb.from('bases').select('id,rows').eq('store_id', sid).eq('active', true).order('created_at', { ascending: false }).limit(1),
+      sb.from('bases').select('id,label,active,created_at,rows_count').eq('store_id', sid).eq('segment', SEG).order('created_at'),
+      sb.from('bases').select('id,rows').eq('store_id', sid).eq('segment', SEG).eq('active', true).order('created_at', { ascending: false }).limit(1),
       sb.from('tracking').select('*').eq('store_id', sid),
       sb.from('claims').select('*').eq('store_id', sid).order('created_at', { ascending: false }),
       sb.from('stores').select('wa_tpl,quotes,report_to,verify_at').eq('id', sid).maybeSingle(),
@@ -1509,7 +1544,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     ['wa_tpl', 'quotes', 'report_to', 'verify_at'].forEach(k => { if (s[k]) cache.settings[k] = s[k]; });
 
     return {
-      me: pubMe(), store: sid, storeName: STORE_NAMES[sid] || sid,
+      me: pubMe(), store: sid, storeName: STORE_NAMES[sid] || sid, segment: SEG,
       bases: cache.bases, active: cache.active,
       tracking: cache.tracking, settings: cache.settings,
       claims: cache.claims, assign: cache.assign,
@@ -1551,6 +1586,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     ['GET', /^\/api\/stores$/, async () => J(await loadStores())],
 
+    // switch between the Consumer and SME books without signing out
+    ['POST', /^\/api\/segment$/, async (m, body) => {
+      if (!ME) return ERR('Not signed in', 401);
+      SEG = segOf(body.segment);
+      return J({ ok: true, segment: SEG });
+    }],
+
     ['POST', /^\/api\/login$/, async (m, body) => {
       const { error } = await sb.auth.signInWithPassword({
         email: emailFor(body.u), password: String(body.p || ''),
@@ -1562,6 +1604,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         return ERR('That login has no Chase CRM profile yet — ask your manager to finish setting it up', 403);
       }
       if (!me.store_id) STORE = STORE_NAMES[body.store] ? body.store : STORE;   // head office picks
+      SEG = segOf(body.segment);
       await loadStores();
       subscribeLive();
       return J({ ok: true, me: pubMe() });
@@ -1618,10 +1661,10 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       const acct = 'WI' + Math.random().toString(36).slice(2, 10).toUpperCase();
       const email = /@/.test(String(body.email || '')) ? String(body.email).slice(0, 120).trim() : '';
       const row = [ME.agent || '', name, '', acct, ms, '', today(),
-        'Walk-in / manual lead', 0, 'New / Add Sim', '', 'Consumer', '', email];
+        'Walk-in / manual lead', 0, 'New / Add Sim', '', SEG === 'sme' ? 'SME' : 'Consumer', '', email];
       // appended server-side by public.add_walkin: consultants may add a customer but may
       // never rewrite a base, and this never touches rows the phone has not downloaded
-      const { error } = await sb.rpc('add_walkin', { p_store: STORE, p_row: row });
+      const { error } = await sb.rpc('add_walkin', { p_store: STORE, p_row: row, p_segment: SEG });
       if (error) return ERR(error);
       if (!base.lazy) base.rows = base.rows.concat([row]);
       const note = String(body.note || '').slice(0, 5000);
@@ -1807,9 +1850,9 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
         const rows = body.rows;
         if (!Array.isArray(rows) || !rows.length || !Array.isArray(rows[0]))
           return ERR('Invalid rows payload');
-        await sb.from('bases').update({ active: false }).eq('store_id', STORE);
+        await sb.from('bases').update({ active: false }).eq('store_id', STORE).eq('segment', SEG);
         const { data, error } = await sb.from('bases').insert({
-          store_id: STORE, label: String(body.label || 'Uploaded base').slice(0, 40),
+          store_id: STORE, segment: SEG, label: String(body.label || 'Uploaded base').slice(0, 40),
           rows, active: true,
         }).select('id').single();
         if (error) return ERR(/bases_one_active/.test(error.message || '') ? 'Someone else just loaded a base — refresh and try again' : error);
@@ -1822,7 +1865,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     ['POST', /^\/api\/bases\/([\w-]+)\/activate$/, async m => {
       if (!isMgr()) return ERR('Manager only', 403);
-      await sb.from('bases').update({ active: false }).eq('store_id', STORE);
+      await sb.from('bases').update({ active: false }).eq('store_id', STORE).eq('segment', SEG);
       const { error } = await sb.from('bases').update({ active: true }).eq('id', m[1]);
       if (error) return ERR(/bases_one_active/.test(error.message || '') ? 'Someone else just switched bases — refresh and try again' : error);
       cache.active = m[1];
@@ -2093,7 +2136,7 @@ async function unzip(buf){
   return out;
 }
 function colIdx(ref){let n=0;for(const ch of ref){const c=ch.charCodeAt(0);if(c>=65&&c<=90)n=n*26+c-64;else break;}return n-1;}
-async function parseXLSX(buf){
+async function parseXLSX(buf,all){
   const files=await unzip(buf);
   const td=new TextDecoder(), dp=new DOMParser();
   const text=n=>files[n]?td.decode(files[n]):null;
@@ -2103,10 +2146,11 @@ async function parseXLSX(buf){
   if(sst){const doc=dp.parseFromString(sst,'application/xml');
     for(const si of doc.getElementsByTagName('si')){
       let s='';for(const t of si.getElementsByTagName('t'))s+=t.textContent;ss.push(s);}}
-  // first worksheet
-  let sheetPath=Object.keys(files).find(n=>/^xl\/worksheets\/sheet1\.xml$/.test(n))
-    ||Object.keys(files).find(n=>/^xl\/worksheets\/.*\.xml$/.test(n));
-  if(!sheetPath) throw new Error('No worksheet found in the file');
+  // the worksheets, in workbook order
+  const paths=Object.keys(files).filter(n=>/^xl\/worksheets\/sheet\d+\.xml$/.test(n))
+    .sort((a,b)=>+a.match(/(\d+)\.xml$/)[1]-+b.match(/(\d+)\.xml$/)[1]);
+  if(!paths.length) throw new Error('No worksheet found in the file');
+  const readSheet=sheetPath=>{
   const doc=dp.parseFromString(text(sheetPath),'application/xml');
   const grid=[];
   for(const row of doc.getElementsByTagName('row')){
@@ -2121,7 +2165,9 @@ async function parseXLSX(buf){
     }
     grid.push(arr);
   }
-  return grid;
+  return grid;};
+  if(all)return paths.map(readSheet);
+  return readSheet(paths[0]);
 }
 function parseCSV(text){
   const grid=[];let row=[],cur='',q=false;
@@ -2148,6 +2194,7 @@ const HEADER_MAP={csr:['csr','agent','consultant'],name:['customername','custome
   next:['nextaction','nextactiondate','callbackdate','followupdate','callback'],
   note:['callnotes','notes','comments','comment']};
 function normHdr(h){return String(h||'').toLowerCase().replace(/[^a-z]/g,'');}
+function normHdrN(h){return String(h||'').toLowerCase().replace(/[^a-z0-9]/g,'');}   // keeps digits: MSISDN 2 ≠ MSISDN 1
 const FIELD_LBL={acct:'Account number',name:'Customer name',product:'Product / device',rsp:'Price (RSP)',offer:'Offer',
   surname:'Surname',msisdn:'Phone number',csr:'Consultant (CSR)',package:'Price plan',act:'Activation date',email:'Email',
   ctype:'Contract type',status:'Status',category:'Category',outcome:'Outcome',next:'Callback date',note:'Notes'};
@@ -2171,20 +2218,96 @@ const TEMPLATE_COLS=[
   ['Outcome','outcome','','Leave blank for a fresh base. Filled in by Chase on export.'],
   ['NextActionDate','next','','Leave blank for a fresh base.'],
   ['CallNotes','note','','Leave blank for a fresh base.']];
+/* ---- SME book: one row per business, email first, any number of lines ---- */
+const FIELD_LBL_SME={name:'Business name',email:'Email',msisdn:'MSISDN 1 (main number)',lines:'Other numbers',contact:'Contact person',
+  acct:'Account number',package:'Package',rsp:'Monthly spend (R)',act:'Contract end',product:'Industry',csr:'Consultant (CSR)',
+  outcome:'Outcome',next:'Callback date',note:'Notes'};
+const FIELD_REQ_SME=['name'];   // plus: a main number OR an email
+const HEADER_MAP_SME={csr:['csr','agent','consultant'],name:['businessname','tradingname','customer','company','business','name'],
+  contact:['contactperson','contactname','contact'],email:['emailaddress','email'],
+  msisdn:['msisdn1','primarymsisdn','msisdn','cellnumber','mobile','phone','number'],
+  acct:['accountnumber','account'],package:['package','priceplan','plan'],rsp:['monthlyspend','spend','rsp','netprice','price'],
+  act:['contractend','enddate','expiry','expires','activationdate'],product:['industry','sector','product'],
+  outcome:['outcome','result','disposition','callstatus','callresult'],
+  next:['nextaction','nextactiondate','callbackdate','followupdate','callback'],
+  note:['callnotes','notes','comments','comment']};
+const TEMPLATE_COLS_SME=[
+  ['BusinessName','name','Riverbend Veterinary Clinic','The business or trading name — one row per business.'],
+  ['ContactPerson','contact','Jenny Naidoo','Who you deal with there (the greeting uses their first name).'],
+  ['Email','email','jenny@riverbendvet.co.za','Their email — SME customers are emailed first.'],
+  ['MSISDN 1','msisdn','0831234567','Main cell number — digits only.'],
+  ['MSISDN 2','lines','0831234568','Second line (optional).'],
+  ['MSISDN 3','lines','','Third line (optional). Add MSISDN 4, 5… columns for more.'],
+  ['MSISDN 4','lines','',''],['MSISDN 5','lines','',''],
+  ['AccountNumber','acct','','Their MTN account number, if you have it.'],
+  ['Package','package','MTN Business Flexi','Current plan (optional).'],
+  ['MonthlySpend','rsp','1499','What they pay per month in rand — just the number.'],
+  ['ContractEnd','act','2026-11-30','When the contract ends — year-month-day.'],
+  ['Industry','product','Veterinary','What the business does (optional).'],
+  ['CSR','csr','LESLEY','Consultant\'s code if already allocated — blank goes to the pool.'],
+  ['Notes','note','','Anything useful before the first call.']];
+const SME_CANON=['BusinessName','ContactPerson','Email','MSISDN 1','MSISDN 2','MSISDN 3','MSISDN 4','MSISDN 5','MSISDN 6','MSISDN 7','MSISDN 8','MSISDN 9','MSISDN 10',
+  'AccountNumber','Package','MonthlySpend','ContractEnd','Industry','CSR','Outcome','NextActionDate','Notes'];
+const fieldLbl=()=>isSME()?FIELD_LBL_SME:FIELD_LBL;
+const fieldReq=()=>isSME()?FIELD_REQ_SME:FIELD_REQ;
+const templateCols=()=>isSME()?TEMPLATE_COLS_SME:TEMPLATE_COLS;
+/* Does this heading row look like an SME list (business + email + several MSISDN columns)? */
+function looksSME(hdr){
+  const h=(hdr||[]).map(normHdr);
+  const multi=(hdr||[]).map(normHdrN).some(x=>/^msisdn([2-9]|1[0-9])$/.test(x));
+  const biz=h.some(x=>/businessname|tradingname|company/.test(x));
+  const noAcct=!h.some(x=>/accountnumber|baaccount/.test(x));
+  return multi||biz||(noAcct&&h.includes('customer')&&h.some(x=>/^email/.test(x)));
+}
+/* The SME export comes as one sheet per "number of lines". Fold every sheet into one grid with the
+   standard SME headings so the normal column check can run on it. */
+function foldSMESheets(sheets){
+  const out=[SME_CANON.slice()];
+  const pos=Object.fromEntries(SME_CANON.map((h,i)=>[h,i]));
+  for(const grid of sheets){
+    if(!grid||grid.length<2)continue;
+    const hdr=grid[0].map(cleanCell), m={}, lineCols=[];
+    hdr.forEach((h,i)=>{const nh=normHdr(h);if(!nh)return;
+      const mm=normHdrN(h).match(/^msisdn(\d+)$/);
+      if(mm){if(+mm[1]===1)m.msisdn=i;else lineCols.push([+mm[1],i]);return;}
+      for(const [k,alts] of Object.entries(HEADER_MAP_SME)){if(m[k]!==undefined)continue;if(alts.some(a=>nh===a||nh.includes(a))){m[k]=i;break;}}});
+    if(m.name===undefined)continue;
+    lineCols.sort((a,b)=>a[0]-b[0]);
+    for(let r=1;r<grid.length;r++){
+      const row=grid[r];if(!row||!row.some(c=>String(c??'').trim()!==''))continue;
+      const g=k=>m[k]===undefined?'':cleanCell(row[m[k]]);
+      const o=new Array(SME_CANON.length).fill('');
+      o[pos.BusinessName]=g('name');o[pos.ContactPerson]=g('contact');o[pos.Email]=g('email');o[pos['MSISDN 1']]=g('msisdn');
+      lineCols.forEach(([num,i],k)=>{const v=cleanCell(row[i]);const slot=pos['MSISDN '+Math.min(k+2,10)];if(v&&slot!==undefined&&!o[slot])o[slot]=v;});
+      o[pos.AccountNumber]=g('acct');o[pos.Package]=g('package');o[pos.MonthlySpend]=g('rsp');o[pos.ContractEnd]=g('act');
+      o[pos.Industry]=g('product');o[pos.CSR]=g('csr');o[pos.Outcome]=g('outcome');o[pos.NextActionDate]=g('next');o[pos.Notes]=g('note');
+      out.push(o);
+    }
+  }
+  // drop columns nobody filled in (keeps the column check honest: real extra lines, no phantom CSR column)
+  const keep=['BusinessName','Email','MSISDN 1'];
+  const unused=[];for(let i=SME_CANON.length-1;i>=0;i--){if(!keep.includes(SME_CANON[i])&&!out.slice(1).some(r=>r[i]))unused.push(i);}
+  return out.map(r=>r.filter((_,i)=>!unused.includes(i)));
+}
 function csvCell(v){v=String(v??'');return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
-function downloadTemplate(){
-  const lines=[TEMPLATE_COLS.map(c=>c[0]).join(','),
-    TEMPLATE_COLS.map(c=>csvCell(c[1]==='acct'?'EXAMPLE-DELETE-THIS-ROW':c[2])).join(',')];
+function tplSet(kind){return kind==='sme'?TEMPLATE_COLS_SME:TEMPLATE_COLS;}
+function tplExample(kind){const cols=tplSet(kind);const key=kind==='sme'?'name':'acct';
+  return cols.map(c=>c[1]===key?(kind==='sme'?'EXAMPLE Business (delete this row)':'EXAMPLE-DELETE-THIS-ROW'):c[2]);}
+function downloadTemplate(kind){
+  kind=kind==='sme'?'sme':'consumer';const cols=tplSet(kind);
+  const lines=[cols.map(c=>c[0]).join(','),tplExample(kind).map(csvCell).join(',')];
   const blob=new Blob(['\ufeff'+lines.join('\r\n')+'\r\n'],{type:'text/csv;charset=utf-8'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Chase-base-template.csv';
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=kind==='sme'?'Chase-SME-base-template.csv':'Chase-base-template.csv';
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);
   toast('Template downloaded — open it in Excel, fill it in, save, then drop it here');
 }
 function renderTemplateHelp(){
   const box=$('#tplHelp');if(!box||box.dataset.done)return;box.dataset.done='1';
-  const req=k=>FIELD_REQ.includes(k);
-  box.innerHTML=`<div style="margin-bottom:8px"><b>Column by column.</b> <span class="req">*</span> = must be filled in.</div>
-    <table>${TEMPLATE_COLS.map(c=>`<tr><td>${esc(c[0])}${req(c[1])?' <span class="req">*</span>':''}</td><td>${esc(c[3])}${c[2]?` <span class="mut">e.g. ${esc(c[2])}</span>`:''}</td></tr>`).join('')}</table>`;
+  const table=(cols,req)=>`<table>${cols.filter(c=>c[3]||c[2]).map(c=>`<tr><td>${esc(c[0])}${req(c)?' <span class="req">*</span>':''}</td><td>${esc(c[3])}${c[2]?` <span class="mut">e.g. ${esc(c[2])}</span>`:''}</td></tr>`).join('')}</table>`;
+  box.innerHTML=`<div style="margin-bottom:8px"><b>Consumer base, column by column.</b> <span class="req">*</span> = must be filled in.</div>
+    ${table(TEMPLATE_COLS,c=>FIELD_REQ.includes(c[1]))}
+    <div style="margin:18px 0 8px"><b>SME base, column by column.</b> <span class="req">*</span> business name, plus a main number or an email.</div>
+    ${table(TEMPLATE_COLS_SME,c=>c[1]==='name'||c[1]==='email'||c[1]==='msisdn')}`;
 }
 /* ---- a small .xlsx writer: enough for a two-sheet workbook with a bold, frozen header ---- */
 const CRC_T=(()=>{const t=new Uint32Array(256);for(let i=0;i<256;i++){let c=i;for(let k=0;k<8;k++)c=c&1?(c>>>1)^0xEDB88320:c>>>1;t[i]=c>>>0;}return t;})();
@@ -2212,12 +2335,14 @@ function xlsxSheet(rows,widths,freeze){
     `<cols>${widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>`+
     rows.map((r,ri)=>`<row r="${ri+1}">${r.map((v,ci)=>cell(v,ri+1,ci,ri===0)).join('')}</row>`).join('')+`</sheetData></worksheet>`;
 }
-function downloadTemplateXlsx(){
-  const head=TEMPLATE_COLS.map(c=>c[0]);
-  const example=TEMPLATE_COLS.map(c=>c[1]==='acct'?'EXAMPLE-DELETE-THIS-ROW':c[2]);
-  const base=xlsxSheet([head,example],TEMPLATE_COLS.map(c=>Math.max(14,Math.min(30,c[0].length+4))),true);
+function downloadTemplateXlsx(kind){
+  kind=kind==='sme'?'sme':'consumer';const cols=tplSet(kind);
+  const head=cols.map(c=>c[0]);
+  const example=tplExample(kind);
+  const base=xlsxSheet([head,example],cols.map(c=>Math.max(14,Math.min(30,c[0].length+4))),true);
+  const isReq=c=>kind==='sme'?(c[1]==='name'?'YES':(c[1]==='email'||c[1]==='msisdn')?'one of':''):(FIELD_REQ.includes(c[1])?'YES':'');
   const guideRows=[['Column','Required?','Example','What to put there']]
-    .concat(TEMPLATE_COLS.map(c=>[c[0],FIELD_REQ.includes(c[1])?'YES':'',c[2],c[3]]))
+    .concat(cols.map(c=>[c[0],isReq(c),c[2],c[3]]))
     .concat([[],['Rules'],['One row per customer account; the account number must be unique.'],['Keep the headings exactly as they are. Column order does not matter.'],
       ['Phone numbers: digits only. Price: just the number, no R. Dates: year-month-day.'],['Delete the example row on the Base sheet before you load the file into Chase CRM.'],
       ['Load it: Chase CRM → Load base → drop this file. Chase shows a preview before saving anything.']]);
@@ -2230,17 +2355,20 @@ function downloadTemplateXlsx(){
     ['xl/_rels/workbook.xml.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${X}package/2006/relationships"><Relationship Id="rId1" Type="${X}officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${X}officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="${X}officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
     ['xl/styles.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="${X}spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs></styleSheet>`],
     ['xl/worksheets/sheet1.xml',base],['xl/worksheets/sheet2.xml',guide]];
-  const a=document.createElement('a');a.href=URL.createObjectURL(zipStore(files));a.download='Chase-base-template.xlsx';
+  const a=document.createElement('a');a.href=URL.createObjectURL(zipStore(files));a.download=kind==='sme'?'Chase-SME-base-template.xlsx':'Chase-base-template.xlsx';
   document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);
   toast('Excel template downloaded — fill in the Base sheet, save, then Load base');
 }
 function colMemory(){try{return JSON.parse(localStorage.getItem('chase-colmap')||'{}')||{};}catch(e){return {};}}
 function mapHeaders(hdrRow){
-  const map={},mem=colMemory();
+  const map={},memAll=colMemory(),mem=isSME()?(memAll.sme||{}):memAll;
+  const HM=isSME()?HEADER_MAP_SME:HEADER_MAP, LBL=fieldLbl();
+  if(isSME())map.lines=[];
   hdrRow.forEach((h,i)=>{
     const n=normHdr(h);if(!n)return;
-    if(Object.prototype.hasOwnProperty.call(mem,n)){const k=mem[n];if(k&&FIELD_LBL[k]&&map[k]===undefined)map[k]=i;return;}
-    for(const [k,alts] of Object.entries(HEADER_MAP)){
+    if(isSME()){const mm=normHdrN(h).match(/^msisdn(\d+)$/);if(mm&&+mm[1]>=2){map.lines.push(i);return;}}
+    if(Object.prototype.hasOwnProperty.call(mem,n)){const k=mem[n];if(k&&LBL[k]&&map[k]===undefined)map[k]=i;return;}
+    for(const [k,alts] of Object.entries(HM)){
       if(map[k]!==undefined)continue;
       if(k==='note'&&n.includes('invoice'))continue;
       if(alts.some(a=>n===a)||alts.some(a=>n.includes(a))){map[k]=i;break;}
@@ -2276,13 +2404,33 @@ function normOutcome(v){
   if(/contact/.test(s))return 'fu';
   return '';
 }
+function smeAcct(ms,email,name){
+  const d=digits(ms);if(d)return 'SME:'+(d.length===10&&d[0]==='0'?'27'+d.slice(1):d);
+  const e=String(email||'').trim().toLowerCase();if(e)return 'SME:'+e.slice(0,34);
+  return 'SME:'+String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,34);
+}
 function gridToRows(grid,override){
   const map=override||mapHeaders(grid[0]);
   const rows=[],trackImp=[];
   for(let i=1;i<grid.length;i++){
     const r=grid[i];if(!r||!r.some(c=>String(c??'').trim()!==''))continue;
-    const g=k=>map[k]===undefined?'':cleanCell(r[map[k]]);
-    if(/^example/i.test(g('acct')))continue;   // the template's sample row
+    const g=k=>map[k]===undefined||Array.isArray(map[k])?'':cleanCell(r[map[k]]);
+    if(/^example/i.test(g('acct'))||/^example/i.test(g('name')))continue;   // the template's sample row
+    if(isSME()){
+      const name=g('name');if(!name)continue;
+      const ms=g('msisdn'),email=/@/.test(g('email'))?g('email'):'';
+      const extra=(map.lines||[]).map(j=>digits(cleanCell(r[j]))).filter(Boolean);
+      let spend=parseFloat(String(g('rsp')).replace(/[R,\s]/gi,''));if(isNaN(spend))spend=0;
+      const acct=g('acct')||smeAcct(ms,email,name);
+      const n=extra.length+(digits(ms)?1:0);
+      rows.push([g('csr'),name,'',acct,ms,g('package'),toDateStr(g('act')),g('product')||(n?n+' line'+(n>1?'s':''):'Business'),
+        Math.round(spend*100)/100,'Business','','SME','',email,extra.join('|'),g('contact')]);
+      if(map.outcome!==undefined||map.next!==undefined||map.note!==undefined){
+        const st=normOutcome(g('outcome')),next=toDateStr(g('next')),note=g('note');
+        if(st||next||note)trackImp.push({acct,st,next,note});
+      }
+      continue;
+    }
     let rsp=parseFloat(String(g('rsp')).replace(/[R,\s]/gi,''));if(isNaN(rsp))rsp=0;
     const offer=g('offer');
     if(!rsp&&offer){const m=offer.match(/R\s*([\d\s,]+)/);if(m)rsp=parseInt(m[1].replace(/[^\d]/g,''),10)||0;}
@@ -2335,7 +2483,9 @@ function buildDataset(rows,label){
       if(acct)s.accts.add(acct);
     }
     if(acct){
-      const c=cust.get(acct)||{acct,name:'',csr:'',msisdn:'',cat:'',offer:'',email:'',rsp:0,items:[]};
+      const c=cust.get(acct)||{acct,name:'',csr:'',msisdn:'',cat:'',offer:'',email:'',rsp:0,items:[],lines:[],contact:''};
+      if(r[14]&&!c.lines.length)c.lines=String(r[14]).split('|').filter(Boolean);
+      if(r[15]&&!c.contact)c.contact=String(r[15]);
       if(!c.name&&(nm||sn))c.name=(nm+' '+sn).trim();
       if(!c.csr&&agent)c.csr=agent;
       if(!c.msisdn&&ms)c.msisdn=ms;
@@ -2451,6 +2601,22 @@ let filters=F0();
 let sortK='rsp',sortDir=-1,shown=40,lbMode='rsp';
 const expanded=new Set();
 const DS=()=>datasets[activeIdx];
+let SEG='consumer';
+const isSME=()=>SEG==='sme';
+function applySeg(seg){
+  SEG=seg==='sme'?'sme':'consumer';
+  document.body.classList.toggle('sme',isSME());
+  $$('#segSw button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.seg===SEG)));
+}
+async function switchSeg(seg){
+  if(seg===SEG)return;
+  try{await api('/api/segment',{method:'POST',body:JSON.stringify({segment:seg})});
+    try{localStorage.setItem('si-seg',seg);}catch(e){}
+    const people=lfPeople();const me=people.find(x=>ME&&x.u===ME.u);if(me){me.seg=seg;lfSave(people);}
+    filters=F0();shown=40;await refreshState();
+    toast(seg==='sme'?'SME book':'Consumer book');
+  }catch(e){if(e.message!=='auth')toast('⚠️ '+esc(e.message));}
+}
 const agentColor=(()=>{let extra=0;const cache={...AGENT_COLORS};
   return n=>cache[n]||(cache[n]=PALETTE[(5+extra++)%PALETTE.length]);})();
 
@@ -2768,7 +2934,7 @@ function renderExplorer(){
       <td>${moveMode
         ?`<span class="mvchk ${sel?'on':''}" role="checkbox" aria-checked="${sel}">${sel?'✓':''}</span>`
         :`<button class="qzap" data-zap="${esc(c.acct)}" title="Quick log" aria-label="Quick log"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.2 2 4.8 13.2h5.5L10.8 22l8.4-11.2h-5.5Z"/></svg></button>`}</td>
-      <td class="cust">${esc(titleCase(c.name))}${miniContact(c)}<small>${esc(c.msisdn||c.acct)}</small></td>
+      <td class="cust">${esc(titleCase(c.name))}${miniContact(c)}<small>${esc(c.msisdn||c.email||c.acct)}${c.lines&&c.lines.length?' · '+(c.lines.length+1)+' lines':''}${c.contact?' · '+esc(titleCase(c.contact)):''}</small></td>
       <td>${agentCell(c)}</td>
       <td>${statusTag(c)}</td>
       <td class="prod" title="${esc(c.prod)}">${esc(c.prod)}</td>
@@ -2832,11 +2998,15 @@ async function handleFiles(files){
   if(document.body.classList.contains('consultant')){applyView('mgr');}
   for(const file of files){
     try{
-      let grid;
+      let grid,sheets=null;
       if(/\.csv$/i.test(file.name))grid=parseCSV(await file.text());
-      else grid=await parseXLSX(await file.arrayBuffer());
+      else{sheets=await parseXLSX(await file.arrayBuffer(),true);grid=sheets[0]||[];}
       if(!grid.length)throw new Error('The file appears to be empty');
+      if(isSME()&&(sheets&&sheets.length>1||looksSME(grid[0])))grid=foldSMESheets(sheets||[grid]);
       if(grid.length<2)throw new Error('No data rows found under the header');
+      pendingFile=file;
+      if(!TEAM_USERS.length){try{TEAM_USERS=await api('/api/users');}catch(e){}}
+      pendingWrongBook=!isSME()&&looksSME(grid[0])?'sme':(isSME()&&!looksSME(grid[0])&&grid[0].map(normHdr).some(x=>/accountnumber|handsetrsp|productdescription/.test(x))?'consumer':'');
       pendingGrid=grid;pendingMap=mapHeaders(grid[0]);
       pendingLabel=file.name.replace(/\.(xlsx|csv)$/i,'').replace(/[_-]+/g,' ').trim().slice(0,28);
       $('#mSub').textContent=file.name;
@@ -2847,8 +3017,17 @@ async function handleFiles(files){
     }
   }
 }
-let pendingGrid=null,pendingMap=null,pendingLabel='';
-function pendingMissing(map){return FIELD_REQ.filter(k=>map[k]===undefined&&!(k==='rsp'&&map.offer!==undefined));}
+let pendingGrid=null,pendingMap=null,pendingLabel='',pendingFile=null,pendingWrongBook='';
+function pendingMissing(map){
+  if(isSME()){const m=[];if(map.name===undefined)m.push('name');if(map.msisdn===undefined&&map.email===undefined)m.push('msisdn');return m;}
+  return FIELD_REQ.filter(k=>map[k]===undefined&&!(k==='rsp'&&map.offer!==undefined));
+}
+function allocOptions(){
+  const seen=new Set(),out=[];
+  (TEAM_USERS||[]).forEach(u=>{const a=String(u.agent||'').toUpperCase();if(a&&!seen.has(a)){seen.add(a);out.push([a,u.name||a]);}});
+  try{DS().csr.forEach(s=>{if(!seen.has(s.name)){seen.add(s.name);out.push([s.name,s.name]);}});}catch(e){}
+  return out;
+}
 /* Rebuild the preview from the file + the current column choices. Runs again whenever a column is changed. */
 function renderPending(){
   if(!pendingGrid)return;
@@ -2859,25 +3038,43 @@ function renderPending(){
   pendingBase=ds;
   const missing=pendingMissing(map);
   const addBaseChecked=$('#mAddBase')?$('#mAddBase').checked:true;
+  const LBL=fieldLbl();
+  // loading into the wrong book?
+  const note=$('#mNote');
+  if(pendingWrongBook){note.hidden=false;
+    note.innerHTML=pendingWrongBook==='sme'
+      ?`This looks like an <b>SME</b> list (businesses, emails, several lines each) but you are loading into the <b>Consumer</b> book.<br><button class="abtn" id="mSwitchBook">Switch to the SME book and load it there</button>`
+      :`This looks like a <b>Consumer</b> base (account numbers, handsets, prices) but you are loading into the <b>SME</b> book.<br><button class="abtn" id="mSwitchBook">Switch to the Consumer book and load it there</button>`;
+    $('#mSwitchBook').onclick=async()=>{const f=pendingFile;$('#modal').classList.remove('show');await switchSeg(pendingWrongBook);if(f)handleFiles([f]);};
+  }else{note.hidden=true;note.innerHTML='';}
+  // no consultant column: let the manager hand the whole file to one person (per-consultant lead files)
+  const al=$('#mAlloc'),aopts=allocOptions();
+  if(map.csr===undefined&&aopts.length){al.hidden=false;const cur=$('#mAllocSel').value;
+    $('#mAllocSel').innerHTML=`<option value="">Nobody yet — the unassigned pool</option>`+aopts.map(([a,nm])=>`<option value="${esc(a)}" ${a===cur?'selected':''}>${esc(nm)} (${esc(a)})</option>`).join('');
+  }else al.hidden=true;
   $('#mRows').innerHTML=`
+    <div class="m-row"><span>Loading into</span><b>${isSME()?'SME book':'Consumer book'} · ${esc($('#storeSub').textContent)}</b></div>
     <div class="m-row"><span>Data rows detected</span><b>${ds.lineItems}</b></div>
     <div class="m-row"><span>Accounts</span><b>${ds.customers.length}</b></div>
     <div class="m-row"><span>Offer value / month</span><b>${zark(ds.totalRSP)}</b></div>
     <div class="m-row"><span>Period detected</span><b>${esc(ds.sub||'—')}</b></div>
-    <div class="m-row"><span>Columns matched</span><b>${Object.keys(map).length} of ${Object.keys(FIELD_LBL).length}</b></div>
-    ${missing.length?`<div class="m-row bad"><span>Still needed</span><b>${missing.map(k=>FIELD_LBL[k]).join(', ')}</b></div>`:''}
+    <div class="m-row"><span>Columns matched</span><b>${Object.keys(map).filter(k=>!Array.isArray(map[k])).length} of ${Object.keys(LBL).filter(k=>k!=='lines').length}${isSME()&&map.lines&&map.lines.length?` · ${map.lines.length} extra line column${map.lines.length>1?'s':''}`:''}</b></div>
+    ${missing.length?`<div class="m-row bad"><span>Still needed</span><b>${missing.map(k=>isSME()&&k==='msisdn'?'a main number or an email':LBL[k]).join(', ')}</b></div>`:''}
     ${ds._track.length?`<div class="m-row" style="border-color:color-mix(in srgb,var(--pos) 40%,transparent)"><span>Customer outcomes found</span><b>${ds._track.length} — will be applied</b></div>
     <div class="m-row"><label><input type="checkbox" id="mAddBase" ${addBaseChecked?'checked':''}> Also load this file as a new base</label></div>`:''}`;
   // one dropdown per Chase field, listing the file's own headings
   const used=new Set(Object.values(map));
   const opts=i=>`<option value="">— not in this file —</option>`+hdr.map((h,j)=>{const t=cleanCell(h);if(!t)return '';
     return `<option value="${j}" ${i===j?'selected':''}>${esc(t.slice(0,40))}</option>`;}).join('');
-  $('#mMap').innerHTML=Object.keys(FIELD_LBL).map(k=>{const req=FIELD_REQ.includes(k)&&!(k==='rsp'&&map.offer!==undefined);
-    return `<label class="${req?'req':''} ${req&&map[k]===undefined?'miss':''}">${FIELD_LBL[k]}${req?' <b>*</b>':''}<select class="sel" data-field="${k}">${opts(map[k])}</select></label>`;}).join('');
+  $('#mMap').innerHTML=Object.keys(LBL).map(k=>{
+    if(k==='lines')return `<label>${LBL[k]}<span class="sel" style="cursor:default">${map.lines&&map.lines.length?map.lines.length+' column'+(map.lines.length>1?'s':'')+' (MSISDN 2+)':'— none —'}</span></label>`;
+    const req=fieldReq().includes(k)&&!(k==='rsp'&&map.offer!==undefined)||(isSME()&&(k==='msisdn'||k==='email')&&map.msisdn===undefined&&map.email===undefined);
+    return `<label class="${req?'req':''} ${req&&map[k]===undefined?'miss':''}">${LBL[k]}${req?' <b>*</b>':''}<select class="sel" data-field="${k}">${opts(map[k])}</select></label>`;}).join('');
   $$('#mMap select').forEach(sel=>sel.onchange=()=>{
     const k=sel.dataset.field,v=sel.value;
     if(v==='')delete pendingMap[k];
-    else{const j=+v;for(const o of Object.keys(pendingMap))if(pendingMap[o]===j)delete pendingMap[o];pendingMap[k]=j;}
+    else{const j=+v;for(const o of Object.keys(pendingMap))if(pendingMap[o]===j)delete pendingMap[o];
+      if(pendingMap.lines)pendingMap.lines=pendingMap.lines.filter(x=>x!==j);pendingMap[k]=j;}
     renderPending();
   });
   $('#mOk').disabled=!!missing.length||!rows.length;
@@ -2886,23 +3083,25 @@ function renderPending(){
 function rememberColumns(){
   if(!pendingGrid||!pendingMap)return;
   try{
-    const mem=colMemory(),byIdx={};
-    Object.entries(pendingMap).forEach(([k,i])=>byIdx[i]=k);
-    pendingGrid[0].forEach((h,i)=>{const n=normHdr(h);if(n)mem[n]=byIdx[i]||'';});
-    localStorage.setItem('chase-colmap',JSON.stringify(mem));
+    const all=colMemory(),mem=isSME()?(all.sme=all.sme||{}):all,byIdx={};
+    Object.entries(pendingMap).forEach(([k,i])=>{if(!Array.isArray(i))byIdx[i]=k;});
+    pendingGrid[0].forEach((h,i)=>{const n=normHdr(h);if(n&&!/^msisdn([2-9]|1\d)$/.test(normHdrN(h)))mem[n]=byIdx[i]||'';});
+    localStorage.setItem('chase-colmap',JSON.stringify(all));
   }catch(e){}
 }
 async function confirmBase(){
   if(!pendingBase)return;
   if(pendingMissing(pendingMap||{}).length){toast('Choose the starred columns first');return;}
   rememberColumns();
+  const alloc=($('#mAlloc')&&!$('#mAlloc').hidden)?$('#mAllocSel').value:'';
+  if(alloc)pendingBase.rows.forEach(r=>{if(!r[0])r[0]=alloc;});
   const addChk=$('#mAddBase');
   const addBase=!(pendingBase._track||[]).length||!addChk||addChk.checked;
   const payload={label:pendingBase.label,rows:pendingBase.rows,outcomes:pendingBase._track||[],addBase};
   $('#mOk').disabled=true;
   try{
     const r=await api('/api/bases',{method:'POST',body:JSON.stringify(payload)});
-    $('#modal').classList.remove('show');pendingBase=null;pendingGrid=null;pendingMap=null;
+    $('#modal').classList.remove('show');pendingBase=null;pendingGrid=null;pendingMap=null;pendingFile=null;
     filters=F0();shown=40;
     await refreshState();
     const bits=[];
@@ -2920,12 +3119,12 @@ let subView='book', dayMine=false, hotMine=false;
 const SVG_TEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.5 2.8.6a2 2 0 0 1 1.7 2Z"/></svg>';
 const SVG_WA='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1 0 12 2Zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .1-1.7-.1a11 11 0 0 1-5.6-4.9c-.4-.7-.7-1.5-.7-2.2 0-.6.3-1.2.7-1.5.2-.2.4-.2.5-.2h.4c.2 0 .3 0 .5.4l.7 1.6c0 .2 0 .3-.1.4l-.3.4c-.2.1-.3.3-.1.5a8 8 0 0 0 3 2.6c.3.1.4.1.6-.1l.6-.8c.2-.2.3-.1.5-.1l1.6.8c.2.1.3.2.4.3 0 .2 0 .8-.2 1.3Z"/></svg>';
 const SVG_MAIL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>';
-const digits=s=>String(s||'').replace(/[^0-9]/g,'');
+const digits=s=>{const d=String(s||'').replace(/[^0-9]/g,'');return d.length===10&&d[0]==='0'?'27'+d.slice(1):d;};
 const TODAY=()=>new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Johannesburg'});
 function mailBtn(c,mini){
   const e=String(c.email||'').trim();
   if(e){
-    const href='mailto:'+encodeURIComponent(e)+'?subject='+encodeURIComponent('Your MTN upgrade')+'&body='+encodeURIComponent(waMsg(c));
+    const href='mailto:'+encodeURIComponent(e)+'?subject='+encodeURIComponent(isSME()?'Your MTN business account':'Your MTN upgrade')+'&body='+encodeURIComponent(waMsg(c));
     return `<a class="${mini?'em':'cbtn2 em has'}" href="${href}" title="Email ${esc(e)}" aria-label="Email">${SVG_MAIL}</a>`;
   }
   return `<span class="${mini?'em':'cbtn2 em no'}" title="No email on file" aria-label="No email on file">${SVG_MAIL}</span>`;
@@ -2937,7 +3136,8 @@ function claimBtnHTML(c){
   return `<button class="claimbtn" data-claim="${esc(c.acct)}">＋ Claim</button>`;
 }
 function waMsg(c){
-  const first=titleCase((c.name||'').split(/\s+/).filter(w=>!/^(mr|mrs|ms|miss|dr|prof|mnr|mev|adv)\.?$/i.test(w))[0]||'there');
+  const first=(isSME()&&!c.contact&&c.name)?titleCase(c.name)
+    :titleCase(((c.contact||c.name)||'').split(/\s+/).filter(w=>!/^(mr|mrs|ms|miss|dr|prof|mnr|mev|adv)\.?$/i.test(w))[0]||'there');
   const who=(ME&&ME.name)?ME.name:'the team';
   const store=($('#storeSub')&&$('#storeSub').textContent)||'MTN';
   const tpl=(SETTINGS.wa_tpl&&SETTINGS.wa_tpl.trim())||DEFAULT_TPL;
@@ -2949,19 +3149,25 @@ function waMsg(c){
     .replace(/\{store\}/g,store)
     .replace(/\{agent\}/g,who);
 }
+function linesHTML(c){
+  const extra=(c.lines||[]).map(digits).filter(Boolean);
+  if(!extra.length)return '';
+  return `<div class="lines">${extra.map(d=>`<a href="tel:+${d}" title="Call this line">${esc(d.replace(/^27/,'0'))}</a>`).join('')}</div>`;
+}
 function contactHTML(c){
   const d=digits(c.msisdn);
-  if(!d)return `<div class="contact">${claimBtnHTML(c)}<span class="cbtn2 dis" title="No number on file">${SVG_TEL}</span>${mailBtn(c)}</div>`;
-  return `<div class="contact">`+claimBtnHTML(c)+
-    `<a class="cbtn2 tel" href="tel:+${d}" title="Call ${esc(c.msisdn)}" aria-label="Call">${SVG_TEL}</a>`+
-    `<a class="cbtn2 wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener" title="WhatsApp with a ready message" aria-label="WhatsApp">${SVG_WA}</a>`+
-    mailBtn(c)+`</div>`;
+  const tel=d?`<a class="cbtn2 tel" href="tel:+${d}" title="Call ${esc(c.msisdn)}" aria-label="Call">${SVG_TEL}</a>`
+            :`<span class="cbtn2 dis" title="No number on file">${SVG_TEL}</span>`;
+  const wa=d?`<a class="cbtn2 wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener" title="WhatsApp with a ready message" aria-label="WhatsApp">${SVG_WA}</a>`:'';
+  // SME: businesses are emailed first, then WhatsApp, then the call
+  const order=isSME()?mailBtn(c)+wa+tel:tel+wa+mailBtn(c);
+  return `<div class="contact">${claimBtnHTML(c)}${order}</div>${isSME()?linesHTML(c):''}`;
 }
 function miniContact(c){
   const d=digits(c.msisdn);
-  const tel=d?`<a class="tel" href="tel:+${d}" title="Call" aria-label="Call">${SVG_TEL}</a>`+
-    `<a class="wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">${SVG_WA}</a>`:'';
-  return `<span class="mini">${tel}${mailBtn(c,true)}</span>`;
+  const tel=d?`<a class="tel" href="tel:+${d}" title="Call" aria-label="Call">${SVG_TEL}</a>`:'';
+  const wa=d?`<a class="wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">${SVG_WA}</a>`:'';
+  return `<span class="mini">${isSME()?mailBtn(c,true)+wa+tel:tel+wa+mailBtn(c,true)}</span>`;
 }
 function daysBetween(a,b){return Math.round((Date.parse(a)-Date.parse(b))/864e5);}
 
@@ -3974,6 +4180,9 @@ function lfGo(step,o){
     $('#lfHiSub').textContent=(LF.storeName||'')+(p?' · @'+p.u:'');
     $('#liU').value=p?p.u:'';$('#liU').hidden=!!p;$('#liP').value='';
     $('#lfForget').hidden=!p;
+    let seg=(p&&p.seg)||'';if(!seg){try{seg=localStorage.getItem('si-seg')||'';}catch(e){}}
+    LF.seg=seg==='sme'?'sme':'consumer';
+    $$('#lfSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.seg===LF.seg)));
     setTimeout(()=>$(p?'#liP':'#liU').focus(),60);
   }
 }
@@ -3994,11 +4203,12 @@ async function doLogin(){
     const storeId=LF.store||($('#liStore')&&$('#liStore').value)||'s1';
     try{localStorage.setItem('si-store',storeId)}catch(e){}
     const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({u,p,store:storeId})});
+      body:JSON.stringify({u,p,store:storeId,segment:LF.seg||'consumer'})});
+    try{localStorage.setItem('si-seg',LF.seg||'consumer');}catch(e){}
     if(!r.ok){$('#liErr').textContent=(await r.json().catch(()=>({}))).error||'Login failed';return;}
     $('#login').classList.remove('show');$('#liP').value='';
     await boot();
-    lfRemember({u:ME.u||u,name:ME.name||u,agent:ME.agent||'',role:ME.role,store:storeId});
+    lfRemember({u:ME.u||u,name:ME.name||u,agent:ME.agent||'',role:ME.role,store:storeId,seg:LF.seg||'consumer'});
   }catch(e){$('#liErr').textContent='Server unreachable';}
   finally{$('#liGo').disabled=false;}
 }
@@ -4007,6 +4217,7 @@ async function refreshState(){
   ME=st.me;tracking=st.tracking||{};
   SETTINGS=st.settings||{};CLAIMS=st.claims||[];ASSIGN=st.assign||{};
   $('#storeSub').textContent=st.storeName||'MTN Dealer';
+  applySeg(st.segment);
   datasets=st.bases.map(b=>Object.assign(buildDataset(b.rows,b.label),{id:b.id,lazy:!!b.lazy,count:b.count}));
   if(!datasets.length)datasets=[Object.assign(buildDataset([],'No base loaded yet'),{id:null})];
   const ai=datasets.findIndex(d=>d.id===st.active);
@@ -4204,6 +4415,8 @@ function init(){
   });
   $('#liGo').onclick=doLogin;
   $$('#lf [data-go]').forEach(b=>b.onclick=()=>lfGo(b.dataset.go));
+  $$('#lfSeg button').forEach(b=>b.onclick=()=>{LF.seg=b.dataset.seg;$$('#lfSeg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});
+  $$('#segSw button').forEach(b=>b.onclick=()=>switchSeg(b.dataset.seg));
   $('#lfForget').onclick=()=>{if(LF.person)lfSave(lfPeople().filter(x=>!(x.u===LF.person.u&&x.store===LF.store)));lfGo('who');};
   $('#liP').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
   $('#liU').addEventListener('keydown',e=>{if(e.key==='Enter')$('#liP').focus();});
@@ -4222,8 +4435,10 @@ function init(){
   };
   $('#upPanel').onclick=()=>$('#fileInp').click();
   $('#tplGo').onclick=e=>{e.stopPropagation();navTo('template');};
-  $('#tplDl').onclick=downloadTemplate;
-  $('#tplXlsx').onclick=downloadTemplateXlsx;
+  $('#tplDl').onclick=()=>downloadTemplate('consumer');
+  $('#tplXlsx').onclick=()=>downloadTemplateXlsx('consumer');
+  $('#tplDlSme').onclick=()=>downloadTemplate('sme');
+  $('#tplXlsxSme').onclick=()=>downloadTemplateXlsx('sme');
   $('#subSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;renderSubView(b.dataset.sv);});
   $('#heroCta').onclick=()=>{navTo('day');};
   ['#dayBoard','#hotBoard'].forEach(sel=>$(sel).addEventListener('click',e=>{

@@ -184,7 +184,7 @@
           return Promise.resolve().then(() => {
             sync();
             if (name === 'add_walkin') {
-              const base = T('bases').filter(b => b.store_id === args.p_store && b.active).pop();
+              const base = T('bases').filter(b => b.store_id === args.p_store && (b.segment || 'consumer') === (args.p_segment || 'consumer') && b.active).pop();
               if (!base) return { data: null, error: { message: 'Load a base first' } };
               base.rows.push(clone(args.p_row)); write();
               emitChange('bases', 'UPDATE', base);

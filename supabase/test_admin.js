@@ -116,7 +116,7 @@ const SEED = {
   /* ---------- 1b. the Base template section ---------- */
   await p.evaluate(() => navTo('template')); await p.waitForTimeout(600);
   ok(await p.$eval('#tplCard', e => e.offsetParent !== null && /What the base is/.test(e.textContent) && /monthly cycle/i.test(e.textContent)), 'Base template section shows the memo');
-  ok(await p.$eval('#tplHelp', e => e.querySelectorAll('tr').length === 17 && e.querySelectorAll('tr .req').length === 4), 'column guide lists all 17 columns, four starred');
+  ok(await p.$eval('#tplHelp', e => { const t = e.querySelectorAll('table'); return t.length === 2 && t[0].querySelectorAll('tr').length === 17 && t[0].querySelectorAll('.req').length === 4 && t[1].querySelectorAll('tr').length >= 12; }), 'column guide: consumer table (17 columns, four starred) and an SME table');
   ok(!!(await p.$('#sidenav .sn-item[data-nav="template"]')), '"Base template" is in the manager menu');
   const [xl] = await Promise.all([p.waitForEvent('download'), p.click('#tplXlsx')]);
   ok(xl.suggestedFilename() === 'Chase-base-template.xlsx', 'Download Excel template gives Chase-base-template.xlsx');

@@ -41,6 +41,8 @@
   /* ---------- session state ---------- */
   let ME = null;        // {id, u, name, role, agent, store_id}
   let STORE = 's1';     // store currently being worked
+  let SEG = 'consumer';  // which book: 'consumer' or 'sme' — each has its own active base per store
+  const segOf = v => v === 'sme' ? 'sme' : 'consumer';
   let STORE_NAMES = {};
   const cache = { tracking: {}, assign: {}, settings: {}, claims: [], bases: [], active: null };
 
@@ -73,8 +75,8 @@
     // one before it, which the KPI deltas compare against — are downloaded. Older bases arrive
     // as label + row count only; tapping one in the app activates it, which loads it.
     const [metas, activeRows, tracking, claims, store] = await Promise.all([
-      sb.from('bases').select('id,label,active,created_at,rows_count').eq('store_id', sid).order('created_at'),
-      sb.from('bases').select('id,rows').eq('store_id', sid).eq('active', true).order('created_at', { ascending: false }).limit(1),
+      sb.from('bases').select('id,label,active,created_at,rows_count').eq('store_id', sid).eq('segment', SEG).order('created_at'),
+      sb.from('bases').select('id,rows').eq('store_id', sid).eq('segment', SEG).eq('active', true).order('created_at', { ascending: false }).limit(1),
       sb.from('tracking').select('*').eq('store_id', sid),
       sb.from('claims').select('*').eq('store_id', sid).order('created_at', { ascending: false }),
       sb.from('stores').select('wa_tpl,quotes,report_to,verify_at').eq('id', sid).maybeSingle(),
@@ -122,7 +124,7 @@
     ['wa_tpl', 'quotes', 'report_to', 'verify_at'].forEach(k => { if (s[k]) cache.settings[k] = s[k]; });
 
     return {
-      me: pubMe(), store: sid, storeName: STORE_NAMES[sid] || sid,
+      me: pubMe(), store: sid, storeName: STORE_NAMES[sid] || sid, segment: SEG,
       bases: cache.bases, active: cache.active,
       tracking: cache.tracking, settings: cache.settings,
       claims: cache.claims, assign: cache.assign,
@@ -164,6 +166,13 @@
 
     ['GET', /^\/api\/stores$/, async () => J(await loadStores())],
 
+    // switch between the Consumer and SME books without signing out
+    ['POST', /^\/api\/segment$/, async (m, body) => {
+      if (!ME) return ERR('Not signed in', 401);
+      SEG = segOf(body.segment);
+      return J({ ok: true, segment: SEG });
+    }],
+
     ['POST', /^\/api\/login$/, async (m, body) => {
       const { error } = await sb.auth.signInWithPassword({
         email: emailFor(body.u), password: String(body.p || ''),
@@ -175,6 +184,7 @@
         return ERR('That login has no Chase CRM profile yet — ask your manager to finish setting it up', 403);
       }
       if (!me.store_id) STORE = STORE_NAMES[body.store] ? body.store : STORE;   // head office picks
+      SEG = segOf(body.segment);
       await loadStores();
       subscribeLive();
       return J({ ok: true, me: pubMe() });
@@ -231,10 +241,10 @@
       const acct = 'WI' + Math.random().toString(36).slice(2, 10).toUpperCase();
       const email = /@/.test(String(body.email || '')) ? String(body.email).slice(0, 120).trim() : '';
       const row = [ME.agent || '', name, '', acct, ms, '', today(),
-        'Walk-in / manual lead', 0, 'New / Add Sim', '', 'Consumer', '', email];
+        'Walk-in / manual lead', 0, 'New / Add Sim', '', SEG === 'sme' ? 'SME' : 'Consumer', '', email];
       // appended server-side by public.add_walkin: consultants may add a customer but may
       // never rewrite a base, and this never touches rows the phone has not downloaded
-      const { error } = await sb.rpc('add_walkin', { p_store: STORE, p_row: row });
+      const { error } = await sb.rpc('add_walkin', { p_store: STORE, p_row: row, p_segment: SEG });
       if (error) return ERR(error);
       if (!base.lazy) base.rows = base.rows.concat([row]);
       const note = String(body.note || '').slice(0, 5000);
@@ -420,9 +430,9 @@
         const rows = body.rows;
         if (!Array.isArray(rows) || !rows.length || !Array.isArray(rows[0]))
           return ERR('Invalid rows payload');
-        await sb.from('bases').update({ active: false }).eq('store_id', STORE);
+        await sb.from('bases').update({ active: false }).eq('store_id', STORE).eq('segment', SEG);
         const { data, error } = await sb.from('bases').insert({
-          store_id: STORE, label: String(body.label || 'Uploaded base').slice(0, 40),
+          store_id: STORE, segment: SEG, label: String(body.label || 'Uploaded base').slice(0, 40),
           rows, active: true,
         }).select('id').single();
         if (error) return ERR(/bases_one_active/.test(error.message || '') ? 'Someone else just loaded a base — refresh and try again' : error);
@@ -435,7 +445,7 @@
 
     ['POST', /^\/api\/bases\/([\w-]+)\/activate$/, async m => {
       if (!isMgr()) return ERR('Manager only', 403);
-      await sb.from('bases').update({ active: false }).eq('store_id', STORE);
+      await sb.from('bases').update({ active: false }).eq('store_id', STORE).eq('segment', SEG);
       const { error } = await sb.from('bases').update({ active: true }).eq('id', m[1]);
       if (error) return ERR(/bases_one_active/.test(error.message || '') ? 'Someone else just switched bases — refresh and try again' : error);
       cache.active = m[1];

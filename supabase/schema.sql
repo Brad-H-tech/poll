@@ -46,6 +46,7 @@ create table if not exists public.bases (
   label      text not null default 'Uploaded base',
   rows       jsonb not null default '[]'::jsonb,
   active     boolean not null default false,
+  segment    text not null default 'consumer' check (segment in ('consumer', 'sme')),  -- consumer | sme book
   created_at timestamptz default now()
 );
 
@@ -241,7 +242,7 @@ end $$;
 
 -- one pending claim per customer, one active base per store, fast lookups
 create unique index if not exists claims_one_pending_idx on public.claims (store_id, acct) where status = 'pending';
-create unique index if not exists bases_one_active_idx   on public.bases (store_id) where active;
+create unique index if not exists bases_one_active_idx   on public.bases (store_id, segment) where active;
 create index if not exists profiles_store_idx on public.profiles (store_id);
 create index if not exists bases_store_idx    on public.bases (store_id);
 create index if not exists claims_store_idx   on public.claims (store_id, status);
@@ -252,24 +253,25 @@ create index if not exists claims_store_idx   on public.claims (store_id, status
 -- server-side, so the phone never has to download or upload the whole base to do it.
 -- (Supabase's advisor will list it as a SECURITY DEFINER function callable by signed-in users:
 -- that is the intent; anonymous callers cannot run it.)
-create or replace function public.add_walkin(p_store text, p_row jsonb) returns text
+create or replace function public.add_walkin(p_store text, p_row jsonb, p_segment text default 'consumer') returns text
   language plpgsql security definer set search_path = public as $$
 declare v_base uuid; v_acct text;
 begin
   if not chase.can_see(p_store) then raise exception 'Not your store' using errcode = '42501'; end if;
+  if p_segment not in ('consumer', 'sme') then raise exception 'Bad segment' using errcode = '22023'; end if;
   if jsonb_typeof(p_row) <> 'array' or jsonb_array_length(p_row) > 20
      or exists (select 1 from jsonb_array_elements(p_row) e where jsonb_typeof(e) in ('object', 'array')) then
     raise exception 'A walk-in is one row of plain cells' using errcode = '22023';
   end if;
   v_acct := coalesce(p_row->>3, '');
   if v_acct = '' or char_length(v_acct) > 40 then raise exception 'Bad account number' using errcode = '22023'; end if;
-  select id into v_base from public.bases where store_id = p_store and active order by created_at desc limit 1;
+  select id into v_base from public.bases where store_id = p_store and segment = p_segment and active order by created_at desc limit 1;
   if v_base is null then raise exception 'Load a base first' using errcode = '22023'; end if;
   update public.bases set rows = rows || jsonb_build_array(p_row) where id = v_base;
   return v_acct;
 end $$;
-revoke execute on function public.add_walkin(text, jsonb) from public, anon;
-grant  execute on function public.add_walkin(text, jsonb) to authenticated, service_role;
+revoke execute on function public.add_walkin(text, jsonb, text) from public, anon;
+grant  execute on function public.add_walkin(text, jsonb, text) to authenticated, service_role;
 
 -- ---------- live sync ----------
 -- every phone sees a change the moment it happens
