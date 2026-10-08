@@ -366,6 +366,15 @@
   .tpl-help tr:first-child td{border-top:0}
   .tpl-help td:first-child{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;white-space:nowrap;color:var(--ink)}
   .tpl-help .req{color:var(--neg);font-weight:800}
+  #tplCard .tpl-help{max-width:none;margin-top:16px}
+  .tpl-memo{display:grid;grid-template-columns:1fr 1fr;gap:22px;font-size:13.5px;color:var(--ink-2);line-height:1.55}
+  .tpl-memo h4{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:0 0 6px}
+  .tpl-memo h4+*{margin-top:0}
+  .tpl-memo p,.tpl-memo ol,.tpl-memo ul{margin:0 0 14px}
+  .tpl-memo ol,.tpl-memo ul{padding-left:20px}
+  .tpl-memo li{margin:3px 0}
+  .tpl-memo b{color:var(--ink)}
+  @media(max-width:760px){.tpl-memo{grid-template-columns:1fr}}
   .pin-inp{width:100%;font:inherit;font-size:17px;letter-spacing:.25em;text-align:center;padding:12px;
     background:var(--surface-2);border:1px solid var(--line);border-radius:11px;color:var(--ink);outline:none;margin-bottom:16px}
   .pin-inp:focus{border-color:var(--brand-deep)}
@@ -922,6 +931,7 @@
   <button class="sn-item mgr-only" data-nav="dash" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="11" width="8" height="10" rx="2"/><rect x="3" y="14" width="8" height="7" rx="2"/></svg> Dashboard</button>
   <button class="sn-item mgr-only" data-nav="centre" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/></svg> Command centre</button>
   <button class="sn-item mgr-only" data-nav="upload" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 20h14"/></svg> Load base</button>
+  <button class="sn-item mgr-only" data-nav="template" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg> Base template</button>
   <button class="sn-item mgr-only" data-nav="base" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.2 13.5v7.5M13.5 17.2H21"/></svg> Base &amp; splits</button>
   <button class="sn-item mgr-only" data-nav="claims" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V4.6a1.6 1.6 0 1 1 3.2 0V11m0-1.4a1.6 1.6 0 1 1 3.2 0V12m0-1a1.6 1.6 0 1 1 3.2 0v4.5a5.5 5.5 0 0 1-5.5 5.5h-1.4a5.5 5.5 0 0 1-4.4-2.2L5 15.5a1.6 1.6 0 0 1 2.4-2.1L9 15"/></svg> Claims <span class="cnt" id="snClaimCnt"></span></button>
   <button class="sn-item mgr-only" data-nav="report" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg> Weekly report</button>
@@ -1071,13 +1081,46 @@
         <p>Drop the raw <b>.csv</b> or <b>.xlsx</b> here (or click). Columns are auto-mapped. If the file
         carries <b>Outcome / Next action / Notes</b> columns — like Chase CRM's own CSV export — customer
         outcomes are updated automatically, so you can round-trip the book through Excel.</p>
-        <div class="tpl-row">
-          <button class="abtn" type="button" id="tplDl">Download blank template (.csv)</button>
-          <button class="abtn" type="button" id="tplHow">What goes in each column</button>
-        </div>
-        <div class="tpl-help" id="tplHelp" hidden></div>
+        <div class="tpl-row"><button class="abtn" type="button" id="tplGo">Need the blank template? Open Base template ↓</button></div>
       </div>
       <button class="upbtn" type="button" tabindex="-1">Choose file</button>
+    </section>
+
+    <section class="card pad-lg" id="tplCard" style="margin-top:16px" aria-label="Base template">
+      <div class="card-hd"><div><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg> Base template</h3>
+        <div class="h-desc">The spreadsheet Chase CRM runs on — download it, fill it in, load it</div></div></div>
+      <div class="tpl-memo">
+        <div class="tpl-memo-col">
+          <h4>What the base is</h4>
+          <p>The base is the list of customers for the month: one row per account. <b>Everything in Chase comes from it</b> — each consultant's book, My Day, the Hot List, the dashboards and the weekly report. No base, nothing to chase.</p>
+          <h4>The monthly cycle</h4>
+          <ol>
+            <li><b>Get the list.</b> Either the raw MTN export, or this blank template filled in by hand.</li>
+            <li><b>Load base</b> (the panel above). Chase checks the columns and shows a preview before anything is saved.</li>
+            <li><b>Split it</b> in Base &amp; splits, or put the consultant's code in the CSR column before loading.</li>
+            <li><b>Work it.</b> Consultants call, WhatsApp and log outcomes on their phones.</li>
+            <li><b>Export</b> at month end: the same sheet comes back out with Outcome, Next action and Notes filled in.</li>
+          </ol>
+        </div>
+        <div class="tpl-memo-col">
+          <h4>Rules for the sheet</h4>
+          <ul>
+            <li>One row per customer account. The account number must be unique.</li>
+            <li>Keep the headings exactly as they are. Column <i>order</i> doesn't matter.</li>
+            <li>Four columns are compulsory: <b>AccountNumber, CustomerName, ProductDescription, HandsetRSP</b>. The rest can be blank.</li>
+            <li>Phone numbers: digits only — 0831234567 or 27831234567.</li>
+            <li>Price: just the number (499), no "R".</li>
+            <li>Dates: year-month-day (2024-03-15). Excel dates work too.</li>
+            <li>Delete the example row before you load.</li>
+            <li>Saves as .xlsx or .csv — both load.</li>
+          </ul>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn2 solid" type="button" id="tplXlsx">Download Excel template (.xlsx)</button>
+            <button class="abtn" type="button" id="tplDl">.csv version</button>
+          </div>
+        </div>
+      </div>
+      <div class="tpl-help" id="tplHelp"></div>
     </section>
 
     <section class="card pad-lg" id="baseCard" style="margin-top:16px" aria-label="Base allocation">
@@ -2138,10 +2181,58 @@ function downloadTemplate(){
   toast('Template downloaded — open it in Excel, fill it in, save, then drop it here');
 }
 function renderTemplateHelp(){
+  const box=$('#tplHelp');if(!box||box.dataset.done)return;box.dataset.done='1';
   const req=k=>FIELD_REQ.includes(k);
-  $('#tplHelp').innerHTML=`<div style="margin-bottom:8px"><b>One row per customer.</b> Keep the headings exactly as they are; column order doesn't matter.
-    Columns marked <span class="req">*</span> must be filled in; everything else is optional. Delete the example row before you upload.</div>
-    <table>${TEMPLATE_COLS.map(c=>`<tr><td>${esc(c[0])}${req(c[1])?' <span class="req">*</span>':''}</td><td>${esc(c[3])}</td></tr>`).join('')}</table>`;
+  box.innerHTML=`<div style="margin-bottom:8px"><b>Column by column.</b> <span class="req">*</span> = must be filled in.</div>
+    <table>${TEMPLATE_COLS.map(c=>`<tr><td>${esc(c[0])}${req(c[1])?' <span class="req">*</span>':''}</td><td>${esc(c[3])}${c[2]?` <span class="mut">e.g. ${esc(c[2])}</span>`:''}</td></tr>`).join('')}</table>`;
+}
+/* ---- a small .xlsx writer: enough for a two-sheet workbook with a bold, frozen header ---- */
+const CRC_T=(()=>{const t=new Uint32Array(256);for(let i=0;i<256;i++){let c=i;for(let k=0;k<8;k++)c=c&1?(c>>>1)^0xEDB88320:c>>>1;t[i]=c>>>0;}return t;})();
+function crc32(u8){let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=CRC_T[(c^u8[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zipStore(files){   // files: [[name, string]] — stored (no compression), which every reader accepts
+  const te=new TextEncoder(),parts=[],cd=[];let off=0;
+  const u16=v=>[v&255,(v>>8)&255],u32=v=>[v&255,(v>>8)&255,(v>>16)&255,(v>>>24)&255];
+  for(const [name,str] of files){
+    const nm=te.encode(name),data=te.encode(str),crc=crc32(data);
+    const hdr=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(nm.length),...u16(0)]);
+    parts.push(hdr,nm,data);
+    cd.push(new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(nm.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),nm);
+    off+=hdr.length+nm.length+data.length;
+  }
+  const cdLen=cd.reduce((a,b)=>a+b.length,0);
+  const eocd=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cdLen),...u32(off),...u16(0)]);
+  return new Blob([...parts,...cd,eocd],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function xlsxSheet(rows,widths,freeze){
+  const xe=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const col=i=>{let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26);}return s;};
+  const cell=(v,r,c,bold)=>v===''||v==null?'':`<c r="${col(c)}${r}" t="inlineStr"${bold?' s="1"':''}><is><t xml:space="preserve">${xe(v)}</t></is></c>`;
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">`+
+    (freeze?`<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>`:'')+
+    `<cols>${widths.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')}</cols><sheetData>`+
+    rows.map((r,ri)=>`<row r="${ri+1}">${r.map((v,ci)=>cell(v,ri+1,ci,ri===0)).join('')}</row>`).join('')+`</sheetData></worksheet>`;
+}
+function downloadTemplateXlsx(){
+  const head=TEMPLATE_COLS.map(c=>c[0]);
+  const example=TEMPLATE_COLS.map(c=>c[1]==='acct'?'EXAMPLE-DELETE-THIS-ROW':c[2]);
+  const base=xlsxSheet([head,example],TEMPLATE_COLS.map(c=>Math.max(14,Math.min(30,c[0].length+4))),true);
+  const guideRows=[['Column','Required?','Example','What to put there']]
+    .concat(TEMPLATE_COLS.map(c=>[c[0],FIELD_REQ.includes(c[1])?'YES':'',c[2],c[3]]))
+    .concat([[],['Rules'],['One row per customer account; the account number must be unique.'],['Keep the headings exactly as they are. Column order does not matter.'],
+      ['Phone numbers: digits only. Price: just the number, no R. Dates: year-month-day.'],['Delete the example row on the Base sheet before you load the file into Chase CRM.'],
+      ['Load it: Chase CRM → Load base → drop this file. Chase shows a preview before saving anything.']]);
+  const guide=xlsxSheet(guideRows,[22,11,26,90],false);
+  const X='http://schemas.openxmlformats.org/';
+  const files=[
+    ['[Content_Types].xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="${X}package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`],
+    ['_rels/.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${X}package/2006/relationships"><Relationship Id="rId1" Type="${X}officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ['xl/workbook.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="${X}spreadsheetml/2006/main" xmlns:r="${X}officeDocument/2006/relationships"><sheets><sheet name="Base" sheetId="1" r:id="rId1"/><sheet name="How to fill in" sheetId="2" r:id="rId2"/></sheets></workbook>`],
+    ['xl/_rels/workbook.xml.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="${X}package/2006/relationships"><Relationship Id="rId1" Type="${X}officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="${X}officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/><Relationship Id="rId3" Type="${X}officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`],
+    ['xl/styles.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="${X}spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs></styleSheet>`],
+    ['xl/worksheets/sheet1.xml',base],['xl/worksheets/sheet2.xml',guide]];
+  const a=document.createElement('a');a.href=URL.createObjectURL(zipStore(files));a.download='Chase-base-template.xlsx';
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},800);
+  toast('Excel template downloaded — fill in the Base sheet, save, then Load base');
 }
 function colMemory(){try{return JSON.parse(localStorage.getItem('chase-colmap')||'{}')||{};}catch(e){return {};}}
 function mapHeaders(hdrRow){
@@ -3784,6 +3875,7 @@ const MM_ITEMS=[
   ['centre','Command centre','<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>'],
   ['base','Base &amp; splits','<rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.2 13.5v7.5M13.5 17.2H21"/>'],
   ['upload','Load base','<path d="M12 15.5V4M7.5 8.5 12 4l4.5 4.5"/><path d="M5 20h14"/>'],
+  ['template','Base template','<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>'],
   ['claims','Claims','<path d="M9 11V4.6a1.6 1.6 0 1 1 3.2 0V11m0-1.4a1.6 1.6 0 1 1 3.2 0V12m0-1a1.6 1.6 0 1 1 3.2 0v4.5a5.5 5.5 0 0 1-5.5 5.5h-1.4a5.5 5.5 0 0 1-4.4-2.2L5 15.5a1.6 1.6 0 0 1 2.4-2.1L9 15"/>'],
   ['report','Weekly report','<rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/>'],
   ['settings','Message &amp; quotes','<circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'],
@@ -3817,6 +3909,7 @@ function navTo(k){
   if(k==='report'){renderReport();const el=$('#reportCard');if(el)el.scrollIntoView({behavior:'smooth'});}
   if(k==='settings'){loadSettingsPanel();const el=$('#settingsCard');if(el)el.scrollIntoView({behavior:'smooth'});}
   if(k==='upload'){const el=$('#upPanel');if(el)el.scrollIntoView({behavior:'smooth'});setTimeout(()=>$('#fileInp').click(),350);}
+  if(k==='template'){renderTemplateHelp();const el=$('#tplCard');if(el)el.scrollIntoView({behavior:'smooth'});}
 }
 
 /* =========================================================
@@ -4128,10 +4221,9 @@ function init(){
       .catch(e=>{if(e.message!=='auth')toast('⚠️ '+esc(e.message));});
   };
   $('#upPanel').onclick=()=>$('#fileInp').click();
-  $('#tplDl').onclick=e=>{e.stopPropagation();downloadTemplate();};
-  $('#tplHow').onclick=e=>{e.stopPropagation();const h=$('#tplHelp');if(h.hidden)renderTemplateHelp();h.hidden=!h.hidden;
-    $('#tplHow').textContent=h.hidden?'What goes in each column':'Hide the column guide';};
-  $('#tplHelp').onclick=e=>e.stopPropagation();
+  $('#tplGo').onclick=e=>{e.stopPropagation();navTo('template');};
+  $('#tplDl').onclick=downloadTemplate;
+  $('#tplXlsx').onclick=downloadTemplateXlsx;
   $('#subSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;renderSubView(b.dataset.sv);});
   $('#heroCta').onclick=()=>{navTo('day');};
   ['#dayBoard','#hotBoard'].forEach(sel=>$(sel).addEventListener('click',e=>{

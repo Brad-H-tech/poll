@@ -113,19 +113,27 @@ const SEED = {
   ok(await p.$eval('#mRows', e => /Columnsmatched17of17/.test(e.textContent.replace(/\s+/g, ''))), 'the standard MTN export matches all 17 columns by itself');
   await p.click('#mCancel'); await p.waitForTimeout(300);
 
-  /* ---------- 1b. the blank template ---------- */
-  await p.evaluate(() => navTo('load')); await p.waitForTimeout(600);
+  /* ---------- 1b. the Base template section ---------- */
+  await p.evaluate(() => navTo('template')); await p.waitForTimeout(600);
+  ok(await p.$eval('#tplCard', e => e.offsetParent !== null && /What the base is/.test(e.textContent) && /monthly cycle/i.test(e.textContent)), 'Base template section shows the memo');
+  ok(await p.$eval('#tplHelp', e => e.querySelectorAll('tr').length === 17 && e.querySelectorAll('tr .req').length === 4), 'column guide lists all 17 columns, four starred');
+  ok(!!(await p.$('#sidenav .sn-item[data-nav="template"]')), '"Base template" is in the manager menu');
+  const [xl] = await Promise.all([p.waitForEvent('download'), p.click('#tplXlsx')]);
+  ok(xl.suggestedFilename() === 'Chase-base-template.xlsx', 'Download Excel template gives Chase-base-template.xlsx');
+  const xlPath = path.join(SC, 'downloaded-template.xlsx'); await xl.saveAs(xlPath);
+  ok(fs.readFileSync(xlPath).slice(0, 2).toString() === 'PK' && fs.statSync(xlPath).size > 2000, 'it is a real zip-based workbook');
+  const unzipped = execFileSync('python3', ['-c', `import zipfile,sys;z=zipfile.ZipFile(sys.argv[1]);print(z.testzip());print(','.join(sorted(z.namelist())));print('Base' in z.read('xl/workbook.xml').decode())`, xlPath]).toString().trim().split('\n');
+  ok(unzipped[0] === 'None' && /xl\/worksheets\/sheet2\.xml/.test(unzipped[1]) && unzipped[2] === 'True', 'zip is valid, two sheets, named "Base" and "How to fill in"');
+  await p.setInputFiles('#fileInp', xlPath); await p.waitForTimeout(1500);
+  ok(await p.$eval('#mRows', e => /Columnsmatched17of17/.test(e.textContent.replace(/\s+/g, ''))), 'Chase reads its own .xlsx template back: 17 of 17 columns');
+  ok(await p.$eval('#mRows', e => /Accounts0(?!\d)/.test(e.textContent.replace(/\s+/g, ''))) && await p.$eval('#mOk', e => e.disabled), 'only the example row inside → nothing to add yet');
+  await p.click('#mCancel'); await p.waitForTimeout(300);
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#tplDl')]);
-  ok(dl.suggestedFilename() === 'Chase-base-template.csv', 'Download blank template gives Chase-base-template.csv');
-  ok(!(await p.$eval('#modal', e => e.classList.contains('show'))), 'clicking the download button does not open the file picker/preview');
+  ok(dl.suggestedFilename() === 'Chase-base-template.csv', 'the .csv version downloads too');
   const tplPath = path.join(SC, 'downloaded-template.csv'); await dl.saveAs(tplPath);
   const tplLines = fs.readFileSync(tplPath, 'utf8').replace(/^\ufeff/, '').trim().split(/\r?\n/);
   ok(tplLines[0] === 'AccountNumber,CustomerName,CustomerSurname,PrimaryMSISDN,ProductDescription,HandsetRSP,Package,ContractType,ActivationDate,InvoiceStatus,CustomerCategory,Offer,Email,CSR,Outcome,NextActionDate,CallNotes',
-     'template has the 17 headings Chase reads, required ones first');
-  ok(tplLines.length === 2 && /^EXAMPLE-DELETE-THIS-ROW,Thandi/.test(tplLines[1]), 'one clearly-marked example row');
-  await p.click('#tplHow'); await p.waitForTimeout(200);
-  ok(await p.$eval('#tplHelp', e => !e.hidden && e.querySelectorAll('tr').length === 17 && /AccountNumber/.test(e.textContent) && e.querySelectorAll('.req').length >= 4),
-     'the column guide lists all 17 columns and stars the required four');
+     'csv has the 17 headings Chase reads, required ones first');
   // someone fills in two customers but forgets to delete the example row
   const filled = tplLines[0] + '\n' + tplLines[1] + '\n' +
     '2001,Thandi,Mokoena,0831234567,Samsung Galaxy A55,499,MTN Mega Gigs S,Upgrade,2024-03-15,Out of contract,Consumer,,,,,,\n' +
@@ -136,6 +144,7 @@ const SEED = {
   ok(await p.$eval('#mRows', e => /Accounts2(?!\d)/.test(e.textContent.replace(/\s+/g, ''))), 'the example row is ignored: 2 accounts, not 3');
   ok(!(await p.$eval('#mOk', e => e.disabled)), 'ready to add');
   await p.click('#mCancel'); await p.waitForTimeout(300);
+  ok(await p.$eval('#upPanel #tplGo', e => /template/i.test(e.textContent)), 'Load base panel points at the template section');
 
   /* ---------- 2. allocate people to stores ---------- */
   await p.evaluate(() => navTo('team')); await p.waitForTimeout(900);
