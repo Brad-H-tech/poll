@@ -769,6 +769,7 @@
   .sh-btn svg{width:16px;height:16px}
   .sh-btn.solid{background:var(--brand);border-color:transparent;color:#14140f}
   .sh-btn.wa{background:#25d366;border-color:transparent;color:#fff}
+  .sh-btn.em{background:#7c68d8;border-color:transparent;color:#fff}
 
   /* ============ Team — sortable, searchable, paged data table ============ */
   .dtab{background:var(--surface-1);border:1px solid var(--line);border-radius:16px;overflow:hidden;font-size:14px}
@@ -4130,10 +4131,13 @@ function renderStartHere(){
     <div class="sh-name">${esc(titleCase(c.name))}</div>
     <div class="sh-meta">${esc(c.prod&&c.prod!=='—'?c.prod:'')}${c.pkgs&&c.pkgs[0]?' · '+esc(c.pkgs[0]):''}${c.rsp?' · <b>'+zar(c.rsp)+'/m</b>':''}</div>
     ${t.note?`<div class="sh-note">“${esc(t.note)}”</div>`:''}
-    <div class="sh-acts">
-      ${d?`<a class="sh-btn solid" href="tel:+${d}">${SVG_TEL}Call</a>`:''}
-      ${d?`<a class="sh-btn wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener">${SVG_WA}WhatsApp</a>`:''}
-      <button class="sh-btn" data-sh-log="${esc(c.acct)}">Log the call</button>
+    <div class="sh-acts">${(()=>{
+      const call=d?`<a class="sh-btn ${isSME()?'':'solid'}" href="tel:+${d}">${SVG_TEL}Call</a>`:'';
+      const wa=d?`<a class="sh-btn wa" href="https://wa.me/${d}?text=${encodeURIComponent(waMsg(c))}" target="_blank" rel="noopener">${SVG_WA}WhatsApp</a>`:'';
+      const em=c.email?`<button type="button" class="sh-btn em" data-mail="${esc(c.acct)}">${SVG_MAIL}Email</button>`:'';
+      const log=`<button class="sh-btn" data-sh-log="${esc(c.acct)}">Log the call</button>`;
+      // SME: email first, then WhatsApp, then the call; consumer keeps call first
+      return isSME()?em+wa+call+log:call+wa+log;})()}
     </div>`;
   const b=$('[data-sh-log]',box);if(b)b.onclick=()=>openQuick(b.dataset.shLog);
 }

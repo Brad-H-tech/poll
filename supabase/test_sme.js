@@ -170,6 +170,10 @@ const SEED = {
   await p2.click('#lfSeg [data-seg="sme"]'); await p2.fill('#liU', 'lesley'); await p2.fill('#liP', 'pw-lesley'); await p2.click('#liGo'); await p2.waitForTimeout(1500);
   ok(await p2.evaluate(() => SEG === 'sme' && DS().customers.filter(c => assignedTo(c) === 'LESLEY').length === 7), 'Lesley in the SME book sees her 7 businesses');
   ok(await p2.$eval('#segSw', e => e.offsetParent !== null), 'a consultant can switch books too');
+  const sh = await p2.$$eval('#startHere .sh-acts .sh-btn', els => els.map(e => e.textContent.trim()));
+  ok(sh.join(',') === 'Email,WhatsApp,Call,Log the call', 'Start here for SME: Email, WhatsApp, Call, Log the call (' + sh.join(', ') + ')');
+  await p2.click('#startHere .sh-btn.em'); await p2.waitForTimeout(400);
+  ok(await p2.$eval('#mailModal', e => e.classList.contains('show')), 'Start-here Email opens the email sheet');
   await p2.close();
 
   ok(errs.length === 0, 'no JavaScript errors during the run');
