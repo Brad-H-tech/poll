@@ -79,7 +79,7 @@
       sb.from('bases').select('id,rows').eq('store_id', sid).eq('segment', SEG).eq('active', true).order('created_at', { ascending: false }).limit(1),
       sb.from('tracking').select('*').eq('store_id', sid),
       sb.from('claims').select('*').eq('store_id', sid).order('created_at', { ascending: false }),
-      sb.from('stores').select('wa_tpl,quotes,report_to,verify_at').eq('id', sid).maybeSingle(),
+      sb.from('stores').select('wa_tpl,quotes,report_to,verify_at,email_subj,email_tpl,email_tpl_by,email_tpl_at').eq('id', sid).maybeSingle(),
     ]);
 
     const list = metas.data || [];
@@ -121,7 +121,7 @@
 
     const s = store.data || {};
     cache.settings = {};
-    ['wa_tpl', 'quotes', 'report_to', 'verify_at'].forEach(k => { if (s[k]) cache.settings[k] = s[k]; });
+    ['wa_tpl', 'quotes', 'report_to', 'verify_at', 'email_subj', 'email_tpl', 'email_tpl_by', 'email_tpl_at'].forEach(k => { if (s[k]) cache.settings[k] = s[k]; });
 
     return {
       me: pubMe(), store: sid, storeName: STORE_NAMES[sid] || sid, segment: SEG,
@@ -256,12 +256,13 @@
     ['PUT', /^\/api\/settings$/, async (m, body) => {
       if (!isMgr()) return ERR('Manager only', 403);
       const key = String(body.key || '').replace(/[^a-z_]/gi, '');
-      if (!['wa_tpl', 'quotes', 'report_to'].includes(key)) return ERR('Unknown setting');
-      const patch = {}; patch[key] = String(body.value || '').slice(0, key === 'report_to' ? 40 : 8000);
+      if (!['wa_tpl', 'quotes', 'report_to', 'email_subj', 'email_tpl'].includes(key)) return ERR('Unknown setting');
+      const patch = {}; patch[key] = String(body.value || '').slice(0, key === 'report_to' ? 40 : key === 'email_subj' ? 200 : 8000);
       if (key === 'wa_tpl') { patch.wa_tpl_by = ME.name; patch.wa_tpl_at = new Date().toISOString(); }
+      if (key === 'email_subj' || key === 'email_tpl') { patch.email_tpl_by = ME.name; patch.email_tpl_at = new Date().toISOString(); }
       const { error } = await sb.from('stores').update(patch).eq('id', STORE);
       if (error) return ERR(error);
-      cache.settings[key] = patch[key];
+      Object.assign(cache.settings, patch);
       emit('settings', {});
       return J({ ok: true });
     }],
@@ -269,18 +270,26 @@
     // head office: every store's WhatsApp message side by side, with who changed it last
     ['GET', /^\/api\/stores\/settings$/, async () => {
       if (!headOffice()) return ERR('Head office only', 403);
-      const { data, error } = await sb.from('stores').select('id,name,sort,wa_tpl,wa_tpl_by,wa_tpl_at').order('sort');
+      const { data, error } = await sb.from('stores').select('id,name,sort,wa_tpl,wa_tpl_by,wa_tpl_at,email_subj,email_tpl,email_tpl_by,email_tpl_at').order('sort');
       if (error) return ERR(error);
-      return J((data || []).map(s => ({ id: s.id, name: s.name, wa_tpl: s.wa_tpl || '', by: s.wa_tpl_by || '', at: s.wa_tpl_at || '' })));
+      return J((data || []).map(s => ({ id: s.id, name: s.name, wa_tpl: s.wa_tpl || '', by: s.wa_tpl_by || '', at: s.wa_tpl_at || '',
+        email_subj: s.email_subj || '', email_tpl: s.email_tpl || '', email_by: s.email_tpl_by || '', email_at: s.email_tpl_at || '' })));
     }],
     ['PUT', /^\/api\/stores\/([\w-]+)\/settings$/, async (m, body) => {
       if (!headOffice()) return ERR('Head office only', 403);
       if (!Object.keys(STORE_NAMES).length) await loadStores();
       if (!STORE_NAMES[m[1]]) return ERR('Unknown store', 404);
-      const wa_tpl = String(body.wa_tpl || '').slice(0, 8000);
-      const { error } = await sb.from('stores').update({ wa_tpl, wa_tpl_by: ME.name, wa_tpl_at: new Date().toISOString() }).eq('id', m[1]);
+      const patch = {}, now = new Date().toISOString();
+      if (body.wa_tpl !== undefined) { patch.wa_tpl = String(body.wa_tpl || '').slice(0, 8000); patch.wa_tpl_by = ME.name; patch.wa_tpl_at = now; }
+      if (body.email_subj !== undefined || body.email_tpl !== undefined) {
+        if (body.email_subj !== undefined) patch.email_subj = String(body.email_subj || '').slice(0, 200);
+        if (body.email_tpl !== undefined) patch.email_tpl = String(body.email_tpl || '').slice(0, 8000);
+        patch.email_tpl_by = ME.name; patch.email_tpl_at = now;
+      }
+      if (!Object.keys(patch).length) return ERR('Nothing to change');
+      const { error } = await sb.from('stores').update(patch).eq('id', m[1]);
       if (error) return ERR(error);
-      if (m[1] === STORE) { cache.settings.wa_tpl = wa_tpl; emit('settings', {}); }
+      if (m[1] === STORE) { Object.assign(cache.settings, patch); emit('settings', {}); }
       return J({ ok: true });
     }],
 

@@ -22,6 +22,10 @@ create table if not exists public.stores (
   wa_tpl    text not null default '',       -- WhatsApp message template
   wa_tpl_by text not null default '',       -- who last changed it (head office can see)
   wa_tpl_at timestamptz,                    -- and when
+  email_subj   text not null default '',  -- email template: subject line
+  email_tpl    text not null default '',  -- email template: body
+  email_tpl_by text not null default '',
+  email_tpl_at timestamptz,
   quotes    text not null default '',       -- mission quotes, one per line
   report_to text not null default '',       -- number the daily report goes to
   verify_at text                            -- last MTN activations check ('YYYY-MM-DD')

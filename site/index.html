@@ -186,6 +186,13 @@
   .m-note{font-size:12.5px;background:color-mix(in srgb,var(--brand) 12%,transparent);border:1px solid color-mix(in srgb,var(--brand) 35%,transparent);border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.45}
   .m-note button{margin-top:6px}
   .m-alloc{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;padding:9px 12px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;margin-bottom:12px}
+  .mail-f{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+  .mail-f .ti{font-size:13.5px;font-weight:500;text-transform:none;letter-spacing:0;width:100%}
+  .mail-f .tplbox{min-height:170px;font-size:13.5px;font-weight:500;text-transform:none;letter-spacing:0}
+  .mail-acts{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px}
+  .mail-acts .btn2{flex:1 1 120px;text-align:center}
+  #mailModal .m-card{width:min(640px,100%)}
+  .smsg .ti{width:100%;margin-bottom:8px;font-size:13.5px}
 
   .hint{font-size:11px;color:var(--ink-3);margin-top:12px;display:flex;align-items:center;gap:6px}
 
@@ -956,6 +963,7 @@
   <button class="sn-item mgr-only" data-nav="claims" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V4.6a1.6 1.6 0 1 1 3.2 0V11m0-1.4a1.6 1.6 0 1 1 3.2 0V12m0-1a1.6 1.6 0 1 1 3.2 0v4.5a5.5 5.5 0 0 1-5.5 5.5h-1.4a5.5 5.5 0 0 1-4.4-2.2L5 15.5a1.6 1.6 0 0 1 2.4-2.1L9 15"/></svg> Claims <span class="cnt" id="snClaimCnt"></span></button>
   <button class="sn-item mgr-only" data-nav="report" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/></svg> Weekly report</button>
   <button class="sn-item mgr-only" data-nav="settings" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19 12c0-.5 0-1-.1-1.4l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2.4-1.4L13.7 2h-3.4l-.4 2.6A7 7 0 0 0 7.5 6L5.1 5 3.1 8.4l2 1.6a7 7 0 0 0 0 2.8l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2.4 1.4l.4 2.6h3.4l.4-2.6a7 7 0 0 0 2.4-1.4l2.4 1 2-3.4-2-1.6c.1-.4.1-.9.1-1.4Z"/></svg> Message &amp; quotes</button>
+  <button class="sn-item mgr-only" data-nav="email" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg> Email templates</button>
   <button class="sn-item mgr-only" data-nav="team" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><path d="M16.2 5.3a3 3 0 0 1 0 5.4M18 19.5a5.5 5.5 0 0 0-3-4.9"/></svg> Team</button>
   <div class="sn-foot">
     <div class="sn-user"><span class="av" id="snAv">?</span>
@@ -1207,6 +1215,15 @@
       <div id="storeMsgBody"></div>
     </section>
 
+    <section class="card pad-lg" id="emailCard" style="margin-top:16px" aria-label="Email templates">
+      <div class="card-hd"><div><h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/></svg> Email templates</h3>
+        <div class="h-desc">What the email button writes — subject and message, per store. Business (SME) customers are emailed first.</div></div></div>
+      <div style="font-size:12.5px;color:var(--ink-2);margin-bottom:9px">
+        <span class="plch">{name}</span><span class="plch">{fullname}</span><span class="plch">{business}</span><span class="plch">{contact}</span><span class="plch">{plan}</span><span class="plch">{offer}</span><span class="plch">{device}</span><span class="plch">{store}</span><span class="plch">{agent}</span>
+        fill themselves in per customer.</div>
+      <div id="emailBody"></div>
+    </section>
+
     <section class="card pad-lg" id="teamCard" style="margin-top:16px" aria-label="Team">
       <div class="card-hd"><div><h3>Team</h3>
         <div class="h-desc">Logins for the floor — everyone works the same live book</div></div></div>
@@ -1371,6 +1388,21 @@
   <div class="m-actions"><button class="btn2 ghost" id="asCancel">Cancel</button></div>
 </div></div>
 
+<div class="modal" id="mailModal"><div class="m-card">
+  <h3>Email <span id="mailWho"></span></h3>
+  <div class="m-sub">Written from this store's email template. Change anything before you send.</div>
+  <label class="mail-f">To<input class="ti" id="mailTo" autocomplete="off"></label>
+  <label class="mail-f">Subject<input class="ti" id="mailSubj" autocomplete="off"></label>
+  <label class="mail-f">Message<textarea class="tplbox" id="mailBody"></textarea></label>
+  <div class="mail-acts">
+    <button class="btn2 solid" type="button" id="mailGmail">Open in Gmail</button>
+    <button class="btn2 solid" type="button" id="mailOutlook">Open in Outlook</button>
+    <button class="btn2 ghost" type="button" id="mailApp">Email app on this device</button>
+    <button class="btn2 ghost" type="button" id="mailCopy">Copy the message</button>
+  </div>
+  <div class="m-actions"><button class="btn2 ghost" id="mailClose">Close</button></div>
+</div></div>
+
 <div class="modal" id="custModal"><div class="m-card">
   <h3>Add a customer</h3>
   <div class="m-sub">A walk-in or new lead — lands in this store's book instantly, assigned to you.</div>
@@ -1499,7 +1531,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
       sb.from('bases').select('id,rows').eq('store_id', sid).eq('segment', SEG).eq('active', true).order('created_at', { ascending: false }).limit(1),
       sb.from('tracking').select('*').eq('store_id', sid),
       sb.from('claims').select('*').eq('store_id', sid).order('created_at', { ascending: false }),
-      sb.from('stores').select('wa_tpl,quotes,report_to,verify_at').eq('id', sid).maybeSingle(),
+      sb.from('stores').select('wa_tpl,quotes,report_to,verify_at,email_subj,email_tpl,email_tpl_by,email_tpl_at').eq('id', sid).maybeSingle(),
     ]);
 
     const list = metas.data || [];
@@ -1541,7 +1573,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 
     const s = store.data || {};
     cache.settings = {};
-    ['wa_tpl', 'quotes', 'report_to', 'verify_at'].forEach(k => { if (s[k]) cache.settings[k] = s[k]; });
+    ['wa_tpl', 'quotes', 'report_to', 'verify_at', 'email_subj', 'email_tpl', 'email_tpl_by', 'email_tpl_at'].forEach(k => { if (s[k]) cache.settings[k] = s[k]; });
 
     return {
       me: pubMe(), store: sid, storeName: STORE_NAMES[sid] || sid, segment: SEG,
@@ -1676,12 +1708,13 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     ['PUT', /^\/api\/settings$/, async (m, body) => {
       if (!isMgr()) return ERR('Manager only', 403);
       const key = String(body.key || '').replace(/[^a-z_]/gi, '');
-      if (!['wa_tpl', 'quotes', 'report_to'].includes(key)) return ERR('Unknown setting');
-      const patch = {}; patch[key] = String(body.value || '').slice(0, key === 'report_to' ? 40 : 8000);
+      if (!['wa_tpl', 'quotes', 'report_to', 'email_subj', 'email_tpl'].includes(key)) return ERR('Unknown setting');
+      const patch = {}; patch[key] = String(body.value || '').slice(0, key === 'report_to' ? 40 : key === 'email_subj' ? 200 : 8000);
       if (key === 'wa_tpl') { patch.wa_tpl_by = ME.name; patch.wa_tpl_at = new Date().toISOString(); }
+      if (key === 'email_subj' || key === 'email_tpl') { patch.email_tpl_by = ME.name; patch.email_tpl_at = new Date().toISOString(); }
       const { error } = await sb.from('stores').update(patch).eq('id', STORE);
       if (error) return ERR(error);
-      cache.settings[key] = patch[key];
+      Object.assign(cache.settings, patch);
       emit('settings', {});
       return J({ ok: true });
     }],
@@ -1689,18 +1722,26 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
     // head office: every store's WhatsApp message side by side, with who changed it last
     ['GET', /^\/api\/stores\/settings$/, async () => {
       if (!headOffice()) return ERR('Head office only', 403);
-      const { data, error } = await sb.from('stores').select('id,name,sort,wa_tpl,wa_tpl_by,wa_tpl_at').order('sort');
+      const { data, error } = await sb.from('stores').select('id,name,sort,wa_tpl,wa_tpl_by,wa_tpl_at,email_subj,email_tpl,email_tpl_by,email_tpl_at').order('sort');
       if (error) return ERR(error);
-      return J((data || []).map(s => ({ id: s.id, name: s.name, wa_tpl: s.wa_tpl || '', by: s.wa_tpl_by || '', at: s.wa_tpl_at || '' })));
+      return J((data || []).map(s => ({ id: s.id, name: s.name, wa_tpl: s.wa_tpl || '', by: s.wa_tpl_by || '', at: s.wa_tpl_at || '',
+        email_subj: s.email_subj || '', email_tpl: s.email_tpl || '', email_by: s.email_tpl_by || '', email_at: s.email_tpl_at || '' })));
     }],
     ['PUT', /^\/api\/stores\/([\w-]+)\/settings$/, async (m, body) => {
       if (!headOffice()) return ERR('Head office only', 403);
       if (!Object.keys(STORE_NAMES).length) await loadStores();
       if (!STORE_NAMES[m[1]]) return ERR('Unknown store', 404);
-      const wa_tpl = String(body.wa_tpl || '').slice(0, 8000);
-      const { error } = await sb.from('stores').update({ wa_tpl, wa_tpl_by: ME.name, wa_tpl_at: new Date().toISOString() }).eq('id', m[1]);
+      const patch = {}, now = new Date().toISOString();
+      if (body.wa_tpl !== undefined) { patch.wa_tpl = String(body.wa_tpl || '').slice(0, 8000); patch.wa_tpl_by = ME.name; patch.wa_tpl_at = now; }
+      if (body.email_subj !== undefined || body.email_tpl !== undefined) {
+        if (body.email_subj !== undefined) patch.email_subj = String(body.email_subj || '').slice(0, 200);
+        if (body.email_tpl !== undefined) patch.email_tpl = String(body.email_tpl || '').slice(0, 8000);
+        patch.email_tpl_by = ME.name; patch.email_tpl_at = now;
+      }
+      if (!Object.keys(patch).length) return ERR('Nothing to change');
+      const { error } = await sb.from('stores').update(patch).eq('id', m[1]);
       if (error) return ERR(error);
-      if (m[1] === STORE) { cache.settings.wa_tpl = wa_tpl; emit('settings', {}); }
+      if (m[1] === STORE) { Object.assign(cache.settings, patch); emit('settings', {}); }
       return J({ ok: true });
     }],
 
@@ -3124,8 +3165,7 @@ const TODAY=()=>new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Johannes
 function mailBtn(c,mini){
   const e=String(c.email||'').trim();
   if(e){
-    const href='mailto:'+encodeURIComponent(e)+'?subject='+encodeURIComponent(isSME()?'Your MTN business account':'Your MTN upgrade')+'&body='+encodeURIComponent(waMsg(c));
-    return `<a class="${mini?'em':'cbtn2 em has'}" href="${href}" title="Email ${esc(e)}" aria-label="Email">${SVG_MAIL}</a>`;
+    return `<button type="button" class="${mini?'em':'cbtn2 em has'}" data-mail="${esc(c.acct)}" title="Email ${esc(e)}" aria-label="Email">${SVG_MAIL}</button>`;
   }
   return `<span class="${mini?'em':'cbtn2 em no'}" title="No email on file" aria-label="No email on file">${SVG_MAIL}</span>`;
 }
@@ -3135,20 +3175,54 @@ function claimBtnHTML(c){
   if(claimStatus(c.acct))return '';
   return `<button class="claimbtn" data-claim="${esc(c.acct)}">＋ Claim</button>`;
 }
-function waMsg(c){
+const DEFAULT_EMAIL_SUBJ='Your MTN account with {store} — a better deal is ready';
+const DEFAULT_EMAIL_TPL=`Good day {name},
+
+I'm {agent} from MTN {store}. I look after {business}'s account and wanted to reach out directly.
+
+You're due for an upgrade on your {plan} plan, and we can move you to {offer} — in many cases for the same or less than you pay now, with new devices included.
+
+Would a quick call this week suit you? Reply to this email with a good time, or WhatsApp me and I'll send the options through.
+
+Kind regards
+{agent}
+MTN {store}`;
+function fillTpl(tpl,c){
   const first=(isSME()&&!c.contact&&c.name)?titleCase(c.name)
     :titleCase(((c.contact||c.name)||'').split(/\s+/).filter(w=>!/^(mr|mrs|ms|miss|dr|prof|mnr|mev|adv)\.?$/i.test(w))[0]||'there');
   const who=(ME&&ME.name)?ME.name:'the team';
   const store=($('#storeSub')&&$('#storeSub').textContent)||'MTN';
-  const tpl=(SETTINGS.wa_tpl&&SETTINGS.wa_tpl.trim())||DEFAULT_TPL;
-  return tpl.replace(/\{name\}/g,first)
+  return String(tpl||'').replace(/\{name\}/g,first)
     .replace(/\{fullname\}/g,titleCase(c.name||''))
+    .replace(/\{business\}/g,isSME()?titleCase(c.name||''):(titleCase(c.name||'')||'your'))
+    .replace(/\{contact\}/g,titleCase(c.contact||''))
     .replace(/\{plan\}/g,(c.pkgs&&c.pkgs[0])||'current')
     .replace(/\{device\}/g,(c.prod&&c.prod!=='—')?c.prod:'a new phone')
     .replace(/\{offer\}/g,c.offer||'a better deal')
     .replace(/\{store\}/g,store)
     .replace(/\{agent\}/g,who);
 }
+function waMsg(c){return fillTpl((SETTINGS.wa_tpl&&SETTINGS.wa_tpl.trim())||DEFAULT_TPL,c);}
+function emailSubj(c){return fillTpl((SETTINGS.email_subj&&SETTINGS.email_subj.trim())||DEFAULT_EMAIL_SUBJ,c);}
+function emailBody(c){return fillTpl((SETTINGS.email_tpl&&SETTINGS.email_tpl.trim())||DEFAULT_EMAIL_TPL,c);}
+/* ---- the email sheet: a mailto: link does nothing on a laptop with no mail app, so we show the
+   written email and let the person pick Gmail, Outlook, the device's mail app, or copy it ---- */
+let mailAcct=null,mailLogged=false;
+function openMail(acct,alreadyLogged){
+  const c=DS().customers.find(x=>x.acct===acct);if(!c)return;
+  if(!c.email){toast('No email address on file for this customer');return;}
+  mailAcct=acct;mailLogged=!!alreadyLogged;
+  $('#mailWho').textContent=titleCase(c.name||'');
+  $('#mailTo').value=c.email;$('#mailSubj').value=emailSubj(c);$('#mailBody').value=emailBody(c);
+  $('#mailModal').classList.add('show');
+  setTimeout(()=>$('#mailBody').focus(),60);
+}
+function mailLog(){
+  if(mailLogged||!mailAcct)return;mailLogged=true;
+  try{postActivity(mailAcct,'em');const t=tracking[mailAcct];if(!t||!t.st){setSt(mailAcct,'fu');pushTrack(mailAcct);}}catch(e){}
+}
+function mailParts(){return {to:$('#mailTo').value.trim(),su:$('#mailSubj').value,body:$('#mailBody').value};}
+function mailOpen(url){window.open(url,'_blank','noopener');mailLog();toast('Logged: emailed — waiting for reply');}
 function linesHTML(c){
   const extra=(c.lines||[]).map(digits).filter(Boolean);
   if(!extra.length)return '';
@@ -3387,7 +3461,7 @@ function quickAction(k){
     if(!(c&&c.email)){toast('No email address on file for this customer');return;}
     postActivity(qsAcct,'em');
     if(!t.st){setSt(qsAcct,'fu');pushTrack(qsAcct);}
-    location.href='mailto:'+encodeURIComponent(c.email)+'?subject='+encodeURIComponent('Your MTN upgrade')+'&body='+encodeURIComponent(waMsg(c));
+    openMail(qsAcct,true);
     toast('Logged: emailed — waiting for reply');return;
   }
   if(k==='nowa'){setSt(qsAcct,'nowa');pushTrack(qsAcct);toast('Marked NOT on WhatsApp — phone them instead');qsRefresh();return;}
@@ -4018,6 +4092,7 @@ function loadSettingsPanel(){
   const rt=$('#repTo');if(rt&&document.activeElement!==rt)rt.value=SETTINGS.report_to||'';
   tplPreview();
   renderStoreMsgs();
+  renderEmailTpls();
 }
 function saveSetting(key,value,msg){
   return api('/api/settings',{method:'PUT',body:JSON.stringify({key,value})})
@@ -4085,6 +4160,7 @@ const MM_ITEMS=[
   ['claims','Claims','<path d="M9 11V4.6a1.6 1.6 0 1 1 3.2 0V11m0-1.4a1.6 1.6 0 1 1 3.2 0V12m0-1a1.6 1.6 0 1 1 3.2 0v4.5a5.5 5.5 0 0 1-5.5 5.5h-1.4a5.5 5.5 0 0 1-4.4-2.2L5 15.5a1.6 1.6 0 0 1 2.4-2.1L9 15"/>'],
   ['report','Weekly report','<rect x="3" y="4.5" width="18" height="15" rx="3"/><path d="M3 13h5l1.5 2.5h5L16 13h5"/>'],
   ['settings','Message &amp; quotes','<circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>'],
+  ['email','Email templates','<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/>'],
   ['team','Team','<circle cx="9" cy="8" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><path d="M16.2 5.3a3 3 0 0 1 0 5.4M18 19.5a5.5 5.5 0 0 0-3-4.9"/>'],
 ];
 function renderMM(){
@@ -4116,6 +4192,7 @@ function navTo(k){
   if(k==='settings'){loadSettingsPanel();const el=$('#settingsCard');if(el)el.scrollIntoView({behavior:'smooth'});}
   if(k==='upload'){const el=$('#upPanel');if(el)el.scrollIntoView({behavior:'smooth'});setTimeout(()=>$('#fileInp').click(),350);}
   if(k==='template'){renderTemplateHelp();const el=$('#tplCard');if(el)el.scrollIntoView({behavior:'smooth'});}
+  if(k==='email'){renderEmailTpls();const el=$('#emailCard');if(el)el.scrollIntoView({behavior:'smooth'});}
 }
 
 /* =========================================================
@@ -4361,6 +4438,36 @@ async function renderTeam(){
   try{TEAM_USERS=await api('/api/users');drawTeam();}catch(e){}
 }
 
+/* ---- Email templates: every store for head office, own store for a store manager ---- */
+async function renderEmailTpls(){
+  const card=$('#emailCard');if(!card||!ME||ME.role!=='manager'){if(card)card.hidden=true;return;}
+  const ae=document.activeElement;if(ae&&(ae.tagName==='TEXTAREA'||ae.tagName==='INPUT')&&card.contains(ae))return;
+  let list;
+  if(ME.head){try{list=await api('/api/stores/settings');}catch(e){return;}}
+  else list=[{id:ME.store_id,name:$('#storeSub').textContent,email_subj:SETTINGS.email_subj||'',email_tpl:SETTINGS.email_tpl||'',email_by:SETTINGS.email_tpl_by||'',email_at:SETTINGS.email_tpl_at||''}];
+  card.hidden=false;
+  $('#emailBody').innerHTML=list.map(s=>{const custom=!!((s.email_tpl&&s.email_tpl.trim())||(s.email_subj&&s.email_subj.trim()));
+    return `<div class="smsg" data-etpl="${esc(s.id)}">
+      <div class="smsg-hd"><b>${esc(s.name)}</b>
+        <span class="pill ${custom?'on':''}">${custom?('Changed by '+esc(s.email_by||'someone')+(s.email_at?' · '+esc(fmtWhen(s.email_at)):'')):'Default email'}</span></div>
+      <input class="ti" data-etpl-subj="${esc(s.id)}" value="${esc(custom&&s.email_subj?s.email_subj:DEFAULT_EMAIL_SUBJ)}" aria-label="Subject">
+      <textarea class="tplbox" data-etpl-box="${esc(s.id)}" style="min-height:190px">${esc(custom&&s.email_tpl?s.email_tpl:DEFAULT_EMAIL_TPL)}</textarea>
+      <div class="toolbar" style="margin:10px 0 0"><button class="abtn" data-etpl-save="${esc(s.id)}">Save for ${esc(s.name)}</button>
+        ${custom?`<button class="abtn" data-etpl-reset="${esc(s.id)}">Back to default</button>`:''}</div></div>`;}).join('');
+  const save=async(id,subj,body,msg)=>{
+    try{
+      if(ME.head)await api('/api/stores/'+id+'/settings',{method:'PUT',body:JSON.stringify({email_subj:subj,email_tpl:body})});
+      else{await api('/api/settings',{method:'PUT',body:JSON.stringify({key:'email_subj',value:subj})});
+           await api('/api/settings',{method:'PUT',body:JSON.stringify({key:'email_tpl',value:body})});}
+      toast(msg);if(!ME.head||id===(ME.store_id||$('#liStore').value))await refreshState();renderEmailTpls();
+    }catch(e){if(e.message!=='auth')toast('⚠️ '+esc(e.message));}
+  };
+  $$('[data-etpl-save]',card).forEach(b=>b.onclick=()=>{const id=b.dataset.etplSave;
+    const subj=$(`[data-etpl-subj="${id}"]`,card).value,body=$(`[data-etpl-box="${id}"]`,card).value;
+    save(id,subj.trim()===DEFAULT_EMAIL_SUBJ.trim()?'':subj,body.trim()===DEFAULT_EMAIL_TPL.trim()?'':body,'Email template saved for '+esc(b.textContent.replace(/^Save for /,'')));});
+  $$('[data-etpl-reset]',card).forEach(b=>b.onclick=()=>save(b.dataset.etplReset,'','','Back to the default email'));
+}
+
 /* ---- Messages by store (head office) ---- */
 function fmtWhen(iso){if(!iso)return '';const d=new Date(iso);if(isNaN(d))return '';
   return d.toLocaleDateString('en-ZA',{day:'numeric',month:'short'})+' '+d.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});}
@@ -4435,6 +4542,13 @@ function init(){
   };
   $('#upPanel').onclick=()=>$('#fileInp').click();
   $('#tplGo').onclick=e=>{e.stopPropagation();navTo('template');};
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-mail]');if(b){e.preventDefault();e.stopPropagation();openMail(b.dataset.mail);}},true);
+  $('#mailClose').onclick=()=>$('#mailModal').classList.remove('show');
+  $('#mailModal').addEventListener('click',e=>{if(e.target.id==='mailModal')$('#mailModal').classList.remove('show');});
+  $('#mailGmail').onclick=()=>{const m=mailParts();mailOpen('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(m.to)+'&su='+encodeURIComponent(m.su)+'&body='+encodeURIComponent(m.body));};
+  $('#mailOutlook').onclick=()=>{const m=mailParts();mailOpen('https://outlook.office.com/mail/deeplink/compose?to='+encodeURIComponent(m.to)+'&subject='+encodeURIComponent(m.su)+'&body='+encodeURIComponent(m.body));};
+  $('#mailApp').onclick=()=>{const m=mailParts();location.href='mailto:'+encodeURIComponent(m.to)+'?subject='+encodeURIComponent(m.su)+'&body='+encodeURIComponent(m.body);mailLog();toast('Opening your email app — if nothing happens, use Gmail or Outlook above');};
+  $('#mailCopy').onclick=async()=>{const m=mailParts();try{await navigator.clipboard.writeText('To: '+m.to+'\nSubject: '+m.su+'\n\n'+m.body);mailLog();toast('Copied — paste it into any email');}catch(e){toast('Could not copy on this device');}};
   $('#tplDl').onclick=()=>downloadTemplate('consumer');
   $('#tplXlsx').onclick=()=>downloadTemplateXlsx('consumer');
   $('#tplDlSme').onclick=()=>downloadTemplate('sme');

@@ -117,6 +117,42 @@ const SEED = {
   const [cv] = await Promise.all([p.waitForEvent('download'), p.click('#tplDlSme')]);
   ok(cv.suggestedFilename() === 'Chase-SME-base-template.csv', 'SME csv template downloads');
 
+  // ---- the email button opens the email sheet (no silent mailto:)
+  await p.click('#segSw [data-seg="sme"]'); await p.waitForTimeout(1000);
+  await p.evaluate(() => navTo('book')); await p.waitForTimeout(400);
+  const tkIdx = await p.$$eval('#tbody tr.main', els => els.findIndex(e => /Tyre King/.test(e.textContent)));
+  await p.click(`#tbody tr.main:nth-of-type(${tkIdx + 1}) .cust .mini .em`); await p.waitForTimeout(400);
+  ok(await p.$eval('#mailModal', e => e.classList.contains('show')), 'clicking the email icon opens the email sheet');
+  const mail = await p.evaluate(() => ({ to: $('#mailTo').value, su: $('#mailSubj').value, body: $('#mailBody').value }));
+  ok(mail.to === 'mark@tyreking.example', 'To is the business email');
+  ok(/Kokstad/.test(mail.su) && /Good day Tyre King/.test(mail.body) && /Bradley/.test(mail.body) && /Tyre King's account/.test(mail.body),
+     'subject and message written from the default template with the business, store and agent filled in');
+  ok(await p.$eval('#mailGmail', e => e.offsetParent !== null) && await p.$eval('#mailOutlook', e => e.offsetParent !== null) && await p.$eval('#mailApp', e => e.offsetParent !== null) && await p.$eval('#mailCopy', e => e.offsetParent !== null),
+     'offers Gmail, Outlook, the device mail app, or copy');
+  await ctx.route('https://mail.google.com/**', r => r.fulfill({ status: 200, contentType: 'text/html', body: 'gmail' }));
+  const [pop] = await Promise.all([ctx.waitForEvent('page'), p.click('#mailGmail')]);
+  await pop.waitForURL(/mail\.google\.com/, { timeout: 5000 }).catch(() => {});
+  ok(/mail\.google\.com\/mail\/\?view=cm/.test(pop.url()) && /to=mark%40tyreking\.example/.test(pop.url()), 'Gmail opens a compose window with the address filled in (' + pop.url().slice(0, 60) + ')');
+  await pop.close(); await p.waitForTimeout(400);
+  ok(await p.evaluate(() => (tracking['SME:27830000030'] || {}).st === 'fu' && ((tracking['SME:27830000030'] || {}).acts || []).some(a => a.k === 'em' || a.t === 'em' || JSON.stringify(a).includes('em'))), 'sending logs "emailed" and moves the business to follow-up');
+  await p.click('#mailClose'); await p.waitForTimeout(200);
+
+  // ---- email templates per store
+  await p.evaluate(() => navTo('email')); await p.waitForTimeout(800);
+  ok(!!(await p.$('#sidenav .sn-item[data-nav="email"]')) && await p.$eval('#emailCard', e => !e.hidden), '"Email templates" is in the manager menu, under Message & quotes');
+  const eblocks = await p.$$eval('#emailBody .smsg', els => els.map(e => e.querySelector('b').textContent));
+  ok(eblocks.length === 3 && eblocks.includes('Kokstad'), 'head office sees every store (' + eblocks.join(', ') + ')');
+  await p.fill('#emailBody [data-etpl-subj="s2"]', 'Kokstad business offer for {business}');
+  await p.fill('#emailBody [data-etpl-box="s2"]', 'Hello {name}, {agent} here from Kokstad.');
+  await p.click('#emailBody [data-etpl-save="s2"]'); await p.waitForTimeout(1200);
+  const st = (await db(p)).tables.stores.find(x => x.id === 's2');
+  ok(/Kokstad business offer/.test(st.email_subj) && /Hello \{name\}/.test(st.email_tpl) && st.email_tpl_by === 'Bradley', 'Kokstad email template saved with Bradley as the changer');
+  ok(await p.$eval('#emailBody [data-etpl="s2"] .pill', e => /Changed by Bradley/.test(e.textContent)), 'pill shows who changed it');
+  await p.evaluate(() => navTo('book')); await p.waitForTimeout(400);
+  await p.click(`#tbody tr.main:nth-of-type(${tkIdx + 1}) .cust .mini .em`); await p.waitForTimeout(400);
+  ok(await p.evaluate(() => $('#mailSubj').value === 'Kokstad business offer for Tyre King' && $('#mailBody').value === 'Hello Tyre King, Bradley here from Kokstad.'), 'the email button now writes from the saved Kokstad template');
+  await p.click('#mailClose'); await p.waitForTimeout(200);
+
   // ---- walk-in lands in the SME base
   await p.evaluate(() => navTo('book')); await p.waitForTimeout(300);
   await p.evaluate(async () => { await fetch('/api/customers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Walk-in Traders', msisdn: '0830009999', email: 'hello@walkin.example' }) }); });
