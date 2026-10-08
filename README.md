@@ -8,12 +8,18 @@ This repo holds only Chase CRM. Everything deploys from `main` to Cloudflare:
 | **Chase API** | A safe, metered API on the same data for spreadsheets, bots and scripts | `api/` | `chase-api` worker (`api/wrangler.jsonc`) |
 | **Database** | Supabase: five tables + row-level security + rules | `supabase/` | run in Supabase → SQL Editor |
 
-## Where the other things went
+## One repo per app
 
-CL Academy (the training drill), the Live Poll and the `/refs` page moved to the
-`Brad-H-tech/cl-academy` repo on 2026-10-02, with their history. Old experiments (petrol tracker,
-phone finder, portfolio, early Chase demos) were removed from `main`; every branch as it stood
-that day is kept under `backup/<branch>-2026-10-02`.
+This repo is **only** Chase CRM and the Chase API. Every push to `main` here redeploys
+the `chase-crm` worker, so nothing else should live here.
+
+- **CL Academy**, the Live Poll and the `/refs` page moved (with their history) to their own repo,
+  [Brad-H-tech/-cl-academy](https://github.com/Brad-H-tech/-cl-academy), which deploys the `cl-academy` worker.
+- **Old experiments** (petrol tracker, phone finder, portfolio, VECTRFL page, the early Chase demos) were
+  taken off `main` on 2026-10-08. Nothing is lost: every branch as it stood on 2026-10-02 is kept under
+  `backup/<branch>-2026-10-02`.
+- **New project?** Create a new, empty GitHub repo for it first and start the Claude session on *that* repo,
+  so it never lands here as another branch.
 
 ## Start here
 
