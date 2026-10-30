@@ -66,7 +66,8 @@ with open(os.path.join(OUT, 'index.html'), 'w', encoding='utf-8') as f:
 
 # PWA companions + the Cloudflare security headers file
 for name in ['manifest.webmanifest', 'sw.js', 'icon-192.png', 'icon-512.png',
-             'icon-maskable-512.png', 'apple-touch-icon.png', 'favicon-32.png', '_headers']:
+             'icon-maskable-512.png', 'apple-touch-icon.png', 'favicon-32.png', '_headers',
+             'mtn-what-are-we-doing-today.gif']:   # email-signature image, hosted so Gmail/Outlook can show it
     src = os.path.join(APP, name)
     if not os.path.exists(src):
         continue
